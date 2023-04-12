@@ -24,22 +24,22 @@ var button_edit, button_print, button_up, button_down, button_left, button_right
 var layer_tiles, layer_tilePicker;
 var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
+var dustEmitter;
 
 var player;
 var dir = "down";
 var idle = true;
 
-function preload ()
-{
+function preload () {
     this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
     this.load.tilemapTiledJSON('mapDisplay', 'assets/tile_display.json');
     this.load.image('tiles', 'assets/gridtiles.png');
 
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
+    this.load.image('spark', 'assets/sprites/tilesets/grass.png');
 }
 
-function create ()
-{
+function create () {
     map = this.make.tilemap({ key: 'map' });
     var tileset = map.addTilesetImage('tiles');
     layer_tiles = map.createLayer('Tile Layer 1', tileset, 0, 0);
@@ -133,11 +133,24 @@ function create ()
         frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }),
         frameRate: 8,
     });
+
+    // dust
+    var particles = this.add.particles('spark');
+    dustEmitter = particles.createEmitter({
+        speed: 20,
+        lifespan: 300,
+        alpha: {
+          start: 0.6,
+          end: 0
+        }
+      });
     
+    // player
     player = this.add.sprite(600, 370);
     player.setScale(2.5);
     player.play('walk_down');
 
+    
 }
 
 function printMap() {
@@ -202,6 +215,9 @@ function update (time, delta) {
     var anim = dir;
     if (dir == "left") anim = "right";
     if (player.anims.currentAnim.key != `${idle ? "idle" : "walk"}_${anim}`) player.play(`${idle ? "idle" : "walk"}_${anim}`);
+    if (!idle) {
+        dustEmitter.setPosition(player.x, player.y + 30);
+    }
 
 
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
