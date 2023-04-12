@@ -29,6 +29,8 @@ var dustEmitter;
 var player;
 var dir = "down";
 var idle = true;
+var fireTick;
+var onFire = false;
 
 function preload () {
     this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
@@ -36,7 +38,7 @@ function preload () {
     this.load.image('tiles', 'assets/gridtiles.png');
 
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
-    this.load.image('spark', 'assets/sprites/tilesets/grass.png');
+    this.load.image('spark', 'assets/red.png');
 }
 
 function create () {
@@ -137,7 +139,7 @@ function create () {
     // dust
     var particles = this.add.particles('spark');
     dustEmitter = particles.createEmitter({
-        speed: 20,
+        speed: 100,
         lifespan: 300,
         alpha: {
           start: 0.6,
@@ -211,11 +213,23 @@ function update (time, delta) {
         idle = false;
     }
 
+    // check for fire
+    var properties = getTileProperties(player.x,player.y + 30 - speed);
+    if (properties.fire) {
+        onFire = true;
+        fireTick = Date.now();
+    }
+
+    if (Date.now() - fireTick > 2000) {
+        onFire = false;
+        dustEmitter.setPosition(-100, -100);
+    }
+
     // set player animtion
     var anim = dir;
     if (dir == "left") anim = "right";
     if (player.anims.currentAnim.key != `${idle ? "idle" : "walk"}_${anim}`) player.play(`${idle ? "idle" : "walk"}_${anim}`);
-    if (!idle) {
+    if (!idle && onFire) {
         dustEmitter.setPosition(player.x, player.y + 30);
     }
 
