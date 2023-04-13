@@ -66,79 +66,23 @@ function create () {
     button_left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
     button_right = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
 
-    /*
-        Player annimations
-    */
-
-    this.anims.create({
-        key: 'idle_down',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3,4,5 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'idle_right',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'idle_up',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'walk_down',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 18,19,20,21,22,23 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'walk_right',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 24,25,26,27,28,29 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'walk_up',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 30,31,32,33,34,35 ] }),
-        frameRate: 8,
-        repeat: -1
-    });
-
-    this.anims.create({
-        key: 'attack_down',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 37,37,38,39 ] }),
-        frameRate: 8,
-    });
-
-    this.anims.create({
-        key: 'attack_right',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }),
-        frameRate: 8,
-    });
-
-    this.anims.create({
-        key: 'attack_up',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }),
-        frameRate: 8,
-    });
-
-    this.anims.create({
-        key: 'fall',
-        frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }),
-        frameRate: 8,
-    });
+    // Player annimations
+    this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 18,19,20,21,22,23 ] }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1});
+    this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 30,31,32,33,34,35 ] }), frameRate: 8, repeat: -1 });
+    this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 37,37,38,39 ] }), frameRate: 8 });
+    this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }), frameRate: 8 });
+    this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 8 });
+    this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
 
     // dust
     var particles = this.add.particles('spark');
     dustEmitter = particles.createEmitter({
+        x: -100,
+        y: -100,
         speed: 100,
         lifespan: 300,
         alpha: {
@@ -152,6 +96,37 @@ function create () {
     player.setScale(2.5);
     player.play('walk_down');
 
+
+    this.input.on('pointerdown', function (pointer) {
+        var attackDir = "";
+
+        // if clicked near player, possibly attack up/down
+        if (Math.abs(pointer.x - player.x) < 80) {
+
+            if ((pointer.y - player.y) < -12) {
+                attackDir = "up";
+            }
+
+            if ((pointer.y - player.y) > 47) {
+                attackDir = "down";
+            }
+
+        }
+
+        // if not attacking up or down, set to left or right
+        if (attackDir == "") {
+
+            if (pointer.x < player.x) {
+                attackDir = "left";
+            } else {
+                attackDir = "right";
+            }
+
+        }
+        
+        console.log(attackDir);
+
+    }, this);
     
 }
 
@@ -189,7 +164,9 @@ function update (time, delta) {
         dir = "up";
         idle = false;
     }
-    if (button_down.isDown) {
+
+    //else here so if player acidently holds up and down they will just go up
+    else if (button_down.isDown) {
         var properties = getTileProperties(player.x,player.y + 45);
         if (!properties.solid)
             player.y += properties.speed != undefined ? properties.speed : speed;
@@ -204,7 +181,9 @@ function update (time, delta) {
         dir = "left";
         idle = false;
     }
-    if (button_right.isDown) {
+
+    //else here so if player acidently holds left and right they will just go left
+    else if (button_right.isDown) {
         var properties = getTileProperties(player.x + 10,player.y + 30);
         if (!properties.solid)
             player.x += properties.speed != undefined ? properties.speed : speed;
