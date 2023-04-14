@@ -13,10 +13,12 @@ var config = {
 };
 
 
-const minSpeed = .5;  // min value a player's speed can get set to if they have multiple slowness effects
-const numPlayers = 4; // number of players to spawn
-const maxDistFromCam = 400; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
-const minCamZoom = 2; // smallest the camera will zoom
+const minSpeed = .5;        // min value a player's speed can get set to if they have multiple slowness effects
+const numPlayers = 4;       // number of players to spawn
+const maxDistFromCam = -1; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
+const minCamZoom = 2;       // smallest the camera will zoom
+const camPadding = 80;      // area between player and edge of screen
+var ratio = .1;
 
 var game = new Phaser.Game(config);
 var map;
@@ -43,9 +45,6 @@ function preload () {
 }
 
 function create () {
-    cam = this.cameras.main;
-    cam.zoomTo(2, 0);
-
     map = this.make.tilemap({ key: 'map' });
     var tileset = map.addTilesetImage('tiles');
     layer_tiles = map.createLayer('Tile Layer 1', tileset, 0, 0);
@@ -62,6 +61,10 @@ function create () {
 
     camera = this.add.image(100, 100, 'camera');
     camera.setScale(0.3);
+
+    cam = this.cameras.main;
+    cam.zoomTo(2, 0);
+    cam.startFollow(camera);
 
     helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
     propertiesText = this.add.text(16, 840, 'Picked: 1', { fontSize: '18px', fill: '#ffffff' });
@@ -177,6 +180,7 @@ function update () {
     var maxX = players[0].player.x;
     var minY = players[0].player.y;
     var maxY = players[0].player.y;
+    var maxDist = 0;
 
     // for each player
     for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
@@ -187,6 +191,7 @@ function update () {
         maxX = Math.max(maxX, p.player.x);
         minY = Math.min(minY, p.player.y);
         maxY = Math.max(maxY, p.player.y);
+        maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p.player.x, p.player.y, camera.x, camera.y));
         
         // #region movement
         // remove this IF statement to let the player walk while attacking
@@ -258,26 +263,43 @@ function update () {
         }
         //#endregion fire
 
+       /*
+        var angle = (Math.atan2(p.player.y - camera.y, p.player.x - camera.x) * 180 / Math.PI);
+        var x = p.player.x + Math.sin(angle) * camPadding;
+        var y = p.player.y + Math.cos(angle) * camPadding;
+
         // player is out of bounds, zoom camera out
-        if (!cam.worldView.contains(p.player.x, p.player.y)) {
+        if (!cam.worldView.contains(x, y)) {
             cam.zoomTo(cam.zoom - 0.01, 0);
-            allInBounds = false;
+            //allInBounds = false;
         }
 
-        // player is near edge, freeze camera size
-        
+        var x2 = p.player.x + Math.sin(angle) * (camPadding + 70);
+        var y2 = p.player.y + Math.cos(angle) * (camPadding + 70);
+
+        if (!cam.worldView.contains(x2, y2)) {
+            allInBounds = false;
+        }
+        */
 
     }
 
     // camera
     camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
-    cam.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
+    //cam.setBounds(minX, minY, Math.abs(maxX - minX), Math.abs(maxY - minY));
+    //cam.setZoom(Math.max(this.scale.width / Math.abs(maxY - minY), this.scale.height / Math.abs(maxX - minX)));
+    
+    const result = ((1 / maxDist) * ratio) + 1;
+    cam.zoomTo(result, 0);
 
+    /*
     if (allInBounds) {
         if (cam.zoom < minCamZoom) {
             cam.zoomTo(cam.zoom + 0.01, 0);
         }
     }
+    */
+    
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
