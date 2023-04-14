@@ -15,7 +15,7 @@ var config = {
 
 const minSpeed = .5;  // min value a player's speed can get set to if they have multiple slowness effects
 const numPlayers = 4; // number of players to spawn
-const maxDistFromCam = 100;
+const maxDistFromCam = 400; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
 
 var game = new Phaser.Game(config);
 var map;
@@ -166,15 +166,19 @@ function create () {
 
 function update () {
 
-    var totalX = 0;
-    var totalY = 0;
+    var minX = players[0].player.x;
+    var maxX = players[0].player.x;
+    var minY = players[0].player.y;
+    var maxY = players[0].player.y;
 
     // for each player
     for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
         var p = players[playerIndex];
 
-        totalX += p.player.x;
-        totalY += p.player.y;
+        minX = Math.min(minX, p.player.x);
+        maxX = Math.max(maxX, p.player.x);
+        minY = Math.min(minY, p.player.y);
+        maxY = Math.max(maxY, p.player.y);
         
         // #region movement
         // remove this IF statement to let the player walk while attacking
@@ -182,34 +186,25 @@ function update () {
             p.idle = true;
         
             if (p.controls.up.isDown) {
-                var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
-                if (!properties.solid)
-                    p.player.y -= properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed
+                p.player.y -= getMoveSpeed(p, 0, -1, 0, 45 - p.speed);
                 p.dir = "up";
                 p.idle = false;
             }
-
             //"else" here so if player acidently holds up and down they will just go up
             else if (p.controls.down.isDown) {
-                var properties = getTileProperties(p.player.x,p.player.y + 45);
-                if (!properties.solid)
-                    p.player.y += properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
+                p.player.y += getMoveSpeed(p, 0, 1, 0, 45);
                 p.dir = "down";
                 p.idle = false;
             }
+
             if (p.controls.left.isDown) {
-                var properties = getTileProperties(p.player.x - 10,p.player.y + 30);
-                if (!properties.solid)
-                    p.player.x -= properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
+                p.player.x -= getMoveSpeed(p, -1, 0, -10, 45);
                 p.dir = "left";
                 p.idle = false;
             }
-
             //"else" here so if player acidently holds left and right they will just go left
             else if (p.controls.right.isDown) {
-                var properties = getTileProperties(p.player.x + 10,p.player.y + 30);
-                if (!properties.solid)
-                    p.player.x += properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
+                p.player.x += getMoveSpeed(p, 1, 0, 10, 45);
                 p.dir = "right";
                 p.idle = false;
             }
@@ -258,7 +253,7 @@ function update () {
     }
 
     // camera
-    camera.setPosition(totalX / numPlayers, totalY / numPlayers);
+    camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
@@ -331,7 +326,7 @@ function update () {
 
 }
 
-// #region tile editor functions
+// #region helper functions
 function printMap() {
     var tiles = []
     map.layers[0].data.forEach(row => {
@@ -351,4 +346,23 @@ function getTileProperties(x,y) {
     }
     return {};
 }
-//#endregion tile editor functions
+
+// get player movement speed
+function getMoveSpeed(p, xMove, yMove, xTileOffset, yTileOffset) {
+
+    // check if player is too far from camera
+    // camera distance disabled when set to -1
+    if (maxDistFromCam != -1) {
+        var dist = Phaser.Math.Distance.Between(p.player.x, p.player.y, camera.x, camera.y);
+        var distIfMove = Phaser.Math.Distance.Between(p.player.x + xMove, p.player.y + yMove, camera.x, camera.y);
+
+        if (dist > maxDistFromCam && distIfMove > dist) return 0;
+    }
+
+    var properties = getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
+    if (properties.solid) return 0;
+    if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
+
+    return p.speed;
+}
+//#endregion helper functions
