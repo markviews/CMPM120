@@ -16,6 +16,7 @@ var config = {
 const minSpeed = .5;  // min value a player's speed can get set to if they have multiple slowness effects
 const numPlayers = 4; // number of players to spawn
 const maxDistFromCam = 400; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
+const minCamZoom = 2; // smallest the camera will zoom
 
 var game = new Phaser.Game(config);
 var map;
@@ -28,6 +29,7 @@ var layer_tiles, layer_tilePicker;
 var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
 var camera;
+var cam;
 
 var players = [];
 
@@ -41,6 +43,9 @@ function preload () {
 }
 
 function create () {
+    cam = this.cameras.main;
+    cam.zoomTo(2, 0);
+
     map = this.make.tilemap({ key: 'map' });
     var tileset = map.addTilesetImage('tiles');
     layer_tiles = map.createLayer('Tile Layer 1', tileset, 0, 0);
@@ -166,6 +171,8 @@ function create () {
 
 function update () {
 
+    // camera variables
+    var allInBounds = true;
     var minX = players[0].player.x;
     var maxX = players[0].player.x;
     var minY = players[0].player.y;
@@ -175,6 +182,7 @@ function update () {
     for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
         var p = players[playerIndex];
 
+        // camera variables
         minX = Math.min(minX, p.player.x);
         maxX = Math.max(maxX, p.player.x);
         minY = Math.min(minY, p.player.y);
@@ -250,10 +258,26 @@ function update () {
         }
         //#endregion fire
 
+        // player is out of bounds, zoom camera out
+        if (!cam.worldView.contains(p.player.x, p.player.y)) {
+            cam.zoomTo(cam.zoom - 0.01, 0);
+            allInBounds = false;
+        }
+
+        // player is near edge, freeze camera size
+        
+
     }
 
     // camera
     camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
+    cam.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
+
+    if (allInBounds) {
+        if (cam.zoom < minCamZoom) {
+            cam.zoomTo(cam.zoom + 0.01, 0);
+        }
+    }
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
