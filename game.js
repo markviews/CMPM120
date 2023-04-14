@@ -12,6 +12,11 @@ var config = {
     }
 };
 
+
+const minSpeed = .5;  // min value a player's speed can get set to if they have multiple slowness effects
+const numPlayers = 4; // number of players to spawn
+const maxDistFromCam = 100;
+
 var game = new Phaser.Game(config);
 var map;
 var mapDisplay;
@@ -22,6 +27,7 @@ var button_edit, button_print, button_up, button_down, button_left, button_right
 var layer_tiles, layer_tilePicker;
 var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
+var camera;
 
 var players = [];
 
@@ -31,6 +37,7 @@ function preload () {
     this.load.image('tiles', 'assets/gridtiles.png');
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('fire', 'assets/red.png');
+    this.load.image('camera', 'assets/camera.png');
 }
 
 function create () {
@@ -47,6 +54,9 @@ function create () {
     marker.strokeRect(0, 0, map.tileWidth, map.tileHeight);
     marker.x = -100;
     marker.y = -100;
+
+    camera = this.add.image(100, 100, 'camera');
+    camera.setScale(0.3);
 
     helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
     propertiesText = this.add.text(16, 840, 'Picked: 1', { fontSize: '18px', fill: '#ffffff' });
@@ -68,10 +78,9 @@ function create () {
     this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
     this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
 
-    for (let playerIndex = 0; playerIndex < 2; playerIndex++) {
-        console.log("Setting up player" + playerIndex);
-
-        players[playerIndex] = { dir: "right", idle: false, fireTick: 0, onFire: false, attacking: false, speed: 3.5 }
+    for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
+        
+        players[playerIndex] = { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
         
         // create player
         players[playerIndex].player = this.add.sprite(600, 370);
@@ -128,25 +137,44 @@ function create () {
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
     }
 
+    if (players[1] != undefined)
     players[1].controls = { 
         up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
     }
+
+    if (players[2] != undefined)
+    players[2].controls = { 
+        up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T),
+        down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G),
+        left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F),
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H)
+    }
+
+    if (players[3] != undefined)
+    players[3].controls = {
+        up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
+        down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
+        left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L)
+    }
     //#endregion player controls
-
-}
-
-function setupPlayer(index) {
 
 }
 
 function update () {
 
+    var totalX = 0;
+    var totalY = 0;
+
     // for each player
     for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
         var p = players[playerIndex];
+
+        totalX += p.player.x;
+        totalY += p.player.y;
         
         // #region movement
         // remove this IF statement to let the player walk while attacking
@@ -156,7 +184,7 @@ function update () {
             if (p.controls.up.isDown) {
                 var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
                 if (!properties.solid)
-                    p.player.y -= properties.speed != undefined ? properties.speed : p.speed
+                    p.player.y -= properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed
                 p.dir = "up";
                 p.idle = false;
             }
@@ -165,14 +193,14 @@ function update () {
             else if (p.controls.down.isDown) {
                 var properties = getTileProperties(p.player.x,p.player.y + 45);
                 if (!properties.solid)
-                    p.player.y += properties.speed != undefined ? properties.speed : p.speed;
+                    p.player.y += properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
                 p.dir = "down";
                 p.idle = false;
             }
             if (p.controls.left.isDown) {
                 var properties = getTileProperties(p.player.x - 10,p.player.y + 30);
                 if (!properties.solid)
-                    p.player.x -= properties.speed != undefined ? properties.speed : p.speed;
+                    p.player.x -= properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
                 p.dir = "left";
                 p.idle = false;
             }
@@ -181,7 +209,7 @@ function update () {
             else if (p.controls.right.isDown) {
                 var properties = getTileProperties(p.player.x + 10,p.player.y + 30);
                 if (!properties.solid)
-                    p.player.x += properties.speed != undefined ? properties.speed : p.speed;
+                    p.player.x += properties.speed != undefined ? Math.max(properties.speed + p.speed, minSpeed) : p.speed;
                 p.dir = "right";
                 p.idle = false;
             }
@@ -228,6 +256,9 @@ function update () {
         //#endregion fire
 
     }
+
+    // camera
+    camera.setPosition(totalX / numPlayers, totalY / numPlayers);
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {

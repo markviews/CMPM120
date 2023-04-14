@@ -1,0 +1,1 @@
+camera.png https://emojipedia.org/camera/

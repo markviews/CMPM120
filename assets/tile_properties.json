@@ -38,8 +38,8 @@
             {
              "41": { "solid": true },
              "26": { "solid": true },
-             "35": { "speed": 1 },
-             "91": { "speed": 6 },
+             "35": { "speed": -2 },
+             "91": { "speed": 2 },
              "106": { "fire": true }
             },
          "tilewidth":32
