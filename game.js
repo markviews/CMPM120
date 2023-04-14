@@ -12,8 +12,6 @@ var config = {
     }
 };
 
-const speed = 3.5;
-
 var game = new Phaser.Game(config);
 var map;
 var mapDisplay;
@@ -24,14 +22,8 @@ var button_edit, button_print, button_up, button_down, button_left, button_right
 var layer_tiles, layer_tilePicker;
 var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
-var fireEmitter;
 
-var player;
-var dir = "right";
-var idle = true;
-var fireTick;
-var onFire = false;
-var attacking = false;
+var players = [];
 
 function preload () {
     this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
@@ -61,23 +53,6 @@ function create () {
 
     button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     button_print = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-    button_up = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-    button_down = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-    button_left = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    button_right = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-
-    // fire
-    var particles = this.add.particles('fire');
-    fireEmitter = particles.createEmitter({
-        x: -100,
-        y: -100,
-        speed: 100,
-        lifespan: 300,
-        alpha: {
-          start: 0.6,
-          end: 0
-        }
-      });
     
     // #region player setup
     
@@ -93,126 +68,166 @@ function create () {
     this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
     this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
 
-    // create player
-    player = this.add.sprite(600, 370);
-    player.setScale(2.5);
-    player.play('walk_right');
-    
-    // attack end event
-    player.on('animationcomplete', function (anim, frame) {
-        if (anim.key.startsWith("attack_")) {
-            attacking = false;
-        }
-    }, player);
+    for (let playerIndex = 0; playerIndex < 2; playerIndex++) {
+        console.log("Setting up player" + playerIndex);
+
+        players[playerIndex] = { dir: "right", idle: false, fireTick: 0, onFire: false, attacking: false, speed: 3.5 }
+        
+        // create player
+        players[playerIndex].player = this.add.sprite(600, 370);
+        players[playerIndex].player.setScale(2.5);
+        players[playerIndex].player.play('walk_right');
+        
+        // attack end event
+        players[playerIndex].player.on('animationcomplete', function (anim, frame) {
+            if (anim.key.startsWith("attack_")) {
+                players[playerIndex].attacking = false;
+            }
+        }, players[playerIndex].player);
+
+    }
 
     //#endregion player setup
 
     // #region player attack
+
     this.input.on('pointerdown', function (pointer) {
+        var p = players[0];
+
+        p.attacking = true;
         var attackDir = "";
 
         // if clicked near player, possibly attack up/down
-        if (Math.abs(pointer.x - player.x) < 80) {
-            if ((pointer.y - player.y) < -12) attackDir = "up";
-            if ((pointer.y - player.y) > 47) attackDir = "down";
+        if (Math.abs(pointer.x - players[0].player.x) < 80) {
+            if ((pointer.y - p.player.y) < -12) attackDir = "up";
+            if ((pointer.y - p.player.y) > 47) attackDir = "down";
         }
 
         // if not attacking up or down, set to left or right
         if (attackDir == "") {
-            if (pointer.x < player.x) attackDir = "left";
+            if (pointer.x < players[0].player.x) attackDir = "left";
             else attackDir = "right";
         }
 
-        // attack
-        attacking = true;
-
-        if (attackDir == "left") player.flipX = true;
-        if (attackDir == "right") player.flipX = false;
-        dir = attackDir;
+        if (attackDir == "left") players[0].player.flipX = true;
+        if (attackDir == "right") players[0].player.flipX = false;
+        p.dir = attackDir;
 
         var anim = `attack_${attackDir == "left" ? "right" : attackDir}`;
-        player.play(anim);
+        p.player.play(anim);
 
     }, this);
     //#endregion player attack
     
+    // #region player controls
+    // controlls
+    players[0].controls = { 
+        up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+        down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+        left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+    }
+
+    players[1].controls = { 
+        up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
+        down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
+        left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
+    }
+    //#endregion player controls
+
+}
+
+function setupPlayer(index) {
+
 }
 
 function update () {
 
-    // #region movement
+    // for each player
+    for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
+        var p = players[playerIndex];
+        
+        // #region movement
+        // remove this IF statement to let the player walk while attacking
+        if (!p.attacking) {
+            p.idle = true;
+        
+            if (p.controls.up.isDown) {
+                var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
+                if (!properties.solid)
+                    p.player.y -= properties.speed != undefined ? properties.speed : p.speed
+                p.dir = "up";
+                p.idle = false;
+            }
 
-    // remove this IF statement to let the player walk while attacking
-    if (!attacking) {
-        idle = true;
-    
-        if (button_up.isDown) {
-            var properties = getTileProperties(player.x,player.y + 30 - speed);
-            if (!properties.solid)
-                player.y -= properties.speed != undefined ? properties.speed : speed
-            dir = "up";
-            idle = false;
+            //"else" here so if player acidently holds up and down they will just go up
+            else if (p.controls.down.isDown) {
+                var properties = getTileProperties(p.player.x,p.player.y + 45);
+                if (!properties.solid)
+                    p.player.y += properties.speed != undefined ? properties.speed : p.speed;
+                p.dir = "down";
+                p.idle = false;
+            }
+            if (p.controls.left.isDown) {
+                var properties = getTileProperties(p.player.x - 10,p.player.y + 30);
+                if (!properties.solid)
+                    p.player.x -= properties.speed != undefined ? properties.speed : p.speed;
+                p.dir = "left";
+                p.idle = false;
+            }
+
+            //"else" here so if player acidently holds left and right they will just go left
+            else if (p.controls.right.isDown) {
+                var properties = getTileProperties(p.player.x + 10,p.player.y + 30);
+                if (!properties.solid)
+                    p.player.x += properties.speed != undefined ? properties.speed : p.speed;
+                p.dir = "right";
+                p.idle = false;
+            }
+        }
+        
+
+        //#endregion movement
+
+        // #region animation
+        // set player animation
+        // replaces "left" dir with "right" animation because it's just mirred right
+        if (!p.attacking) {
+            var anim = `${p.idle ? "idle" : "walk"}_${p.dir == "left" ? "right" : p.dir}`;
+            if (p.player.anims.currentAnim.key != anim) p.player.play(anim);
+
+            if (p.dir == "left") p.player.flipX = true;
+            if (p.dir == "right") p.player.flipX = false;
+        }
+        //#endregion animation
+
+        // #region fire
+        var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
+        if (properties.fire) {
+            p.onFire = true;
+            p.fireTick = Date.now();
+
+
+            if (!p.fireEmitter) {
+                p.fireParticles = this.add.particles('fire');
+                p.fireEmitter = p.fireParticles.createEmitter({ x: p.player.x, y: p.player.y + 30, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
+            }
+
         }
 
-        //"else" here so if player acidently holds up and down they will just go up
-        else if (button_down.isDown) {
-            var properties = getTileProperties(player.x,player.y + 45);
-            if (!properties.solid)
-                player.y += properties.speed != undefined ? properties.speed : speed;
-            dir = "down";
-            idle = false;
-        }
-        if (button_left.isDown) {
-            var properties = getTileProperties(player.x - 10,player.y + 30);
-            if (!properties.solid)
-                player.x -= properties.speed != undefined ? properties.speed : speed;
-            dir = "left";
-            idle = false;
+        if (p.onFire && Date.now() - p.fireTick > 2000) {
+            p.onFire = false;
+            p.fireParticles.destroy()
+            p.fireEmitter = undefined
         }
 
-        //"else" here so if player acidently holds left and right they will just go left
-        else if (button_right.isDown) {
-            var properties = getTileProperties(player.x + 10,player.y + 30);
-            if (!properties.solid)
-                player.x += properties.speed != undefined ? properties.speed : speed;
-            
-            dir = "right";
-            idle = false;
+        if (p.onFire) {
+            p.fireEmitter.setPosition(p.player.x, p.player.y + 30);
         }
+        //#endregion fire
+
     }
-    
-
-    //#endregion movement
-
-    // #region animation
-    // set player animation
-    // replaces "left" dir wsaith "right" animation because it's just mirred right
-    if (!attacking) {
-        var anim = `${idle ? "idle" : "walk"}_${dir == "left" ? "right" : dir}`;
-        if (player.anims.currentAnim.key != anim) player.play(anim);
-
-        if (dir == "left") player.flipX = true;
-        if (dir == "right") player.flipX = false;
-    }
-    
-    //#endregion animation
-
-    // #region fire
-    var properties = getTileProperties(player.x,player.y + 30 - speed);
-    if (properties.fire) {
-        onFire = true;
-        fireTick = Date.now();
-    }
-
-    if (Date.now() - fireTick > 2000) {
-        onFire = false;
-        fireEmitter.setPosition(-100, -100);
-    }
-
-    if (onFire) {
-        fireEmitter.setPosition(player.x, player.y + 30);
-    }
-    //#endregion fire
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
