@@ -41,7 +41,6 @@ function preload () {
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('fire', 'assets/red.png');
     this.load.image('camera', 'assets/camera.png');
-    this.load.image('emoji', 'assets/emoji.png');
 }
 
 function create () {
@@ -90,9 +89,6 @@ function create () {
 
     for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
         players[playerIndex] = { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
-        
-        //players[playerIndex].emoji = this.add.image(100, 100, 'emoji');
-        //players[playerIndex].emoji.setScale(0.05);
 
         // create player
         var x = Phaser.Math.Between(500, 700);
@@ -117,36 +113,6 @@ function create () {
     }
 
     //#endregion player setup
-
-    // #region player attack
-
-    this.input.on('pointerdown', function (pointer) {
-        var p = players[0];
-
-        p.attacking = true;
-        var attackDir = "";
-
-        // if clicked near player, possibly attack up/down
-        if (Math.abs(pointer.x - players[0].player.x) < 80) {
-            if ((pointer.y - p.player.y) < -12) attackDir = "up";
-            if ((pointer.y - p.player.y) > 47) attackDir = "down";
-        }
-
-        // if not attacking up or down, set to left or right
-        if (attackDir == "") {
-            if (pointer.x < players[0].player.x) attackDir = "left";
-            else attackDir = "right";
-        }
-
-        if (attackDir == "left") players[0].player.flipX = true;
-        if (attackDir == "right") players[0].player.flipX = false;
-        p.dir = attackDir;
-
-        var anim = `attack_${attackDir == "left" ? "right" : attackDir}`;
-        p.player.play(anim);
-
-    }, this);
-    //#endregion player attack
     
     // #region player controls
     // controlls
@@ -154,7 +120,8 @@ function create () {
         up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q)
     }
 
     if (players[1] != undefined)
@@ -162,7 +129,8 @@ function create () {
         up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
-        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT)
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE)
     }
 
     if (players[2] != undefined)
@@ -170,7 +138,8 @@ function create () {
         up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T),
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F),
-        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H)
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H),
+        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
     }
 
     if (players[3] != undefined)
@@ -178,7 +147,8 @@ function create () {
         up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
-        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L)
+        right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
+        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U)
     }
     //#endregion player controls
 
@@ -203,6 +173,13 @@ function update () {
         minY = Math.min(minY, p.player.y);
         maxY = Math.max(maxY, p.player.y);
         
+        // mele attack
+        if (Phaser.Input.Keyboard.JustDown(p.controls.attack_mele)) {
+            p.attacking = true;
+            var anim = `attack_${p.dir == "left" ? "right" : p.dir}`;
+            p.player.play(anim);
+        }
+
         // #region movement
         // remove this IF statement to let the player walk while attacking
         if (!p.attacking) {
@@ -277,9 +254,6 @@ function update () {
         var angle = Math.atan2(p.player.x - camera.x, p.player.y - camera.y);
         var x = p.player.x + Math.sin(angle) * camPadding;
         var y = p.player.y + Math.cos(angle) * camPadding;
-
-        // marker for debugging
-        //p.emoji.setPosition(x,y);
 
         // player is out of bounds, zoom camera out
         if (!cam.worldView.contains(x, y)) {
