@@ -18,7 +18,6 @@ const numPlayers = 4;       // number of players to spawn
 const maxDistFromCam = -1; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
 const minCamZoom = 2;       // smallest the camera will zoom
 const camPadding = 80;      // area between player and edge of screen
-var ratio = .1;
 
 var game = new Phaser.Game(config);
 var map;
@@ -42,6 +41,7 @@ function preload () {
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('fire', 'assets/red.png');
     this.load.image('camera', 'assets/camera.png');
+    this.load.image('emoji', 'assets/emoji.png');
 }
 
 function create () {
@@ -61,10 +61,12 @@ function create () {
 
     camera = this.add.image(100, 100, 'camera');
     camera.setScale(0.3);
+    
 
     cam = this.cameras.main;
     cam.zoomTo(2, 0);
     cam.startFollow(camera);
+    cam.setBounds(0,0,layer_tiles.width, layer_tiles.height);
 
     helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
     propertiesText = this.add.text(16, 840, 'Picked: 1', { fontSize: '18px', fill: '#ffffff' });
@@ -87,9 +89,11 @@ function create () {
     this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
 
     for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
-        
         players[playerIndex] = { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
         
+        players[playerIndex].emoji = this.add.image(100, 100, 'emoji');
+        players[playerIndex].emoji.setScale(0.05);
+
         // create player
         players[playerIndex].player = this.add.sprite(600, 370);
         players[playerIndex].player.setScale(2.5);
@@ -263,43 +267,37 @@ function update () {
         }
         //#endregion fire
 
-       /*
-        var angle = (Math.atan2(p.player.y - camera.y, p.player.x - camera.x) * 180 / Math.PI);
+        var angle = Math.atan2(p.player.x - camera.x, p.player.y - camera.y);
         var x = p.player.x + Math.sin(angle) * camPadding;
         var y = p.player.y + Math.cos(angle) * camPadding;
 
+        // marker for debugging
+        p.emoji.setPosition(x,y);
+
         // player is out of bounds, zoom camera out
         if (!cam.worldView.contains(x, y)) {
-            cam.zoomTo(cam.zoom - 0.01, 0);
-            //allInBounds = false;
+            if (cam._bounds.contains(x,y)) {
+                cam.zoomTo(cam.zoom - 0.01, 1);
+                //console.log("zooming out");
+            }
         }
-
-        var x2 = p.player.x + Math.sin(angle) * (camPadding + 70);
-        var y2 = p.player.y + Math.cos(angle) * (camPadding + 70);
-
+        
+        // zoom back in if everyone is away from the edges
+        var x2 = p.player.x + Math.sin(angle) * (camPadding + 10);
+        var y2 = p.player.y + Math.cos(angle) * (camPadding + 10);
         if (!cam.worldView.contains(x2, y2)) {
             allInBounds = false;
         }
-        */
 
     }
 
-    // camera
+    // set position of camera
     camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
-    //cam.setBounds(minX, minY, Math.abs(maxX - minX), Math.abs(maxY - minY));
-    //cam.setZoom(Math.max(this.scale.width / Math.abs(maxY - minY), this.scale.height / Math.abs(maxX - minX)));
     
-    const result = ((1 / maxDist) * ratio) + 1;
-    cam.zoomTo(result, 0);
-
-    /*
-    if (allInBounds) {
-        if (cam.zoom < minCamZoom) {
-            cam.zoomTo(cam.zoom + 0.01, 0);
-        }
+    if (allInBounds && cam.zoom < minCamZoom) {
+        cam.zoomTo(cam.zoom + 0.01, 1);
+        //console.log("zooming in");
     }
-    */
-    
 
     // #region tile editor
     if (Phaser.Input.Keyboard.JustDown(button_print)) {
