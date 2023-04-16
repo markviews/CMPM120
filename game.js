@@ -9,6 +9,12 @@ var config = {
         preload: preload,
         create: create,
         update: update
+    },
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 200 }
+        }
     }
 };
 
@@ -33,6 +39,7 @@ var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
 var camera;
 var cam;
+let projectiles;
 
 var players = [];
 
@@ -43,6 +50,7 @@ function preload () {
     this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
     this.load.image('fire', 'assets/red.png');
     this.load.image('camera', 'assets/camera.png');
+    this.load.image('bullet', 'assets/emoji.png');
 }
 
 function create () {
@@ -75,6 +83,8 @@ function create () {
     button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     button_print = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     
+    projectiles = this.add.group();
+
     // #region player setup
     
     // setup annimations
@@ -123,7 +133,8 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
+        attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)
     }
 
     if (players[1] != undefined)
@@ -132,7 +143,8 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
-        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
+        attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PAGE_DOWN)
     }
 
     if (players[2] != undefined)
@@ -141,7 +153,8 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H),
-        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
+        attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y)
     }
 
     if (players[3] != undefined)
@@ -150,7 +163,8 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
-        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U),
+        attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O)
     }
     //#endregion player controls
 
@@ -180,6 +194,15 @@ function update () {
             p.attacking = true;
             var anim = `attack_${p.dir == "left" ? "right" : p.dir}`;
             p.player.play(anim);
+        }
+
+        // projectile attack
+        if (Phaser.Input.Keyboard.JustDown(p.controls.attack_projectile)) {
+            let mySprite = this.add.sprite(p.player.x, p.player.y + 30, 'bullet');
+            mySprite.setScale(0.05);
+            projectiles.add(mySprite);
+            this.physics.add.existing(mySprite);
+            mySprite.body.setVelocity(1000, 0);
         }
 
         // #region movement
@@ -263,8 +286,8 @@ function update () {
         }
         
         // zoom back in if everyone is away from the edges
-        var x2 = p.player.x + Math.sin(angle) * (camPadding + 20);
-        var y2 = p.player.y + Math.cos(angle) * (camPadding + 20);
+        var x2 = p.player.x + Math.sin(angle) * (camPadding + 30);
+        var y2 = p.player.y + Math.cos(angle) * (camPadding + 30);
         if (!cam.worldView.contains(x2, y2)) {
             outOfBounds++;
         }
