@@ -13,11 +13,13 @@ var config = {
 };
 
 
-const minSpeed = .5;        // min value a player's speed can get set to if they have multiple slowness effects
-const numPlayers = 4;       // number of players to spawn
-const maxDistFromCam = -1;  // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
-const minCamZoom = 2;       // smallest the camera will zoom
-const camPadding = 80;      // area between player and edge of screen
+const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
+const numPlayers = 4;           // number of players to spawn
+const maxDistFromCam = -1;      // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
+const minCamZoom = 2;           // smallest the camera will zoom
+const camPadding = 80;          // area between player and edge of screen
+const freezeMelee = true;       // freeze player movement while using melee attacks
+const freezeProjectile = false; // freeze player movement while using projectile attacks
 
 var game = new Phaser.Game(config);
 var map;
@@ -98,7 +100,7 @@ function create () {
         players[playerIndex].player.play('walk_right');
         
         // random direction
-        const directions = ["up", "down", "left", "right"];
+        const directions = ["down", "left", "right"];
         var randDir = directions[Math.floor(Math.random() * directions.length)]
         players[playerIndex].player.play(`idle_${randDir}`);
         players[playerIndex].dir = randDir;
@@ -121,7 +123,7 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q)
     }
 
     if (players[1] != undefined)
@@ -130,7 +132,7 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
-        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE)
     }
 
     if (players[2] != undefined)
@@ -139,7 +141,7 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H),
-        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R)
     }
 
     if (players[3] != undefined)
@@ -148,7 +150,7 @@ function create () {
         down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
         left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
         right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
-        attack_mele: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U)
+        attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U)
     }
     //#endregion player controls
 
@@ -157,7 +159,7 @@ function create () {
 function update () {
 
     // camera variables
-    var allInBounds = true;
+    var outOfBounds = 0; // number of players out of bounds this frame
     var minX = players[0].player.x;
     var maxX = players[0].player.x;
     var minY = players[0].player.y;
@@ -173,41 +175,38 @@ function update () {
         minY = Math.min(minY, p.player.y);
         maxY = Math.max(maxY, p.player.y);
         
-        // mele attack
-        if (Phaser.Input.Keyboard.JustDown(p.controls.attack_mele)) {
+        // melee attack
+        if (Phaser.Input.Keyboard.JustDown(p.controls.attack_melee)) {
             p.attacking = true;
             var anim = `attack_${p.dir == "left" ? "right" : p.dir}`;
             p.player.play(anim);
         }
 
         // #region movement
-        // remove this IF statement to let the player walk while attacking
-        if (!p.attacking) {
-            p.idle = true;
-        
-            if (p.controls.up.isDown) {
-                p.player.y -= getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
-                p.dir = "up";
-                p.idle = false;
-            }
-            //"else" here so if player acidently holds up and down they will just go up
-            else if (p.controls.down.isDown) {
-                p.player.y += getMoveSpeed(p, 0, 1, 0, 45);
-                p.dir = "down";
-                p.idle = false;
-            }
+        p.idle = true;
+    
+        if (p.controls.up.isDown) {
+            p.player.y -= getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
+            p.dir = "up";
+            p.idle = false;
+        }
+        //"else" here so if player acidently holds up and down they will just go up
+        else if (p.controls.down.isDown) {
+            p.player.y += getMoveSpeed(p, 0, 1, 0, 45);
+            p.dir = "down";
+            p.idle = false;
+        }
 
-            if (p.controls.left.isDown) {
-                p.player.x -= getMoveSpeed(p, -1, 0, -10, 40);
-                p.dir = "left";
-                p.idle = false;
-            }
-            //"else" here so if player acidently holds left and right they will just go left
-            else if (p.controls.right.isDown) {
-                p.player.x += getMoveSpeed(p, 1, 0, 10, 40);
-                p.dir = "right";
-                p.idle = false;
-            }
+        if (p.controls.left.isDown) {
+            p.player.x -= getMoveSpeed(p, -1, 0, -10, 40);
+            p.dir = "left";
+            p.idle = false;
+        }
+        //"else" here so if player acidently holds left and right they will just go left
+        else if (p.controls.right.isDown) {
+            p.player.x += getMoveSpeed(p, 1, 0, 10, 40);
+            p.dir = "right";
+            p.idle = false;
         }
         
 
@@ -267,7 +266,7 @@ function update () {
         var x2 = p.player.x + Math.sin(angle) * (camPadding + 20);
         var y2 = p.player.y + Math.cos(angle) * (camPadding + 20);
         if (!cam.worldView.contains(x2, y2)) {
-            allInBounds = false;
+            outOfBounds++;
         }
         //#endregion check if camera needs to zoom
 
@@ -277,7 +276,7 @@ function update () {
     camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
     
     // zoom camera in if all players are away from edges
-    if (allInBounds && cam.zoom < minCamZoom) {
+    if (outOfBounds <= 1 && cam.zoom < minCamZoom) {
         cam.zoomTo(cam.zoom + 0.01, 1);
         //console.log("zooming in");
     }
@@ -376,6 +375,9 @@ function getTileProperties(x,y) {
 
 // get player movement speed
 function getMoveSpeed(p, xMove, yMove, xTileOffset, yTileOffset) {
+
+    // freeze player if attacking
+    if (freezeMelee && p.attacking) return 0;
 
     // check if player is too far from camera
     // camera distance disabled when set to -1
