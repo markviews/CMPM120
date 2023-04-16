@@ -61,7 +61,7 @@ function create () {
 
     camera = this.add.image(100, 100, 'camera');
     camera.setScale(0.3);
-    
+    camera.visible = false;
 
     cam = this.cameras.main;
     cam.zoomTo(2, 0);
@@ -91,14 +91,22 @@ function create () {
     for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
         players[playerIndex] = { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
         
-        players[playerIndex].emoji = this.add.image(100, 100, 'emoji');
-        players[playerIndex].emoji.setScale(0.05);
+        //players[playerIndex].emoji = this.add.image(100, 100, 'emoji');
+        //players[playerIndex].emoji.setScale(0.05);
 
         // create player
-        players[playerIndex].player = this.add.sprite(600, 370);
+        var x = Phaser.Math.Between(500, 700);
+        var y = Phaser.Math.Between(300, 500);
+        players[playerIndex].player = this.add.sprite(x, y);
         players[playerIndex].player.setScale(2.5);
         players[playerIndex].player.play('walk_right');
         
+        // random direction
+        const directions = ["up", "down", "left", "right"];
+        var randDir = directions[Math.floor(Math.random() * directions.length)]
+        players[playerIndex].player.play(`idle_${randDir}`);
+        players[playerIndex].dir = randDir;
+
         // attack end event
         players[playerIndex].player.on('animationcomplete', function (anim, frame) {
             if (anim.key.startsWith("attack_")) {
@@ -271,7 +279,7 @@ function update () {
         var y = p.player.y + Math.cos(angle) * camPadding;
 
         // marker for debugging
-        p.emoji.setPosition(x,y);
+        //p.emoji.setPosition(x,y);
 
         // player is out of bounds, zoom camera out
         if (!cam.worldView.contains(x, y)) {
@@ -282,8 +290,8 @@ function update () {
         }
         
         // zoom back in if everyone is away from the edges
-        var x2 = p.player.x + Math.sin(angle) * (camPadding + 10);
-        var y2 = p.player.y + Math.cos(angle) * (camPadding + 10);
+        var x2 = p.player.x + Math.sin(angle) * (camPadding + 20);
+        var y2 = p.player.y + Math.cos(angle) * (camPadding + 20);
         if (!cam.worldView.contains(x2, y2)) {
             allInBounds = false;
         }
