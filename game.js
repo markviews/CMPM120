@@ -15,7 +15,7 @@ var config = {
 
 const minSpeed = .5;        // min value a player's speed can get set to if they have multiple slowness effects
 const numPlayers = 4;       // number of players to spawn
-const maxDistFromCam = -1; // max distance any 1 player can travel from the camera (center of the screen) before they "hit an invisible wall"
+const maxDistFromCam = -1;  // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
 const minCamZoom = 2;       // smallest the camera will zoom
 const camPadding = 80;      // area between player and edge of screen
 
@@ -184,7 +184,6 @@ function update () {
     var maxX = players[0].player.x;
     var minY = players[0].player.y;
     var maxY = players[0].player.y;
-    var maxDist = 0;
 
     // for each player
     for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
@@ -195,7 +194,6 @@ function update () {
         maxX = Math.max(maxX, p.player.x);
         minY = Math.min(minY, p.player.y);
         maxY = Math.max(maxY, p.player.y);
-        maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p.player.x, p.player.y, camera.x, camera.y));
         
         // #region movement
         // remove this IF statement to let the player walk while attacking
@@ -203,7 +201,7 @@ function update () {
             p.idle = true;
         
             if (p.controls.up.isDown) {
-                p.player.y -= getMoveSpeed(p, 0, -1, 0, 45 - p.speed);
+                p.player.y -= getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
                 p.dir = "up";
                 p.idle = false;
             }
@@ -215,13 +213,13 @@ function update () {
             }
 
             if (p.controls.left.isDown) {
-                p.player.x -= getMoveSpeed(p, -1, 0, -10, 45);
+                p.player.x -= getMoveSpeed(p, -1, 0, -10, 40);
                 p.dir = "left";
                 p.idle = false;
             }
             //"else" here so if player acidently holds left and right they will just go left
             else if (p.controls.right.isDown) {
-                p.player.x += getMoveSpeed(p, 1, 0, 10, 45);
+                p.player.x += getMoveSpeed(p, 1, 0, 10, 40);
                 p.dir = "right";
                 p.idle = false;
             }
@@ -267,6 +265,7 @@ function update () {
         }
         //#endregion fire
 
+        // #region check if camera needs to zoom
         var angle = Math.atan2(p.player.x - camera.x, p.player.y - camera.y);
         var x = p.player.x + Math.sin(angle) * camPadding;
         var y = p.player.y + Math.cos(angle) * camPadding;
@@ -288,12 +287,14 @@ function update () {
         if (!cam.worldView.contains(x2, y2)) {
             allInBounds = false;
         }
+        //#endregion check if camera needs to zoom
 
     }
 
-    // set position of camera
+    // set camera position
     camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
     
+    // zoom camera in if all players are away from edges
     if (allInBounds && cam.zoom < minCamZoom) {
         cam.zoomTo(cam.zoom + 0.01, 1);
         //console.log("zooming in");
