@@ -18,7 +18,6 @@ var config = {
     }
 };
 
-
 const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
 const numPlayers = 4;           // number of players to spawn
 const maxDistFromCam = -1;      // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
@@ -73,6 +72,7 @@ function create () {
     camera.visible = false;
 
     cam = this.cameras.main;
+    cam.roundPixels = true
     cam.zoomTo(2, 0);
     cam.startFollow(camera);
     cam.setBounds(0,0,layer_tiles.width, layer_tiles.height);
