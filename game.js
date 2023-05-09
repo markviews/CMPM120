@@ -1,29 +1,62 @@
+// global player settings
 const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
 const numPlayers = 4;           // number of players to spawn
-const maxDistFromCam = -1;      // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
-const minCamZoom = 2;           // smallest the camera will zoom
-const camPadding = 80;          // area between player and edge of screen
 const freezeMelee = true;       // freeze player movement while using melee attacks
 const freezeProjectile = false; // freeze player movement while using projectile attacks
 
-var map;
+// global camera settings
+const camMinZoom = 2;           // smallest the camera will zoom
+const camPadding = 80;          // area between player and edge of screen
+
+// global variables
+var players = [];
+
+// map editor variables
+// TODO make these lobal to GameLevel
 var mapDisplay;
-var marker;
 var helpText;
 var propertiesText;
-var button_edit, button_print, button_up, button_down, button_left, button_right;
-var layer_tiles, layer_tilePicker;
+var button_edit, button_print;
+var layer_tilePicker;
 var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
 var tile_painting = 1;
-var camera;
-var cam;
-let projectiles;
-
-var players = [];
 
 class GameLevel extends Phaser.Scene {
     constructor() {
         super('scene1')
+    }
+
+    // get player movement speed
+    getMoveSpeed(p, xMove, yMove, xTileOffset, yTileOffset) {
+
+        // freeze player if attacking
+        if (freezeMelee && p.attacking) return 0;
+
+        var properties = this.getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
+        if (properties.solid) return 0;
+        if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
+
+        return p.speed;
+    }
+
+    getTileProperties(x,y) {
+        var tile = this.layer_tiles.getTileAtWorldXY(x, y, true);
+        if (tile) {
+            var properties = this.layer_tiles.layer.tilemapLayer.tileset[0].tileProperties[tile.index]
+            if (properties)
+                return properties;
+        }
+        return {};
+    }
+
+    printMap() {
+        var tiles = []
+        this.map.layers[0].data.forEach(row => {
+            row.forEach(tile => {
+                tiles.push(tile.index)
+            });
+        });
+        console.log(`[${tiles.toString()}]`)
     }
 
     preload() {
@@ -37,29 +70,29 @@ class GameLevel extends Phaser.Scene {
     }
 
     create() {
-        map = this.make.tilemap({ key: 'map' });
-        var tileset = map.addTilesetImage('tiles');
-        layer_tiles = map.createLayer('Tile Layer 1', tileset, 0, 0);
+        this.map = this.make.tilemap({ key: 'map' });
+        var tileset = this.map.addTilesetImage('tiles');
+        this.layer_tiles = this.map.createLayer('Tile Layer 1', tileset, 0, 0);
     
         mapDisplay = this.make.tilemap({ key: 'mapDisplay' });
         layer_tilePicker = mapDisplay.createLayer('Tile Layer 2', tileset, 0, 0);
         layer_tilePicker.setAlpha(0);
         
-        marker = this.add.graphics();
-        marker.lineStyle(3, 0xffffff, 1);
-        marker.strokeRect(0, 0, map.tileWidth, map.tileHeight);
-        marker.x = -100;
-        marker.y = -100;
+        this.marker = this.add.graphics();
+        this.marker.lineStyle(3, 0xffffff, 1);
+        this.marker.strokeRect(0, 0, this.map.tileWidth, this.map.tileHeight);
+        this.marker.x = -100;
+        this.marker.y = -100;
+        
+        // a camera object used to keep track of center camera position
+        this.camera = this.add.image(100, 100, 'camera');
+        this.camera.setScale(0.3);
+        this.camera.visible = false;
     
-        camera = this.add.image(100, 100, 'camera');
-        camera.setScale(0.3);
-        camera.visible = false;
-    
-        cam = this.cameras.main;
-        cam.roundPixels = true
-        cam.zoomTo(2, 0);
-        cam.startFollow(camera);
-        cam.setBounds(0,0,layer_tiles.width, layer_tiles.height);
+        this.cameras.main.roundPixels = true
+        this.cameras.main.zoomTo(2, 0);
+        this.cameras.main.startFollow(this.camera);
+        this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
     
         helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
         propertiesText = this.add.text(16, 840, 'Picked: 1', { fontSize: '18px', fill: '#ffffff' });
@@ -67,7 +100,7 @@ class GameLevel extends Phaser.Scene {
         button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
         button_print = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         
-        projectiles = this.add.group();
+        this.projectiles = this.add.group();
     
         // #region player setup
         
@@ -182,7 +215,7 @@ class GameLevel extends Phaser.Scene {
             if (Phaser.Input.Keyboard.JustDown(p.controls.attack_projectile)) {
                 let mySprite = this.add.sprite(p.player.x, p.player.y + 30, 'bullet');
                 mySprite.setScale(0.05);
-                projectiles.add(mySprite);
+                this.projectiles.add(mySprite);
                 this.physics.add.existing(mySprite);
                 mySprite.body.setVelocity(1000, 0);
             }
@@ -191,25 +224,25 @@ class GameLevel extends Phaser.Scene {
             p.idle = true;
         
             if (p.controls.up.isDown) {
-                p.player.y -= getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
+                p.player.y -= this.getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
                 p.dir = "up";
                 p.idle = false;
             }
             //"else" here so if player acidently holds up and down they will just go up
             else if (p.controls.down.isDown) {
-                p.player.y += getMoveSpeed(p, 0, 1, 0, 45);
+                p.player.y += this.getMoveSpeed(p, 0, 1, 0, 45);
                 p.dir = "down";
                 p.idle = false;
             }
 
             if (p.controls.left.isDown) {
-                p.player.x -= getMoveSpeed(p, -1, 0, -10, 40);
+                p.player.x -= this.getMoveSpeed(p, -1, 0, -10, 40);
                 p.dir = "left";
                 p.idle = false;
             }
             //"else" here so if player acidently holds left and right they will just go left
             else if (p.controls.right.isDown) {
-                p.player.x += getMoveSpeed(p, 1, 0, 10, 40);
+                p.player.x += this.getMoveSpeed(p, 1, 0, 10, 40);
                 p.dir = "right";
                 p.idle = false;
             }
@@ -230,7 +263,7 @@ class GameLevel extends Phaser.Scene {
             //#endregion animation
 
             // #region fire
-            var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
+            var properties = this.getTileProperties(p.player.x,p.player.y + 30 - p.speed);
             if (properties.fire) {
                 p.onFire = true;
                 p.fireTick = Date.now();
@@ -255,15 +288,14 @@ class GameLevel extends Phaser.Scene {
             //#endregion fire
 
             // #region check if camera needs to zoom
-            /*
-            var angle = Math.atan2(p.player.x - camera.x, p.player.y - camera.y);
+            var angle = Math.atan2(p.player.x - this.camera.x, p.player.y - this.camera.y);
             var x = p.player.x + Math.sin(angle) * camPadding;
             var y = p.player.y + Math.cos(angle) * camPadding;
 
             // player is out of bounds, zoom camera out
-            if (!cam.worldView.contains(x, y)) {
-                if (cam._bounds.contains(x,y)) {
-                    cam.zoomTo(cam.zoom - 0.01, 1);
+            if (!this.cameras.main.worldView.contains(x, y)) {
+                if (this.cameras.main._bounds.contains(x,y)) {
+                    this.cameras.main.zoomTo(this.cameras.main.zoom - 0.01, 1);
                     //console.log("zooming out");
                 }
             }
@@ -271,26 +303,32 @@ class GameLevel extends Phaser.Scene {
             // zoom back in if everyone is away from the edges
             var x2 = p.player.x + Math.sin(angle) * (camPadding + 30);
             var y2 = p.player.y + Math.cos(angle) * (camPadding + 30);
-            if (!cam.worldView.contains(x2, y2)) {
+            if (!this.cameras.main.worldView.contains(x2, y2)) {
                 outOfBounds++;
             }
-            */
             //#endregion check if camera needs to zoom
 
         }
 
-        // set camera position
-        camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
-        
-        // zoom camera in if all players are away from edges
-        if (outOfBounds <= 1 && cam.zoom < minCamZoom) {
-            cam.zoomTo(cam.zoom + 0.01, 1);
-            //console.log("zooming in");
+        if (editMode == 0) {
+            // normal camera movement
+            // set camera position
+            this.camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
+            
+            // zoom camera in if all players are away from edges
+            if (outOfBounds <= 1 && this.cameras.main.zoom < camMinZoom) {
+                this.cameras.main.zoomTo(this.cameras.main.zoom + 0.01, 1);
+                //console.log("zooming in");
+            }
+        } else {
+            // zoom out in edit mode
+            this.cameras.main.zoomTo(1);
         }
 
         // #region tile editor
+
         if (Phaser.Input.Keyboard.JustDown(button_print)) {
-            printMap();
+            this.printMap();
         }
 
         if (Phaser.Input.Keyboard.JustDown(button_edit)) {
@@ -301,8 +339,8 @@ class GameLevel extends Phaser.Scene {
             switch(editMode) {
                 case 0:
                     helpText.setText('EditMode: Not editing');
-                    marker.x = -100;
-                    marker.y = -100;
+                    this.marker.x = -100;
+                    this.marker.y = -100;
                 break;
                 case 1:
                     helpText.setText('EditMode: Pick Block');
@@ -321,12 +359,12 @@ class GameLevel extends Phaser.Scene {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
 
             // Rounds down to nearest tile
-            var pointerTileX = map.worldToTileX(worldPoint.x);
-            var pointerTileY = map.worldToTileY(worldPoint.y);
+            var pointerTileX = this.map.worldToTileX(worldPoint.x);
+            var pointerTileY = this.map.worldToTileY(worldPoint.y);
 
             // Snap to tile coordinates, but in world space
-            marker.x = map.tileToWorldX(pointerTileX);
-            marker.y = map.tileToWorldY(pointerTileY);
+            this.marker.x = this.map.tileToWorldX(pointerTileX);
+            this.marker.y = this.map.tileToWorldY(pointerTileY);
         }
 
         //mouse click event
@@ -344,7 +382,7 @@ class GameLevel extends Phaser.Scene {
                     }
                 break;
                 case 2:
-                    var tile = map.getTileAt(pointerTileX, pointerTileY);
+                    var tile = this.map.getTileAt(pointerTileX, pointerTileY);
 
                     if (tile) {
                         tile.index = tile_painting;
@@ -358,50 +396,6 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
-
-// #region helper functions
-function printMap() {
-    var tiles = []
-    map.layers[0].data.forEach(row => {
-        row.forEach(tile => {
-            tiles.push(tile.index)
-        });
-    });
-    console.log(`[${tiles.toString()}]`)
-}
-
-function getTileProperties(x,y) {
-    var tile = layer_tiles.getTileAtWorldXY(x, y, true);
-    if (tile) {
-        var properties = layer_tiles.layer.tilemapLayer.tileset[0].tileProperties[tile.index]
-        if (properties)
-            return properties;
-    }
-    return {};
-}
-
-// get player movement speed
-function getMoveSpeed(p, xMove, yMove, xTileOffset, yTileOffset) {
-
-    // freeze player if attacking
-    if (freezeMelee && p.attacking) return 0;
-
-    // check if player is too far from camera
-    // camera distance disabled when set to -1
-    if (maxDistFromCam != -1) {
-        var dist = Phaser.Math.Distance.Between(p.player.x, p.player.y, camera.x, camera.y);
-        var distIfMove = Phaser.Math.Distance.Between(p.player.x + xMove, p.player.y + yMove, camera.x, camera.y);
-
-        if (dist > maxDistFromCam && distIfMove > dist) return 0;
-    }
-
-    var properties = getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
-    if (properties.solid) return 0;
-    if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
-
-    return p.speed;
-}
-//#endregion helper functions
 
 var config = {
     type: Phaser.AUTO,
