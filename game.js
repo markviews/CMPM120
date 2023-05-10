@@ -1,73 +1,118 @@
+// global settings
 const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
-const numPlayers = 4;           // number of players to spawn
-const maxDistFromCam = -1;      // max distance any player can travel from the camera (center of the screen) before they "hit an invisible wall"
-const minCamZoom = 2;           // smallest the camera will zoom
-const camPadding = 80;          // area between player and edge of screen
 const freezeMelee = true;       // freeze player movement while using melee attacks
 const freezeProjectile = false; // freeze player movement while using projectile attacks
+const camMinZoom = 2;           // smallest the camera will zoom
+const camPadding = 80;          // area between player and edge of screen
+const itemScale = 1.5;          // scale of items
+const itemsGrid = true;         // items snap to grid when placed
 
-var map;
-var mapDisplay;
-var marker;
-var helpText;
-var propertiesText;
-var button_edit, button_print, button_up, button_down, button_left, button_right;
-var layer_tiles, layer_tilePicker;
-var editMode = 0; //0 = not editing, 1 = choose block, 2 = paint
-var tile_painting = 1;
-var camera;
-var cam;
-let projectiles;
-
-var players = [];
+// global variables
+var players = [
+    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5,  },
+    /* { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 } */
+];
 
 class GameLevel extends Phaser.Scene {
     constructor() {
-        super('scene1')
+        super('gamelevel')
+    }
+
+    init (data) {
+        //console.log(data);
+        this.level = data.level;
+    }
+
+    // get player movement speed
+    getMoveSpeed(p, xTileOffset, yTileOffset) {
+
+        // freeze player if attacking
+        if (freezeMelee && p.attacking) return 0;
+
+        var properties = this.getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
+        if (properties.solid) return 0;
+        if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
+
+        return p.speed;
+    }
+
+    getTileProperties(x,y) {
+        var tile = this.layer_tiles.getTileAtWorldXY(x, y, true);
+        if (tile && tile.properties) {
+            return tile.properties;
+        }
+        return {};
+    }
+
+    printMap() {
+        // print tiles
+        var tiles = []
+        this.map.layers[this.layer_tiles.layerIndex].data.forEach(row => {
+            row.forEach(tile => {
+                tiles.push(tile.index)
+            });
+        });
+        console.log(`[${tiles.toString()}]`)
+
+        // print items
+        let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
+        console.log(JSON.stringify(properties))
     }
 
     preload() {
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
-        this.load.tilemapTiledJSON('mapDisplay', 'assets/tile_display.json');
         this.load.image('tiles', 'assets/gridtiles.png');
         this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
         this.load.image('fire', 'assets/red.png');
-        this.load.image('camera', 'assets/camera.png');
         this.load.image('bullet', 'assets/emoji.png');
+        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 32 });
+        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);  
     }
 
     create() {
-        map = this.make.tilemap({ key: 'map' });
-        var tileset = map.addTilesetImage('tiles');
-        layer_tiles = map.createLayer('Tile Layer 1', tileset, 0, 0);
+        window.inst = this;
+
+        this.map = this.make.tilemap({ key: 'map' });
+        var tileset = this.map.addTilesetImage('tiles');
+        this.layer_tiles = this.map.createLayer(this.level, tileset, 0, 0);
+
+        // set tile properties
+        this.layer_tiles.forEachTile(function (tile) {
+            var properties = this.map.tilesets[0].tileProperties[tile.index];
+            tile.properties = properties;
+        }, this);
+
+        // load items
+        let items = this.map.layers[this.layer_tiles.layerIndex].properties.items;
+        items.forEach(item => {
+            var item = this.add.image(item.x, item.y, 'items',  item.index);
+            item.setOrigin(0.5, 0.5);
+            item.setScale(itemScale);
+        });
+
+        // a camera object used to keep track of center camera position
+        this.camera = this.add.image(100, 100);
+        this.camera.visible = false;
     
-        mapDisplay = this.make.tilemap({ key: 'mapDisplay' });
-        layer_tilePicker = mapDisplay.createLayer('Tile Layer 2', tileset, 0, 0);
-        layer_tilePicker.setAlpha(0);
+        this.cameras.main.roundPixels = true;
+        this.cameras.main.zoomTo(2, 0);
+        this.cameras.main.startFollow(this.camera);
+        this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
         
-        marker = this.add.graphics();
-        marker.lineStyle(3, 0xffffff, 1);
-        marker.strokeRect(0, 0, map.tileWidth, map.tileHeight);
-        marker.x = -100;
-        marker.y = -100;
-    
-        camera = this.add.image(100, 100, 'camera');
-        camera.setScale(0.3);
-        camera.visible = false;
-    
-        cam = this.cameras.main;
-        cam.roundPixels = true
-        cam.zoomTo(2, 0);
-        cam.startFollow(camera);
-        cam.setBounds(0,0,layer_tiles.width, layer_tiles.height);
-    
-        helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
-        propertiesText = this.add.text(16, 840, 'Picked: 1', { fontSize: '18px', fill: '#ffffff' });
-    
-        button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-        button_print = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
-        
-        projectiles = this.add.group();
+        this.projectiles = this.add.group();
+
+         // task progress bar
+         this.circularProgress = this.add.rexCircularProgress({
+            x: 0, y: 0,
+            radius: 20,
+            trackColor: 0x260e04,
+            barColor: 0x7b5e57,
+            //centerColor: 0x4e342e,
+            anticlockwise: false,
+            value: 0,
+        })
+        this.circularProgress.setOrigin(0.5, 0.5);
+        this.circularProgress.visible = false;
     
         // #region player setup
         
@@ -82,30 +127,25 @@ class GameLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }), frameRate: 10 });
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
-    
-        for (let playerIndex = 0; playerIndex < numPlayers; playerIndex++) {
-            players[playerIndex] = { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
-    
-            // create player
-            var x = Phaser.Math.Between(500, 700);
-            var y = Phaser.Math.Between(300, 500);
-            players[playerIndex].player = this.add.sprite(x, y);
-            players[playerIndex].player.setScale(2.5);
-            players[playerIndex].player.play('walk_right');
+
+        // setup players
+        for (var p of players) {
+            p.player = this.add.sprite(Phaser.Math.Between(500, 700), Phaser.Math.Between(300, 500));
+            p.player.setScale(2.5);
+            p.player.play('walk_right');
             
             // random direction
             const directions = ["down", "left", "right"];
-            var randDir = directions[Math.floor(Math.random() * directions.length)]
-            players[playerIndex].player.play(`idle_${randDir}`);
-            players[playerIndex].dir = randDir;
-    
+            p.dir = directions[Math.floor(Math.random() * directions.length)]
+            p.player.play(`idle_${p.dir}`);
+            
             // attack end event
-            players[playerIndex].player.on('animationcomplete', function (anim, frame) {
+            p.player.on('animationcomplete', function (anim, frame) {
                 if (anim.key.startsWith("attack_")) {
-                    players[playerIndex].attacking = false;
+                    p.attacking = false;
                 }
-            }, players[playerIndex].player);
-    
+            }, p.player);
+
         }
     
         //#endregion player setup
@@ -130,27 +170,98 @@ class GameLevel extends Phaser.Scene {
             attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
             attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PAGE_DOWN)
         }
-    
-        if (players[2] != undefined)
-        players[2].controls = { 
-            up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.T),
-            down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.G),
-            left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F),
-            right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.H),
-            attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.R),
-            attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Y)
-        }
-    
-        if (players[3] != undefined)
-        players[3].controls = {
-            up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I),
-            down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.K),
-            left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J),
-            right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.L),
-            attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.U),
-            attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.O)
-        }
-        //#endregion player controls    
+        //#endregion player controls
+
+        // #region map editor
+        this.editMode = 0;
+        this.tile_painting = 1;
+        this.mapDisplay = this.make.tilemap({ key: 'map' });
+        this.layer_tilePicker = this.mapDisplay.createLayer('display', tileset, 0, 0);
+        this.layer_tilePicker.setAlpha(0);
+
+        this.marker = this.add.graphics();
+        this.marker.lineStyle(3, 0xffffff, 1);
+        this.marker.strokeRect(0, 0, this.map.tileWidth, this.map.tileHeight);
+        this.marker.x = -100;
+        this.marker.y = -100;
+
+        this.helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
+        this.propertiesText = this.add.text(16, 840, 'Picked Tile: 1', { fontSize: '18px', fill: '#ffffff' });
+
+        this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        
+        //mouse click event
+        this.input.on('pointerdown', () => {
+            var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
+            var x = this.map.worldToTileX(worldPoint.x);
+            var y = this.map.worldToTileY(worldPoint.y);
+
+            switch(this.editMode) {
+                case 0:
+                break;
+                case 1:
+                    var tile = this.mapDisplay.getTileAt(x, y);
+                    if (tile) {
+                        this.tile_painting = tile.index;
+                        this.propertiesText.setText('Picked Tile: ' + this.tile_painting);
+                    } else {
+
+                        // clicked button to choose item to place
+                        if (x == 0 && y == 10) {
+                            let input = prompt("Enter item ID to place", "1");
+
+                            if (isNaN(input)) {
+                                alert(input + ' is not a valid item ID')
+                            } else {
+                                this.placeItem = parseInt(input);
+                                this.propertiesText.setText('Picked Item: ' + this.placeItem);
+                            }
+                            
+                            break;
+                        }
+
+                        // clicked button to print map
+                        if (x == 1 && y == 10) {
+                            this.printMap();
+                            break;
+                        }
+
+                        console.log(x, y)
+
+                    }
+                break;
+                case 2:
+                    if (this.placeItem != undefined) {
+                        // place item
+                        if (itemsGrid) {
+                            x = this.map.tileToWorldX(x) + this.map.tileWidth / 2;
+                            y = this.map.tileToWorldY(y) + 5;
+                        } else {
+                            x = worldPoint.x;
+                            y = worldPoint.y;
+                        }
+
+                        var item = this.add.image(x, y, 'items',  this.placeItem);
+                        item.setScale(itemScale);
+                        item.setOrigin(0.5, 0.5);
+                        this.map.layers[this.layer_tiles.layerIndex].properties.items.push({x: x, y: y, index: this.placeItem});
+                    } else {
+                        // place tile
+                        var tile = this.map.getTileAt(x, y);
+                        if (!tile) break;
+                        
+                        tile.index = this.tile_painting;
+                        
+                        // set default properties
+                        var properties = this.map.tilesets[0].tileProperties[tile.index];
+                        tile.properties = properties;
+                    }
+                break;
+            }
+
+        });
+        // #endregion map editor
+
     }
 
     update() {
@@ -161,9 +272,7 @@ class GameLevel extends Phaser.Scene {
         var minY = players[0].player.y;
         var maxY = players[0].player.y;
 
-        // for each player
-        for (let playerIndex = 0; playerIndex < players.length; playerIndex++) {
-            var p = players[playerIndex];
+        for (var p of players) {
 
             // camera variables
             minX = Math.min(minX, p.player.x);
@@ -182,34 +291,34 @@ class GameLevel extends Phaser.Scene {
             if (Phaser.Input.Keyboard.JustDown(p.controls.attack_projectile)) {
                 let mySprite = this.add.sprite(p.player.x, p.player.y + 30, 'bullet');
                 mySprite.setScale(0.05);
-                projectiles.add(mySprite);
+                this.projectiles.add(mySprite);
                 this.physics.add.existing(mySprite);
                 mySprite.body.setVelocity(1000, 0);
             }
-
+            
             // #region movement
             p.idle = true;
         
             if (p.controls.up.isDown) {
-                p.player.y -= getMoveSpeed(p, 0, -1, 0, 40 - p.speed);
+                p.player.y -= this.getMoveSpeed(p, 0, 40 - p.speed);
                 p.dir = "up";
                 p.idle = false;
             }
             //"else" here so if player acidently holds up and down they will just go up
             else if (p.controls.down.isDown) {
-                p.player.y += getMoveSpeed(p, 0, 1, 0, 45);
+                p.player.y += this.getMoveSpeed(p, 0, 45);
                 p.dir = "down";
                 p.idle = false;
             }
 
             if (p.controls.left.isDown) {
-                p.player.x -= getMoveSpeed(p, -1, 0, -10, 40);
+                p.player.x -= this.getMoveSpeed(p, -10, 40);
                 p.dir = "left";
                 p.idle = false;
             }
             //"else" here so if player acidently holds left and right they will just go left
             else if (p.controls.right.isDown) {
-                p.player.x += getMoveSpeed(p, 1, 0, 10, 40);
+                p.player.x += this.getMoveSpeed(p, 10, 40);
                 p.dir = "right";
                 p.idle = false;
             }
@@ -230,12 +339,11 @@ class GameLevel extends Phaser.Scene {
             //#endregion animation
 
             // #region fire
-            var properties = getTileProperties(p.player.x,p.player.y + 30 - p.speed);
+            var properties = this.getTileProperties(p.player.x,p.player.y + 30 - p.speed);
             if (properties.fire) {
                 p.onFire = true;
                 p.fireTick = Date.now();
-
-
+                
                 if (!p.fireEmitter) {
                     p.fireParticles = this.add.particles('fire');
                     p.fireEmitter = p.fireParticles.createEmitter({ x: p.player.x, y: p.player.y + 30, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
@@ -254,16 +362,54 @@ class GameLevel extends Phaser.Scene {
             }
             //#endregion fire
 
+            // #region door
+
+            if (properties.door) {
+
+                if (!(this.progress && this.progress.isPlaying())) {
+
+                    // move this.circularProgress to front
+                    this.children.bringToTop(this.circularProgress);
+
+                    this.circularProgress.setPosition(p.player.x, p.player.y);
+                    this.circularProgress.visible = true;
+                    this.progress = this.tweens.add({
+                        targets: this.circularProgress,
+                        value: 1,
+                        duration: Phaser.Math.Between(2000, 4000),
+                        ease: 'Linear ',
+                        callbackScope: this,
+                        onComplete: function () {
+                            this.circularProgress.visible = false;
+                            this.circularProgress.value = 0;
+                            this.scene.start('gamelevel', { level: 'level2' });
+                        }
+                    });
+
+                }
+
+            } else {
+
+                // stop progress bar if player is not on task tile
+                if (this.progress && this.progress.isPlaying()) {
+                    this.progress.pause();
+                    this.circularProgress.value = 0;
+                    this.circularProgress.visible = false;
+                }
+                
+            }
+
+            // #endregion door
+
             // #region check if camera needs to zoom
-            /*
-            var angle = Math.atan2(p.player.x - camera.x, p.player.y - camera.y);
+            var angle = Math.atan2(p.player.x - this.camera.x, p.player.y - this.camera.y);
             var x = p.player.x + Math.sin(angle) * camPadding;
             var y = p.player.y + Math.cos(angle) * camPadding;
 
             // player is out of bounds, zoom camera out
-            if (!cam.worldView.contains(x, y)) {
-                if (cam._bounds.contains(x,y)) {
-                    cam.zoomTo(cam.zoom - 0.01, 1);
+            if (!this.cameras.main.worldView.contains(x, y)) {
+                if (this.cameras.main._bounds.contains(x,y)) {
+                    this.cameras.main.zoomTo(this.cameras.main.zoom - 0.01, 1);
                     //console.log("zooming out");
                 }
             }
@@ -271,137 +417,69 @@ class GameLevel extends Phaser.Scene {
             // zoom back in if everyone is away from the edges
             var x2 = p.player.x + Math.sin(angle) * (camPadding + 30);
             var y2 = p.player.y + Math.cos(angle) * (camPadding + 30);
-            if (!cam.worldView.contains(x2, y2)) {
+            if (!this.cameras.main.worldView.contains(x2, y2)) {
                 outOfBounds++;
             }
-            */
             //#endregion check if camera needs to zoom
 
         }
 
-        // set camera position
-        camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
-        
-        // zoom camera in if all players are away from edges
-        if (outOfBounds <= 1 && cam.zoom < minCamZoom) {
-            cam.zoomTo(cam.zoom + 0.01, 1);
-            //console.log("zooming in");
+        if (this.editMode == 0) {
+            // normal camera movement
+            this.camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
+            
+            // zoom camera in if all players are away from edges
+            if (outOfBounds <= 1 && this.cameras.main.zoom < camMinZoom) {
+                this.cameras.main.zoomTo(this.cameras.main.zoom + 0.01, 1);
+            }
+        } else {
+            // zoom out in edit mode
+            this.cameras.main.zoomTo(1);
         }
 
         // #region tile editor
-        if (Phaser.Input.Keyboard.JustDown(button_print)) {
-            printMap();
-        }
 
-        if (Phaser.Input.Keyboard.JustDown(button_edit)) {
-            editMode += 1
-            if (editMode > 2) editMode = 0;
+        if (Phaser.Input.Keyboard.JustDown(this.button_edit)) {
+            this.editMode += 1
+            if (this.editMode > 2) this.editMode = 0;
             
-
-            switch(editMode) {
+            //0 = not editing, 1 = choose block, 2 = paint
+            switch(this.editMode) {
                 case 0:
-                    helpText.setText('EditMode: Not editing');
-                    marker.x = -100;
-                    marker.y = -100;
+                    this.placeItem = undefined;
+                    this.helpText.setText('EditMode: Not editing');
+                    this.marker.x = -100;
+                    this.marker.y = -100;
                 break;
                 case 1:
-                    helpText.setText('EditMode: Pick Block');
-                    layer_tilePicker.setAlpha(1);
+                    this.helpText.setText('EditMode: Pick Block');
+                    this.layer_tilePicker.setAlpha(1);
                 break;
                 case 2:
-                    helpText.setText('EditMode: Painting');
-                    layer_tilePicker.setAlpha(0);
+                    if (this.placeItem != undefined) {
+                        this.helpText.setText('EditMode: Painting Item');
+                    } else {
+                        this.helpText.setText('EditMode: Painting Tile');
+                    }
+
+                    this.layer_tilePicker.setAlpha(0);
                 break;
             }
             
         }
 
         //block selector
-        if (editMode != 0) {
+        if (this.editMode != 0) {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
-
-            // Rounds down to nearest tile
-            var pointerTileX = map.worldToTileX(worldPoint.x);
-            var pointerTileY = map.worldToTileY(worldPoint.y);
-
-            // Snap to tile coordinates, but in world space
-            marker.x = map.tileToWorldX(pointerTileX);
-            marker.y = map.tileToWorldY(pointerTileY);
+            var pointerTileX = this.map.worldToTileX(worldPoint.x);
+            var pointerTileY = this.map.worldToTileY(worldPoint.y);
+            this.marker.x = this.map.tileToWorldX(pointerTileX);
+            this.marker.y = this.map.tileToWorldY(pointerTileY);
         }
 
-        //mouse click event
-        if (this.input.manager.activePointer.isDown) {
-
-            switch(editMode) {
-                case 0:
-                break;
-                case 1:
-                    var tile = mapDisplay.getTileAt(pointerTileX, pointerTileY);
-
-                    if (tile) {
-                        tile_painting = tile.index;
-                        propertiesText.setText('Picked: ' + tile_painting);
-                    }
-                break;
-                case 2:
-                    var tile = map.getTileAt(pointerTileX, pointerTileY);
-
-                    if (tile) {
-                        tile.index = tile_painting;
-                        //propertiesText.setText('Properties: ' + JSON.stringify(tile.properties));
-                        //tile.properties.viewed = true;
-                    }
-                break;
-            }
-
-        }
         //#endregion tile editor
     }
 }
-
-// #region helper functions
-function printMap() {
-    var tiles = []
-    map.layers[0].data.forEach(row => {
-        row.forEach(tile => {
-            tiles.push(tile.index)
-        });
-    });
-    console.log(`[${tiles.toString()}]`)
-}
-
-function getTileProperties(x,y) {
-    var tile = layer_tiles.getTileAtWorldXY(x, y, true);
-    if (tile) {
-        var properties = layer_tiles.layer.tilemapLayer.tileset[0].tileProperties[tile.index]
-        if (properties)
-            return properties;
-    }
-    return {};
-}
-
-// get player movement speed
-function getMoveSpeed(p, xMove, yMove, xTileOffset, yTileOffset) {
-
-    // freeze player if attacking
-    if (freezeMelee && p.attacking) return 0;
-
-    // check if player is too far from camera
-    // camera distance disabled when set to -1
-    if (maxDistFromCam != -1) {
-        var dist = Phaser.Math.Distance.Between(p.player.x, p.player.y, camera.x, camera.y);
-        var distIfMove = Phaser.Math.Distance.Between(p.player.x + xMove, p.player.y + yMove, camera.x, camera.y);
-
-        if (dist > maxDistFromCam && distIfMove > dist) return 0;
-    }
-
-    var properties = getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
-    if (properties.solid) return 0;
-    if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
-
-    return p.speed;
-}
-//#endregion helper functions
 
 var config = {
     type: Phaser.AUTO,
