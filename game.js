@@ -9,8 +9,8 @@ const itemsGrid = true;         // items snap to grid when placed
 
 // global variables
 var players = [
-    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5,  },
-     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
+    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 },
+    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
 ];
 
 class GameLevel extends Phaser.Scene {
@@ -65,7 +65,7 @@ class GameLevel extends Phaser.Scene {
         this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
-        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 32 });
+        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);  
     }
 
@@ -82,12 +82,18 @@ class GameLevel extends Phaser.Scene {
             tile.properties = properties;
         }, this);
 
+        // make physics group for items
+        this.items = this.physics.add.group();
+
         // load items
-        let items = this.map.layers[this.layer_tiles.layerIndex].properties.items;
-        items.forEach(item => {
-            var item = this.add.image(item.x, item.y, 'items',  item.index);
+        let loadItems = this.map.layers[this.layer_tiles.layerIndex].properties.items;
+        loadItems.forEach(item => {
+            var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
             item.setOrigin(0.5, 0.5);
             item.setScale(itemScale);
+
+            // add item to group
+            this.items.add(item);
         });
 
         // a camera object used to keep track of center camera position
@@ -113,6 +119,30 @@ class GameLevel extends Phaser.Scene {
         })
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
+
+        // collide event
+        this.physics.world.on('collide', (gameObject1, gameObject2, body1, body2) => {
+            var playerID = gameObject1.id;
+            var itemID = gameObject2.frame.name;
+            console.log(`player ${playerID} collided with item ID: ${itemID}`)
+
+            this.items.remove(gameObject2);
+
+            // tween item twards player, make smaller, fade out, then destroy
+            // a cool effect would be the item dragging twards the player as it fades. I couldn't figure that out yet
+            this.tweens.add({
+                targets: gameObject2,
+                scaleX: 0,
+                scaleY: 0,
+                alpha: 0,
+                duration: 1000,
+                ease: 'Power2',
+                onComplete: () => {
+                    gameObject2.destroy();
+                }
+            });
+
+        });
     
         // #region player setup
         
@@ -128,11 +158,22 @@ class GameLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
 
+        let index = 1;
         // setup players
-        for (var p of players) {
+        for (var i in players) {
+            let p = players[i];
+            
             p.player = this.add.sprite(Phaser.Math.Between(500, 700), Phaser.Math.Between(300, 500));
             p.player.setScale(2.5);
             p.player.play('walk_right');
+            p.player.id = index++;
+
+            // enable physics
+            this.physics.world.enable(p.player);
+            p.player.body.onCollide = true;
+            p.player.body.setSize(15, 20);
+            p.player.body.setOffset(17, 22);
+            this.physics.add.collider(p.player, this.items);
             
             // random direction
             const directions = ["down", "left", "right"];
@@ -143,8 +184,9 @@ class GameLevel extends Phaser.Scene {
             p.player.on('animationcomplete', function (anim, frame) {
                 if (anim.key.startsWith("attack_")) {
                     p.attacking = false;
+                    console.log(`player ${p.player.id} attack ended`);
                 }
-            }, p.player);
+            });
 
         }
     
@@ -226,7 +268,7 @@ class GameLevel extends Phaser.Scene {
                             break;
                         }
 
-                        console.log(x, y)
+                        //console.log(x, y)
 
                     }
                 break;
@@ -514,7 +556,8 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 200 }
+            gravity: { y: 0 },
+            debug: false
         }
     }
 };
