@@ -2,7 +2,7 @@
 const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
 const freezeMelee = true;       // freeze player movement while using melee attacks
 const freezeProjectile = false; // freeze player movement while using projectile attacks
-const camMinZoom = 2;           // smallest the camera will zoom
+const camMinZoom = 2.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 1.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
@@ -10,7 +10,7 @@ const itemsGrid = true;         // items snap to grid when placed
 // global variables
 var players = [
     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5,  },
-    /* { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 } */
+     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
 ];
 
 class GameLevel extends Phaser.Scene {
@@ -244,6 +244,7 @@ class GameLevel extends Phaser.Scene {
                         var item = this.add.image(x, y, 'items',  this.placeItem);
                         item.setScale(itemScale);
                         item.setOrigin(0.5, 0.5);
+
                         this.map.layers[this.layer_tiles.layerIndex].properties.items.push({x: x, y: y, index: this.placeItem});
                     } else {
                         // place tile
@@ -271,6 +272,8 @@ class GameLevel extends Phaser.Scene {
         var maxX = players[0].player.x;
         var minY = players[0].player.y;
         var maxY = players[0].player.y;
+
+        var playersDoor = 0; // number of players at door this frame
 
         for (var p of players) {
 
@@ -365,28 +368,47 @@ class GameLevel extends Phaser.Scene {
             // #region door
 
             if (properties.door) {
+                playersDoor++;
 
-                if (!(this.progress && this.progress.isPlaying())) {
+                // if all players are standing on a door
+                if (playersDoor == players.length) {
 
-                    // move this.circularProgress to front
-                    this.children.bringToTop(this.circularProgress);
-
-                    this.circularProgress.setPosition(p.player.x, p.player.y);
-                    this.circularProgress.visible = true;
-                    this.progress = this.tweens.add({
-                        targets: this.circularProgress,
-                        value: 1,
-                        duration: Phaser.Math.Between(2000, 4000),
-                        ease: 'Linear ',
-                        callbackScope: this,
-                        onComplete: function () {
-                            this.circularProgress.visible = false;
-                            this.circularProgress.value = 0;
-                            this.scene.start('gamelevel', { level: 'level2' });
+                    // get max distance between players
+                    // to make sure their all on the same area of buttons
+                    // can probably change this if we assign doors to room IDs or something
+                    var maxDist = 0;
+                    for (var p1 of players) {
+                        for (var p2 of players) {
+                            maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p1.player.x, p1.player.y, p2.player.x, p2.player.y));
                         }
-                    });
+                    }
+
+                    // if all players are on the same door, and progress hasn't started yet
+                    if (maxDist < 60 && !(this.progress && this.progress.isPlaying())) {
+
+                        // move this.circularProgress to front
+                        this.children.bringToTop(this.circularProgress);
+
+                        this.circularProgress.setPosition(p.player.x, p.player.y);
+                        this.circularProgress.visible = true;
+                        this.progress = this.tweens.add({
+                            targets: this.circularProgress,
+                            value: 1,
+                            duration: Phaser.Math.Between(2000, 4000),
+                            ease: 'Linear ',
+                            callbackScope: this,
+                            onComplete: function () {
+                                this.circularProgress.visible = false;
+                                this.circularProgress.value = 0;
+                                this.scene.start('gamelevel', { level: 'level2' });
+                            }
+                        });
+
+                    }
 
                 }
+
+                
 
             } else {
 
