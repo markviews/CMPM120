@@ -13,7 +13,7 @@ const RandLevels = ["level1", "level2"];
 // global variables
 var players = [
     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 },
-    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
+    /*{ dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }*/
 ];
 
 // data for each level explored
@@ -48,7 +48,8 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
         
-        this.scene.start('gamelevel');
+        let id = Phaser.Utils.String.UUID().substring(0, 10);
+        this.scene.start('gamelevel', id);
     }
 
 }
@@ -58,24 +59,11 @@ class GameLevel extends Phaser.Scene {
         super('gamelevel')
     }
 
-    init (data) {
-        
-        if (!data.level) {
-            data.level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
-        }
-
-        // if this is a new level, create a new id
-        if (!data.id) {
-            // TODO make sure id is unique
-            data.id = Phaser.Utils.String.UUID().substring(0, 10);
-        }
-        
-        if (!data.doors) {
-            data.doors = [];
-        }
-
-        levels[data.id] = { ...data, ...levels[data.id] };
-        this.id = data.id;
+    init (id) {
+        if (levels[id] == undefined) levels[id] = {};
+        if (levels[id].level == undefined) levels[id].level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
+        if (levels[id].doors == undefined) levels[id].doors = [];
+        this.id = id;
     }
 
     // get player movement speed
@@ -169,6 +157,7 @@ class GameLevel extends Phaser.Scene {
         var level = levels[this.id].level;
         this.layer_tiles = this.map.createLayer(level, tileset, 0, 0);
 
+        //console.log("Welcome to " + this.id);
         let tp_door = {};
 
         // set tile properties
@@ -208,11 +197,9 @@ class GameLevel extends Phaser.Scene {
                     else if (minDist == distUp) wall = "up";
                     else if (minDist == distDown) wall = "down";
                     
-                    let door = {x: tile.x, y: tile.y, level: properties.door, wall: wall};
-                    door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
-
+                    let door = {x: tile.x, y: tile.y, wall: wall};
                     levels[this.id].doors.push(door);
-                    console.log("Setup door ", door);
+                    //console.log("Setup door ", door);
                 }
 
             }
@@ -228,25 +215,34 @@ class GameLevel extends Phaser.Scene {
             else if (levels[this.id].from_wall == "up") find_door = "down";
             else if (levels[this.id].from_wall == "down") find_door = "up";
 
-            console.log("find_door", find_door);
-
+            // find previous connection
             for (var door in levels[this.id].doors) {
                 var door = levels[this.id].doors[door];
-                if (door.wall == find_door) {
-                    door.dest_id = levels[this.id].from_id;
 
-                    console.log("found door", door);
-
-                    // teleport all players
-                    for (var i in players) {
-                        tp_door = {x: door.x * 32, y: door.y * 32 }
-                        //players[i].player.x = door.x * 32;
-                        //players[i].player.y = door.y * 32;
-                    }
-
+                if (door.dest_id == levels[this.id].from_id) {
+                    tp_door = {x: (door.x * 32) +16, y: door.y * 32-16 }
+                    //console.log("From: " + levels[this.id].from_id + " To: " + this.id + " found door", door);
                     break;
                 }
             }
+
+            // make new connection
+            if (tp_door.x == undefined)
+                for (var door in levels[this.id].doors) {
+                    var door = levels[this.id].doors[door];
+                    if (door.wall == find_door) {
+
+                        // if door already has a diffrent connection, skip it
+                        if (door.dest_id != undefined && door.dest_id != levels[this.id].from_id) {
+                            continue;
+                        }
+
+                        door.dest_id = levels[this.id].from_id;
+                        tp_door = {x: door.x * 32 +16, y: door.y * 32-16 }
+                        //console.log("From: " + levels[this.id].from_id + " To: " + this.id + " found NEW door", door);
+                        break;
+                    }
+                }
 
         }
 
@@ -254,8 +250,7 @@ class GameLevel extends Phaser.Scene {
         this.items = this.physics.add.group();
 
         // load items into data
-        if (!levels[this.id].loadedItems) {
-            levels[this.id].loadedItems = true;
+        if (levels[this.id].items == undefined) {
             let items = this.map.layers[this.layer_tiles.layerIndex].properties.items;
             if (!items) items = {};
             levels[this.id].items = items;
@@ -660,16 +655,28 @@ class GameLevel extends Phaser.Scene {
                             onComplete: function () {
                                 this.circularProgress.visible = false;
                                 this.circularProgress.value = 0;
+                                var foundDoor = false;
 
                                 // find nearby door
                                 levels[this.id].doors.forEach(door => {
                                     var dist = Phaser.Math.Distance.Between(p.player.x/32, p.player.y/32, door.x, door.y);
                                     if (dist < 2) {
-                                        this.scene.start('gamelevel', { id: door.dest_id, from_wall: door.wall, from_id: this.id });
+
+                                        // if door doesn't have a destination set, generate one
+                                        if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
+
+                                        // setup new level
+                                        if (levels[door.dest_id] == undefined) levels[door.dest_id] = {};
+                                        levels[door.dest_id].from_wall = door.wall;
+                                        levels[door.dest_id].from_id = this.id;
+
+                                        this.scene.start('gamelevel', door.dest_id);
+                                        foundDoor = true;
                                     }
                                 });
 
-                                console.log("Failed to find door... (not good)");
+                                if (!foundDoor)
+                                    console.log("Failed to find door... (not good)");
                             }
                         });
 
