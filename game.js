@@ -7,11 +7,51 @@ const camPadding = 80;          // area between player and edge of screen
 const itemScale = 1.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 
+// list of random levels to choose from
+const RandLevels = ["level1", "level2"];          
+
 // global variables
 var players = [
     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 },
     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }
 ];
+
+// data for each level explored
+var levels = {
+
+};
+
+const EditMode = { NotEditing: "NotEditing", Selecting: "Selecting", PlaceBlock: "PlaceBlock", PlaceItem: "PlaceItem", DeleteItem: "DeleteItem" }
+
+class SetupLevel extends Phaser.Scene {
+
+    preload() {
+        this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
+        this.load.image('tiles', 'assets/gridtiles.png');
+        this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
+        this.load.image('fire', 'assets/red.png');
+        this.load.image('bullet', 'assets/emoji.png');
+        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
+        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);  
+    }
+
+    create() {
+        // setup annimations
+        this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 18,19,20,21,22,23 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 30,31,32,33,34,35 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 37,37,38,39 ] }), frameRate: 16 });
+        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }), frameRate: 10 });
+        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
+        this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
+        
+        this.scene.start('gamelevel');
+    }
+
+}
 
 class GameLevel extends Phaser.Scene {
     constructor() {
@@ -19,8 +59,23 @@ class GameLevel extends Phaser.Scene {
     }
 
     init (data) {
-        //console.log(data);
-        this.level = data.level;
+        
+        if (!data.level) {
+            data.level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
+        }
+
+        // if this is a new level, create a new id
+        if (!data.id) {
+            // TODO make sure id is unique
+            data.id = Phaser.Utils.String.UUID().substring(0, 10);
+        }
+        
+        if (!data.doors) {
+            data.doors = [];
+        }
+
+        levels[data.id] = { ...data, ...levels[data.id] };
+        this.id = data.id;
     }
 
     // get player movement speed
@@ -59,14 +114,51 @@ class GameLevel extends Phaser.Scene {
         console.log(JSON.stringify(properties))
     }
 
-    preload() {
-        this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
-        this.load.image('tiles', 'assets/gridtiles.png');
-        this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
-        this.load.image('fire', 'assets/red.png');
-        this.load.image('bullet', 'assets/emoji.png');
-        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
-        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);  
+
+    setEditMode(mode) {
+        this.editMode = mode;
+
+        this.layer_tilePicker.setAlpha(0);
+        this.propertiesText.setText('');
+        this.text_item.setVisible(false);
+        this.text_JSON.setVisible(false);
+        this.text_delItem.setVisible(false);
+
+        switch(mode) {
+            case EditMode.NotEditing:
+                this.placeItem = undefined;
+                this.helpText.setText('EditMode: Not editing');
+                this.marker.x = -100;
+                this.marker.y = -100;
+
+                this.helpText.setVisible(false);
+                this.propertiesText.setVisible(false);
+            break;
+            case EditMode.Selecting:
+                this.helpText.setText('EditMode: Pick Block');
+                this.layer_tilePicker.setAlpha(1);
+
+                // show stuff
+                this.text_item.setVisible(true);
+                this.text_JSON.setVisible(true);
+                this.text_delItem.setVisible(true);
+                this.helpText.setVisible(true);
+                this.propertiesText.setVisible(true);
+            break;
+            case EditMode.PlaceBlock:
+                this.helpText.setText('EditMode: Painting Tile');
+                this.propertiesText.setText('Picked Tile: ' + this.tile_painting);
+            break;
+            case EditMode.PlaceItem:
+                this.helpText.setText('EditMode: Painting Item');
+                this.propertiesText.setText('Picked Item: ' + this.placeItem);
+            break;
+            case EditMode.DeleteItem:
+                this.helpText.setText('EditMode: Deleting Item');
+            break;
+
+        }
+
     }
 
     create() {
@@ -74,20 +166,103 @@ class GameLevel extends Phaser.Scene {
 
         this.map = this.make.tilemap({ key: 'map' });
         var tileset = this.map.addTilesetImage('tiles');
-        this.layer_tiles = this.map.createLayer(this.level, tileset, 0, 0);
+        var level = levels[this.id].level;
+        this.layer_tiles = this.map.createLayer(level, tileset, 0, 0);
+
+        let tp_door = {};
 
         // set tile properties
         this.layer_tiles.forEachTile(function (tile) {
             var properties = this.map.tilesets[0].tileProperties[tile.index];
             tile.properties = properties;
+
+            // check door connections
+            if (properties && properties.door) {
+                //console.log(tile.x, tile.y);
+
+                // check if near a door
+                var nearDoor = false;
+                for (var door in levels[this.id].doors) {
+                    var door = levels[this.id].doors[door];
+                    var distance = Phaser.Math.Distance.Between(door.x, door.y, tile.x, tile.y);
+                    if (distance < 2) {
+                        nearDoor = true;
+                        break;
+                    }
+                }
+
+                if (!nearDoor) {
+                    // found a new door
+
+                    
+                    // fine nearby wall
+                    var distLeft = tile.x;
+                    var distRight = (inst.map.layers[0].widthInPixels / inst.map.layers[0].tileWidth) - tile.x;
+                    var distUp = tile.y;
+                    var distDown = (inst.map.layers[0].heightInPixels / inst.map.layers[0].tileHeight) - tile.y;
+                    var wall = "";
+
+                    var minDist = Math.min(distLeft, distRight, distUp, distDown);
+                    if (minDist == distLeft) wall = "left";
+                    else if (minDist == distRight) wall = "right";
+                    else if (minDist == distUp) wall = "up";
+                    else if (minDist == distDown) wall = "down";
+                    
+                    let door = {x: tile.x, y: tile.y, level: properties.door, wall: wall};
+                    door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
+
+                    levels[this.id].doors.push(door);
+                    console.log("Setup door ", door);
+                }
+
+            }
+
         }, this);
+
+        // create door connection / teleport player to proper door
+        if (levels[this.id].from_wall) {
+
+            var find_door = "";
+            if (levels[this.id].from_wall == "left") find_door = "right";
+            else if (levels[this.id].from_wall == "right") find_door = "left";
+            else if (levels[this.id].from_wall == "up") find_door = "down";
+            else if (levels[this.id].from_wall == "down") find_door = "up";
+
+            console.log("find_door", find_door);
+
+            for (var door in levels[this.id].doors) {
+                var door = levels[this.id].doors[door];
+                if (door.wall == find_door) {
+                    door.dest_id = levels[this.id].from_id;
+
+                    console.log("found door", door);
+
+                    // teleport all players
+                    for (var i in players) {
+                        tp_door = {x: door.x * 32, y: door.y * 32 }
+                        //players[i].player.x = door.x * 32;
+                        //players[i].player.y = door.y * 32;
+                    }
+
+                    break;
+                }
+            }
+
+        }
 
         // make physics group for items
         this.items = this.physics.add.group();
 
+        // load items into data
+        if (!levels[this.id].loadedItems) {
+            levels[this.id].loadedItems = true;
+            let items = this.map.layers[this.layer_tiles.layerIndex].properties.items;
+            if (!items) items = {};
+            levels[this.id].items = items;
+        }
+
         // load items
-        let loadItems = this.map.layers[this.layer_tiles.layerIndex].properties.items;
-        loadItems.forEach(item => {
+        levels[this.id].items.forEach(item => {
             var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
             item.setOrigin(0.5, 0.5);
             item.setScale(itemScale);
@@ -124,7 +299,7 @@ class GameLevel extends Phaser.Scene {
         this.physics.world.on('collide', (gameObject1, gameObject2, body1, body2) => {
             var playerID = gameObject1.id;
             var itemID = gameObject2.frame.name;
-            console.log(`player ${playerID} collided with item ID: ${itemID}`)
+            //console.log(`player ${playerID} collided with item ID: ${itemID}`)
 
             this.items.remove(gameObject2);
 
@@ -139,31 +314,30 @@ class GameLevel extends Phaser.Scene {
                 ease: 'Power2',
                 onComplete: () => {
                     gameObject2.destroy();
+
+                    // remove item from level data
+                    levels[this.id].items = levels[this.id].items.filter(item => {
+                        return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
+                    });
+
                 }
             });
 
         });
-    
-        // #region player setup
         
-        // setup annimations
-        this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 18,19,20,21,22,23 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1});
-        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 30,31,32,33,34,35 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 37,37,38,39 ] }), frameRate: 16 });
-        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }), frameRate: 10 });
-        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
-        this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
-
+        // #region player setup
         let index = 1;
         // setup players
         for (var i in players) {
             let p = players[i];
             
-            p.player = this.add.sprite(Phaser.Math.Between(500, 700), Phaser.Math.Between(300, 500));
+            let x = Phaser.Math.Between(500, 700);
+            let y = Phaser.Math.Between(300, 500);
+            if (tp_door.x && tp_door.y) {
+                x = tp_door.x;
+                y = tp_door.y;
+            }
+            p.player = this.add.sprite(x, y);
             p.player.setScale(2.5);
             p.player.play('walk_right');
             p.player.id = index++;
@@ -215,7 +389,7 @@ class GameLevel extends Phaser.Scene {
         //#endregion player controls
 
         // #region map editor
-        this.editMode = 0;
+        this.editMode = EditMode.NotEditing;
         this.tile_painting = 1;
         this.mapDisplay = this.make.tilemap({ key: 'map' });
         this.layer_tilePicker = this.mapDisplay.createLayer('display', tileset, 0, 0);
@@ -226,12 +400,32 @@ class GameLevel extends Phaser.Scene {
         this.marker.strokeRect(0, 0, this.map.tileWidth, this.map.tileHeight);
         this.marker.x = -100;
         this.marker.y = -100;
+        this.physics.add.existing(this.marker);
+        this.marker.body.setSize(32, 32);
+        // Select Item helper text
+        this.text_item = this.add.text(0, 321, 'Select Item', { font: '10px Arial', fill: '#000000' });
+        this.text_item.setStroke('#ffffff', 2);
+        this.text_item.setWordWrapWidth(50, true);
+        this.text_item.setAlign('center');
+
+        // Select Item helper text
+        this.text_JSON = this.add.text(32, 321, 'Print JSON', { font: '10px Arial', fill: '#000000' });
+        this.text_JSON.setStroke('#ffffff', 2);
+        this.text_JSON.setWordWrapWidth(50, true);
+        this.text_JSON.setAlign('center');
+
+        // Delete item helper text
+        this.text_delItem = this.add.text(64, 321, 'Delete Item', { font: '10px Arial', fill: '#000000' });
+        this.text_delItem.setStroke('#ffffff', 2);
+        this.text_delItem.setWordWrapWidth(50, true);
+        this.text_delItem.setAlign('center');
 
         this.helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
         this.propertiesText = this.add.text(16, 840, 'Picked Tile: 1', { fontSize: '18px', fill: '#ffffff' });
 
         this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
-        
+        this.setEditMode(EditMode.NotEditing);
+
         //mouse click event
         this.input.on('pointerdown', () => {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
@@ -239,13 +433,13 @@ class GameLevel extends Phaser.Scene {
             var y = this.map.worldToTileY(worldPoint.y);
 
             switch(this.editMode) {
-                case 0:
+                case EditMode.NotEditing:
                 break;
-                case 1:
+                case EditMode.Selecting:
                     var tile = this.mapDisplay.getTileAt(x, y);
                     if (tile) {
                         this.tile_painting = tile.index;
-                        this.propertiesText.setText('Picked Tile: ' + this.tile_painting);
+                        this.setEditMode(EditMode.PlaceBlock);
                     } else {
 
                         // clicked button to choose item to place
@@ -256,7 +450,7 @@ class GameLevel extends Phaser.Scene {
                                 alert(input + ' is not a valid item ID')
                             } else {
                                 this.placeItem = parseInt(input);
-                                this.propertiesText.setText('Picked Item: ' + this.placeItem);
+                                this.setEditMode(EditMode.PlaceItem);
                             }
                             
                             break;
@@ -268,38 +462,62 @@ class GameLevel extends Phaser.Scene {
                             break;
                         }
 
+                        // clicked button to delete item
+                        if (x == 2 && y == 10) {
+                            this.setEditMode(EditMode.DeleteItem);
+                            break;
+                        }
+
                         //console.log(x, y)
 
                     }
                 break;
-                case 2:
-                    if (this.placeItem != undefined) {
-                        // place item
-                        if (itemsGrid) {
-                            x = this.map.tileToWorldX(x) + this.map.tileWidth / 2;
-                            y = this.map.tileToWorldY(y) + 5;
-                        } else {
-                            x = worldPoint.x;
-                            y = worldPoint.y;
-                        }
-
-                        var item = this.add.image(x, y, 'items',  this.placeItem);
-                        item.setScale(itemScale);
-                        item.setOrigin(0.5, 0.5);
-
-                        this.map.layers[this.layer_tiles.layerIndex].properties.items.push({x: x, y: y, index: this.placeItem});
-                    } else {
-                        // place tile
-                        var tile = this.map.getTileAt(x, y);
-                        if (!tile) break;
-                        
-                        tile.index = this.tile_painting;
-                        
-                        // set default properties
-                        var properties = this.map.tilesets[0].tileProperties[tile.index];
-                        tile.properties = properties;
-                    }
+                case EditMode.PlaceBlock:
+                    var tile = this.map.getTileAt(x, y);
+                    if (!tile) break;
+                    
+                    tile.index = this.tile_painting;
+                    
+                    // set default properties
+                    var properties = this.map.tilesets[0].tileProperties[tile.index];
+                    tile.properties = properties;
                 break;
+                case EditMode.PlaceItem:
+                    if (itemsGrid) {
+                        x = this.map.tileToWorldX(x) + this.map.tileWidth / 2;
+                        y = this.map.tileToWorldY(y) + this.map.tileHeight / 2;
+                    } else {
+                        x = worldPoint.x;
+                        y = worldPoint.y;
+                    }
+
+                    var item = this.physics.add.image(x, y, 'items',  this.placeItem);
+                    item.setScale(itemScale);
+                    item.setOrigin(0.5, 0.5);
+                    this.items.add(item);
+
+                    this.map.layers[this.layer_tiles.layerIndex].properties.items.push({x: x, y: y, index: this.placeItem});
+                break;
+                case EditMode.DeleteItem:
+
+                    this.items.getChildren().forEach(function(item) {
+                        if (item.getBounds().contains(this.input.activePointer.worldX, this.input.activePointer.worldY)) {
+                            console.log("Item clicked:", item);
+                            item.destroy();
+
+                            // remove item from properties
+                            for (var i = 0; i < this.map.layers[this.layer_tiles.layerIndex].properties.items.length; i++) {
+                                if (this.map.layers[this.layer_tiles.layerIndex].properties.items[i].x == item.x && this.map.layers[this.layer_tiles.layerIndex].properties.items[i].y == item.y) {
+                                    this.map.layers[this.layer_tiles.layerIndex].properties.items.splice(i, 1);
+                                    break;
+                                }
+                            }
+
+                        }
+                    }, this);
+                    
+                break;
+
             }
 
         });
@@ -442,7 +660,16 @@ class GameLevel extends Phaser.Scene {
                             onComplete: function () {
                                 this.circularProgress.visible = false;
                                 this.circularProgress.value = 0;
-                                this.scene.start('gamelevel', { level: 'level2' });
+
+                                // find nearby door
+                                levels[this.id].doors.forEach(door => {
+                                    var dist = Phaser.Math.Distance.Between(p.player.x/32, p.player.y/32, door.x, door.y);
+                                    if (dist < 2) {
+                                        this.scene.start('gamelevel', { id: door.dest_id, from_wall: door.wall, from_id: this.id });
+                                    }
+                                });
+
+                                console.log("Failed to find door... (not good)");
                             }
                         });
 
@@ -488,7 +715,7 @@ class GameLevel extends Phaser.Scene {
 
         }
 
-        if (this.editMode == 0) {
+        if (this.editMode == EditMode.NotEditing) {
             // normal camera movement
             this.camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
             
@@ -504,36 +731,17 @@ class GameLevel extends Phaser.Scene {
         // #region tile editor
 
         if (Phaser.Input.Keyboard.JustDown(this.button_edit)) {
-            this.editMode += 1
-            if (this.editMode > 2) this.editMode = 0;
-            
-            //0 = not editing, 1 = choose block, 2 = paint
-            switch(this.editMode) {
-                case 0:
-                    this.placeItem = undefined;
-                    this.helpText.setText('EditMode: Not editing');
-                    this.marker.x = -100;
-                    this.marker.y = -100;
-                break;
-                case 1:
-                    this.helpText.setText('EditMode: Pick Block');
-                    this.layer_tilePicker.setAlpha(1);
-                break;
-                case 2:
-                    if (this.placeItem != undefined) {
-                        this.helpText.setText('EditMode: Painting Item');
-                    } else {
-                        this.helpText.setText('EditMode: Painting Tile');
-                    }
 
-                    this.layer_tilePicker.setAlpha(0);
-                break;
+            if (this.editMode == EditMode.NotEditing) {
+                this.setEditMode(EditMode.Selecting);
+            } else {
+                this.setEditMode(EditMode.NotEditing);
             }
             
         }
 
         //block selector
-        if (this.editMode != 0) {
+        if (this.editMode != EditMode.NotEditing) {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
             var pointerTileX = this.map.worldToTileX(worldPoint.x);
             var pointerTileY = this.map.worldToTileY(worldPoint.y);
@@ -552,12 +760,12 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [GameLevel],
+    scene: [SetupLevel, GameLevel],
     physics: {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            debug: false
+            debug: true
         }
     }
 };
