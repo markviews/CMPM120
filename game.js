@@ -8,18 +8,16 @@ const itemScale = 1.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 
 // list of random levels to choose from
-const RandLevels = ["level1", "level2"];          
+const RandLevels = ["level1", "level2"];
 
 // global variables
 var players = [
-    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 },
+    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5, items: {} },
     /*{ dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }*/
 ];
 
 // data for each level explored
-var levels = {
-
-};
+var levels = {};
 
 const EditMode = { NotEditing: "NotEditing", Selecting: "Selecting", PlaceBlock: "PlaceBlock", PlaceItem: "PlaceItem", DeleteItem: "DeleteItem" }
 
@@ -77,6 +75,11 @@ class GameLevel extends Phaser.Scene {
         if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
 
         return p.speed;
+    }
+
+    giveItem(p, item) {
+        if (p.items[item] == undefined) p.items[item] = 0;
+        p.items[item]++;
     }
 
     getTileProperties(x,y) {
@@ -182,7 +185,6 @@ class GameLevel extends Phaser.Scene {
 
                 if (!nearDoor) {
                     // found a new door
-
                     
                     // fine nearby wall
                     var distLeft = tile.x;
@@ -246,6 +248,10 @@ class GameLevel extends Phaser.Scene {
 
         }
 
+        // clear previous door data
+        delete levels[this.id].from_id;
+        delete levels[this.id].from_wall;
+
         // make physics group for items
         this.items = this.physics.add.group();
 
@@ -271,18 +277,19 @@ class GameLevel extends Phaser.Scene {
         this.camera.visible = false;
     
         this.cameras.main.roundPixels = true;
-        this.cameras.main.zoomTo(2, 0);
         this.cameras.main.startFollow(this.camera);
         this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
+        this.cameras.main.zoomTo(camMinZoom, 0);
+        this.cameras.main.fadeIn(1000);
         
         this.projectiles = this.add.group();
 
          // task progress bar
          this.circularProgress = this.add.rexCircularProgress({
             x: 0, y: 0,
-            radius: 20,
-            trackColor: 0x260e04,
-            barColor: 0x7b5e57,
+            radius: 40,
+            //trackColor: 0xe8e8e8,
+            barColor: 0x23751a,
             //centerColor: 0x4e342e,
             anticlockwise: false,
             value: 0,
@@ -310,6 +317,8 @@ class GameLevel extends Phaser.Scene {
                 onComplete: () => {
                     gameObject2.destroy();
 
+                    this.giveItem(players[playerID], itemID);
+
                     // remove item from level data
                     levels[this.id].items = levels[this.id].items.filter(item => {
                         return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
@@ -321,7 +330,7 @@ class GameLevel extends Phaser.Scene {
         });
         
         // #region player setup
-        let index = 1;
+        let index = 0;
         // setup players
         for (var i in players) {
             let p = players[i];
@@ -353,7 +362,7 @@ class GameLevel extends Phaser.Scene {
             p.player.on('animationcomplete', function (anim, frame) {
                 if (anim.key.startsWith("attack_")) {
                     p.attacking = false;
-                    console.log(`player ${p.player.id} attack ended`);
+                    //console.log(`player ${p.player.id} attack ended`);
                 }
             });
 
@@ -637,7 +646,7 @@ class GameLevel extends Phaser.Scene {
                             maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p1.player.x, p1.player.y, p2.player.x, p2.player.y));
                         }
                     }
-
+                    
                     // if all players are on the same door, and progress hasn't started yet
                     if (maxDist < 60 && !(this.progress && this.progress.isPlaying())) {
 
@@ -649,7 +658,7 @@ class GameLevel extends Phaser.Scene {
                         this.progress = this.tweens.add({
                             targets: this.circularProgress,
                             value: 1,
-                            duration: Phaser.Math.Between(2000, 4000),
+                            duration: 1000,
                             ease: 'Linear ',
                             callbackScope: this,
                             onComplete: function () {
