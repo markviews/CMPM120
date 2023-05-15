@@ -11,15 +11,13 @@ const itemsGrid = true;         // items snap to grid when placed
 const RandLevels = ["level1", "level2"];
 
 // global variables
+var levels = {};
 var players = [
     { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5, items: {} },
     /*{ dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }*/
 ];
 
-// data for each level explored
-var levels = {};
-
-const EditMode = { NotEditing: "NotEditing", Selecting: "Selecting", PlaceBlock: "PlaceBlock", PlaceItem: "PlaceItem", DeleteItem: "DeleteItem" }
+const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4 }
 
 class SetupLevel extends Phaser.Scene {
 
@@ -27,6 +25,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/gridtiles.png');
         this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet('slime', 'assets/sprites/characters/slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
@@ -34,8 +33,15 @@ class SetupLevel extends Phaser.Scene {
     }
 
     create() {
-        // setup annimations
-        this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+        // slime annimations
+        this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNumbers('slime', { frames: [ 0,1,2,3 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'slime_jump2', frames: this.anims.generateFrameNumbers('slime', { frames: [ 8,9,10,11,12 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 14,15,16,17,18,19,20 ] }), frameRate: 8 });
+        this.anims.create({key: 'slime_ouch', frames: this.anims.generateFrameNumbers('slime', { frames: [ 21,22,23 ] }), frameRate: 6 });
+        this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 6 });
+
+        // player annimations
+        this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 18,19,20,21,22,23 ] }), frameRate: 8, repeat: -1 });
@@ -75,6 +81,22 @@ class GameLevel extends Phaser.Scene {
         if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
 
         return p.speed;
+    }
+
+    getNearestPlayer(x, y, viewDistance) {
+
+        // get nearest player
+        var nearestPlayer = undefined;
+        var nearestDistance = viewDistance;
+        players.forEach(p => {
+            var distance = Phaser.Math.Distance.Between(x, y, p.player.x, p.player.y);
+            if (distance < nearestDistance) {
+                nearestPlayer = p;
+                nearestDistance = distance;
+            }
+        });
+
+        return nearestPlayer;
     }
 
     giveItem(p, item) {
@@ -248,10 +270,6 @@ class GameLevel extends Phaser.Scene {
 
         }
 
-        // clear previous door data
-        delete levels[this.id].from_id;
-        delete levels[this.id].from_wall;
-
         // make physics group for items
         this.items = this.physics.add.group();
 
@@ -299,6 +317,8 @@ class GameLevel extends Phaser.Scene {
 
         // collide event
         this.physics.world.on('collide', (gameObject1, gameObject2, body1, body2) => {
+            if (gameObject2.texture.key != "items") return;
+
             var playerID = gameObject1.id;
             var itemID = gameObject2.frame.name;
             //console.log(`player ${playerID} collided with item ID: ${itemID}`)
@@ -326,8 +346,13 @@ class GameLevel extends Phaser.Scene {
 
                 }
             });
-
+            
         });
+
+        this.slimes = this.physics.add.group({ classType: Slime, runChildUpdate: true })
+        this.slimes.get(500, 500);
+        this.slimes.get(400, 500);
+        this.slimes.get(400, 400);
         
         // #region player setup
         let index = 0;
@@ -352,11 +377,33 @@ class GameLevel extends Phaser.Scene {
             p.player.body.setSize(15, 20);
             p.player.body.setOffset(17, 22);
             this.physics.add.collider(p.player, this.items);
+            this.physics.add.collider(p.player, this.slimes);
             
-            // random direction
-            const directions = ["down", "left", "right"];
-            p.dir = directions[Math.floor(Math.random() * directions.length)]
+            if (levels[this.id].from_wall) {
+                // face direction of door
+                p.dir = levels[this.id].from_wall;
+            } else {
+                // random direction
+                const directions = ["down", "left", "right"];
+                p.dir = directions[Math.floor(Math.random() * directions.length)]
+            }
+            
             p.player.play(`idle_${p.dir}`);
+
+            switch(p.dir) {
+                case "down":
+                    p.angle = 90;
+                    break;
+                case "left":
+                    p.angle = 180;
+                    break;
+                case "right":
+                    p.angle = 0;
+                    break;
+                case "up":
+                    p.angle = 270;
+                    break;
+            }
             
             // attack end event
             p.player.on('animationcomplete', function (anim, frame) {
@@ -527,6 +574,10 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
+        // clear previous door data
+        delete levels[this.id].from_id;
+        delete levels[this.id].from_wall;
+
     }
 
     update() {
@@ -560,36 +611,59 @@ class GameLevel extends Phaser.Scene {
                 mySprite.setScale(0.05);
                 this.projectiles.add(mySprite);
                 this.physics.add.existing(mySprite);
-                mySprite.body.setVelocity(1000, 0);
+
+                let projectileSpeed = 500;
+                let a = Phaser.Math.DegToRad(p.angle);
+                mySprite.body.setVelocity(Math.cos(a) * projectileSpeed, Math.sin(a) * projectileSpeed);
+
+                // destroy projectile after 1 second
+                this.time.delayedCall(1000, function() {
+                    mySprite.destroy();
+                });
+                
             }
             
             // #region movement
             p.idle = true;
+            var directions = [];
         
             if (p.controls.up.isDown) {
                 p.player.y -= this.getMoveSpeed(p, 0, 40 - p.speed);
                 p.dir = "up";
                 p.idle = false;
+                directions.push("up");
             }
             //"else" here so if player acidently holds up and down they will just go up
             else if (p.controls.down.isDown) {
                 p.player.y += this.getMoveSpeed(p, 0, 45);
                 p.dir = "down";
                 p.idle = false;
+                directions.push("down");
             }
 
             if (p.controls.left.isDown) {
                 p.player.x -= this.getMoveSpeed(p, -10, 40);
                 p.dir = "left";
                 p.idle = false;
+                directions.push("left");
             }
             //"else" here so if player acidently holds left and right they will just go left
             else if (p.controls.right.isDown) {
                 p.player.x += this.getMoveSpeed(p, 10, 40);
                 p.dir = "right";
                 p.idle = false;
+                directions.push("right");
             }
-            
+
+            // calculate angle player is walking
+            if (directions.includes("up") && directions.includes("left")) p.angle = 225;
+            else if (directions.includes("up") && directions.includes("right")) p.angle = 315;
+            else if (directions.includes("down") && directions.includes("left")) p.angle = 135;
+            else if (directions.includes("down") && directions.includes("right")) p.angle = 45;
+            else if (directions.includes("up")) p.angle = 270;
+            else if (directions.includes("down")) p.angle = 90;
+            else if (directions.includes("left")) p.angle = 180;
+            else if (directions.includes("right")) p.angle = 0;
 
             //#endregion movement
 
