@@ -24,6 +24,9 @@ class SetupLevel extends Phaser.Scene {
     preload() {
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/gridtiles.png');
+
+        //this.load.atlas('girl', 'path/to/my/spritesheet.png', 'assets/Character Girl Compact.json');
+
         this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('fire', 'assets/red.png');
@@ -33,14 +36,14 @@ class SetupLevel extends Phaser.Scene {
     }
 
     create() {
-        // slime annimations
+        // slime animations
         this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNumbers('slime', { frames: [ 0,1,2,3 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'slime_jump2', frames: this.anims.generateFrameNumbers('slime', { frames: [ 8,9,10,11,12 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 14,15,16,17,18,19,20 ] }), frameRate: 8 });
         this.anims.create({key: 'slime_ouch', frames: this.anims.generateFrameNumbers('slime', { frames: [ 21,22,23 ] }), frameRate: 6 });
-        this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 6 });
+        this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 8 });
 
-        // player annimations
+        // player animations
         this.anims.create({key: 'idle_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 0,1,2,3 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 6,7,8,9,10,11 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
@@ -369,16 +372,26 @@ class GameLevel extends Phaser.Scene {
             p.player = this.add.sprite(x, y);
             p.player.setScale(2.5);
             p.player.play('walk_right');
-            p.player.id = index++;
+            p.player.id = index;
 
             // enable physics
             this.physics.world.enable(p.player);
             p.player.body.onCollide = true;
             p.player.body.setSize(15, 20);
             p.player.body.setOffset(17, 22);
+            
+            p.MeleeHithox = this.add.rectangle(-100, -100, 0, 0);
+            this.physics.world.enable(p.MeleeHithox);
+            p.MeleeHithox.body.onCollide = true;
+            p.MeleeHithox.name = "melee_hitbox";
+            p.MeleeHithox.id = index;
+            
+
+            // hixboxes
             this.physics.add.collider(p.player, this.items);
             this.physics.add.collider(p.player, this.slimes);
-            
+            this.physics.add.collider(p.MeleeHithox, this.slimes);
+
             if (levels[this.id].from_wall) {
                 // face direction of door
                 p.dir = levels[this.id].from_wall;
@@ -405,14 +418,33 @@ class GameLevel extends Phaser.Scene {
                     break;
             }
             
-            // attack end event
+            // melee attack end event
             p.player.on('animationcomplete', function (anim, frame) {
                 if (anim.key.startsWith("attack_")) {
                     p.attacking = false;
-                    //console.log(`player ${p.player.id} attack ended`);
                 }
             });
 
+            // melee attack hitbox
+            p.player.on('animationupdate', function (anim, frame, sprite, frameKey) {
+                if (anim.key.startsWith("attack_right")) {
+                    p.MeleeHithox.x = p.player.x - 2;
+                    p.MeleeHithox.y = p.player.y + 35;
+                    p.MeleeHithox.body.setSize(90, 35);
+                }
+                if (anim.key.startsWith("attack_up")) {
+                    p.MeleeHithox.x = p.player.x;
+                    p.MeleeHithox.y = p.player.y + 15;
+                    p.MeleeHithox.body.setSize(60, 40);
+                }
+                if (anim.key.startsWith("attack_down")) {
+                    p.MeleeHithox.x = p.player.x - 5;
+                    p.MeleeHithox.y = p.player.y + 40;
+                    p.MeleeHithox.body.setSize(70, 40);
+                }
+            });
+
+            index++;
         }
     
         //#endregion player setup
@@ -676,6 +708,9 @@ class GameLevel extends Phaser.Scene {
 
                 if (p.dir == "left") p.player.flipX = true;
                 if (p.dir == "right") p.player.flipX = false;
+
+                p.MeleeHithox.x = -100;
+                p.MeleeHithox.y = -100;
             }
             //#endregion animation
 
@@ -855,7 +890,7 @@ var config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            debug: true
+            debug: false
         }
     }
 };
