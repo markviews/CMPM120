@@ -34,7 +34,7 @@ class Slime extends Phaser.GameObjects.Sprite {
             if (gameObject1.name != "melee_hitbox") return;
             
             var playerID = gameObject1.id;
-            var p = players[playerID]
+            var player = players[playerID]
             
             // skip if currently being knocked back
             if (this.knockback != null && this.knockback.isPlaying()) {
@@ -42,8 +42,8 @@ class Slime extends Phaser.GameObjects.Sprite {
             }
 
             // knock slime back
-            var dx = this.x - p.player.x;
-            var dy = this.y - p.player.y;
+            var dx = this.x - player.sprite.x;
+            var dy = this.y - player.sprite.y;
             var angle = Math.atan2(dy, dx);
 
             this.play('slime_ouch');
@@ -78,14 +78,14 @@ class Slime extends Phaser.GameObjects.Sprite {
             return;
         }
 
-        var p = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
-        if (p == null) return;
+        var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
+        if (player == null) return;
 
         this.play('slime_jump');
 
         // jump towards nearest player
-        var dx = p.player.x - this.x;
-        var dy = p.player.y - this.y;
+        var dx = player.sprite.x - this.x;
+        var dy = player.sprite.y - this.y;
         var angle = Math.atan2(dy, dx);
         // tween jump twards player
         this.scene.tweens.add({
@@ -100,26 +100,26 @@ class Slime extends Phaser.GameObjects.Sprite {
                 if (this.scene == null) return;
 
                 // if touching player
-                if (this.scene.physics.world.overlap(this, p.player)) {
+                if (this.scene.physics.world.overlap(this, player.sprite)) {
 
                     // knock player back
-                    var dx = p.player.x - this.x;
-                    var dy = p.player.y - this.y;
+                    var dx = player.sprite.x - this.x;
+                    var dy = player.sprite.y - this.y;
                     var angle = Math.atan2(dy, dx);
 
                     // should probably make a "stunned" state for the player, but this does the same thing
-                    p.attacking = true;
+                    player.attacking = true;
 
-                    p.player.play('fall');
+                    player.sprite.play('fall');
 
                     this.scene.tweens.add({
-                        targets: p.player,
-                        x: p.player.x + Math.cos(angle) * 30,
-                        y: p.player.y + Math.sin(angle) * 30,
+                        targets: player.sprite,
+                        x: player.sprite.x + Math.cos(angle) * 30,
+                        y: player.sprite.y + Math.sin(angle) * 30,
                         ease: 'Power1',
                         duration: 500,
                         onComplete: function() {
-                            p.attacking = false;
+                            player.attacking = false;
                         },
                         onCompleteScope: this
                     });

@@ -12,10 +12,7 @@ const RandLevels = ["level1", "level2"];
 
 // global variables
 var levels = {};
-var players = [
-    { dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5, items: {} },
-    /*{ dir: "right", idle: false, onFire: false, attacking: false, speed: 3.5 }*/
-];
+var players = [];
 
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4 }
 
@@ -24,9 +21,6 @@ class SetupLevel extends Phaser.Scene {
     preload() {
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/gridtiles.png');
-
-        //this.load.atlas('girl', 'path/to/my/spritesheet.png', 'assets/Character Girl Compact.json');
-
         this.load.spritesheet('kid', 'assets/sprites/characters/player.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('fire', 'assets/red.png');
@@ -55,6 +49,9 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
         
+        // create players
+        players.push(new Player());
+
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.start('gamelevel', id);
     }
@@ -73,26 +70,13 @@ class GameLevel extends Phaser.Scene {
         this.id = id;
     }
 
-    // get player movement speed
-    getMoveSpeed(p, xTileOffset, yTileOffset) {
-
-        // freeze player if attacking
-        if (freezeMelee && p.attacking) return 0;
-
-        var properties = this.getTileProperties(p.player.x + xTileOffset,p.player.y + yTileOffset);
-        if (properties.solid) return 0;
-        if (properties.speed) return Math.max(properties.speed + p.speed, minSpeed)
-
-        return p.speed;
-    }
-
     getNearestPlayer(x, y, viewDistance) {
 
         // get nearest player
         var nearestPlayer = undefined;
         var nearestDistance = viewDistance;
         players.forEach(p => {
-            var distance = Phaser.Math.Distance.Between(x, y, p.player.x, p.player.y);
+            var distance = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);
             if (distance < nearestDistance) {
                 nearestPlayer = p;
                 nearestDistance = distance;
@@ -100,11 +84,6 @@ class GameLevel extends Phaser.Scene {
         });
 
         return nearestPlayer;
-    }
-
-    giveItem(p, item) {
-        if (p.items[item] == undefined) p.items[item] = 0;
-        p.items[item]++;
     }
 
     getTileProperties(x,y) {
@@ -185,8 +164,8 @@ class GameLevel extends Phaser.Scene {
         var level = levels[this.id].level;
         this.layer_tiles = this.map.createLayer(level, tileset, 0, 0);
 
-        //console.log("Welcome to " + this.id);
-        let tp_door = {};
+        // store location of door players are coming from
+        this.tp_door = {};
 
         // set tile properties
         this.layer_tiles.forEachTile(function (tile) {
@@ -247,14 +226,13 @@ class GameLevel extends Phaser.Scene {
                 var door = levels[this.id].doors[door];
 
                 if (door.dest_id == levels[this.id].from_id) {
-                    tp_door = {x: (door.x * 32) +16, y: door.y * 32-16 }
-                    //console.log("From: " + levels[this.id].from_id + " To: " + this.id + " found door", door);
+                    this.tp_door = {x: (door.x * 32) +16, y: door.y * 32-16 }
                     break;
                 }
             }
 
             // make new connection
-            if (tp_door.x == undefined)
+            if (this.tp_door.x == undefined)
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
                     if (door.wall == find_door) {
@@ -265,8 +243,7 @@ class GameLevel extends Phaser.Scene {
                         }
 
                         door.dest_id = levels[this.id].from_id;
-                        tp_door = {x: door.x * 32 +16, y: door.y * 32-16 }
-                        //console.log("From: " + levels[this.id].from_id + " To: " + this.id + " found NEW door", door);
+                        this.tp_door = {x: door.x * 32 +16, y: door.y * 32-16 }
                         break;
                     }
                 }
@@ -318,158 +295,15 @@ class GameLevel extends Phaser.Scene {
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
 
-        // collide event
-        this.physics.world.on('collide', (gameObject1, gameObject2, body1, body2) => {
-            if (gameObject2.texture.key != "items") return;
-
-            var playerID = gameObject1.id;
-            var itemID = gameObject2.frame.name;
-            //console.log(`player ${playerID} collided with item ID: ${itemID}`)
-
-            this.items.remove(gameObject2);
-
-            // tween item twards player, make smaller, fade out, then destroy
-            // a cool effect would be the item dragging twards the player as it fades. I couldn't figure that out yet
-            this.tweens.add({
-                targets: gameObject2,
-                scaleX: 0,
-                scaleY: 0,
-                alpha: 0,
-                duration: 1000,
-                ease: 'Power2',
-                onComplete: () => {
-                    gameObject2.destroy();
-
-                    this.giveItem(players[playerID], itemID);
-
-                    // remove item from level data
-                    levels[this.id].items = levels[this.id].items.filter(item => {
-                        return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
-                    });
-
-                }
-            });
-            
-        });
-
         this.slimes = this.physics.add.group({ classType: Slime, runChildUpdate: true })
         this.slimes.get(500, 500);
         this.slimes.get(400, 500);
         this.slimes.get(400, 400);
-        
-        // #region player setup
-        let index = 0;
-        // setup players
-        for (var i in players) {
-            let p = players[i];
-            
-            let x = Phaser.Math.Between(500, 700);
-            let y = Phaser.Math.Between(300, 500);
-            if (tp_door.x && tp_door.y) {
-                x = tp_door.x;
-                y = tp_door.y;
-            }
-            p.player = this.add.sprite(x, y);
-            p.player.setScale(2.5);
-            p.player.play('walk_right');
-            p.player.id = index;
 
-            // enable physics
-            this.physics.world.enable(p.player);
-            p.player.body.onCollide = true;
-            p.player.body.setSize(15, 20);
-            p.player.body.setOffset(17, 22);
-            
-            p.MeleeHithox = this.add.rectangle(-100, -100, 0, 0);
-            this.physics.world.enable(p.MeleeHithox);
-            p.MeleeHithox.body.onCollide = true;
-            p.MeleeHithox.name = "melee_hitbox";
-            p.MeleeHithox.id = index;
-            
-
-            // hixboxes
-            this.physics.add.collider(p.player, this.items);
-            this.physics.add.collider(p.player, this.slimes);
-            this.physics.add.collider(p.MeleeHithox, this.slimes);
-
-            if (levels[this.id].from_wall) {
-                // face direction of door
-                p.dir = levels[this.id].from_wall;
-            } else {
-                // random direction
-                const directions = ["down", "left", "right"];
-                p.dir = directions[Math.floor(Math.random() * directions.length)]
-            }
-            
-            p.player.play(`idle_${p.dir}`);
-
-            switch(p.dir) {
-                case "down":
-                    p.angle = 90;
-                    break;
-                case "left":
-                    p.angle = 180;
-                    break;
-                case "right":
-                    p.angle = 0;
-                    break;
-                case "up":
-                    p.angle = 270;
-                    break;
-            }
-            
-            // melee attack end event
-            p.player.on('animationcomplete', function (anim, frame) {
-                if (anim.key.startsWith("attack_")) {
-                    p.attacking = false;
-                }
-            });
-
-            // melee attack hitbox
-            p.player.on('animationupdate', function (anim, frame, sprite, frameKey) {
-                if (anim.key.startsWith("attack_right")) {
-                    p.MeleeHithox.x = p.player.x - 2;
-                    p.MeleeHithox.y = p.player.y + 35;
-                    p.MeleeHithox.body.setSize(90, 35);
-                }
-                if (anim.key.startsWith("attack_up")) {
-                    p.MeleeHithox.x = p.player.x;
-                    p.MeleeHithox.y = p.player.y + 15;
-                    p.MeleeHithox.body.setSize(60, 40);
-                }
-                if (anim.key.startsWith("attack_down")) {
-                    p.MeleeHithox.x = p.player.x - 5;
-                    p.MeleeHithox.y = p.player.y + 40;
-                    p.MeleeHithox.body.setSize(70, 40);
-                }
-            });
-
-            index++;
+        // create players in new scene
+        for (var player of players) {
+            player.newScene(this);
         }
-    
-        //#endregion player setup
-        
-        // #region player controls
-        // controlls
-        players[0].controls = { 
-            up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
-            down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
-            left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
-            right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-            attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
-            attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)
-        }
-    
-        if (players[1] != undefined)
-        players[1].controls = { 
-            up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.UP),
-            down: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
-            left: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
-            right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
-            attack_melee: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
-            attack_projectile: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PAGE_DOWN)
-        }
-        //#endregion player controls
 
         // #region map editor
         this.editMode = EditMode.NotEditing;
@@ -615,131 +449,25 @@ class GameLevel extends Phaser.Scene {
     update() {
         // camera variables
         var outOfBounds = 0; // number of players out of bounds this frame
-        var minX = players[0].player.x;
-        var maxX = players[0].player.x;
-        var minY = players[0].player.y;
-        var maxY = players[0].player.y;
+        var minX = players[0].sprite.x;
+        var maxX = players[0].sprite.x;
+        var minY = players[0].sprite.y;
+        var maxY = players[0].sprite.y;
 
         var playersDoor = 0; // number of players at door this frame
 
-        for (var p of players) {
+        for (var player of players) {
+            player.update();
 
             // camera variables
-            minX = Math.min(minX, p.player.x);
-            maxX = Math.max(maxX, p.player.x);
-            minY = Math.min(minY, p.player.y);
-            maxY = Math.max(maxY, p.player.y);
+            minX = Math.min(minX, player.sprite.x);
+            maxX = Math.max(maxX, player.sprite.x);
+            minY = Math.min(minY, player.sprite.y);
+            maxY = Math.max(maxY, player.sprite.y);
             
-            // melee attack
-            if (Phaser.Input.Keyboard.JustDown(p.controls.attack_melee)) {
-                p.attacking = true;
-                var anim = `attack_${p.dir == "left" ? "right" : p.dir}`;
-                p.player.play(anim);
-            }
-
-            // projectile attack
-            if (Phaser.Input.Keyboard.JustDown(p.controls.attack_projectile)) {
-                let mySprite = this.add.sprite(p.player.x, p.player.y + 30, 'bullet');
-                mySprite.setScale(0.05);
-                this.projectiles.add(mySprite);
-                this.physics.add.existing(mySprite);
-
-                let projectileSpeed = 500;
-                let a = Phaser.Math.DegToRad(p.angle);
-                mySprite.body.setVelocity(Math.cos(a) * projectileSpeed, Math.sin(a) * projectileSpeed);
-
-                // destroy projectile after 1 second
-                this.time.delayedCall(1000, function() {
-                    mySprite.destroy();
-                });
-                
-            }
-            
-            // #region movement
-            p.idle = true;
-            var directions = [];
-        
-            if (p.controls.up.isDown) {
-                p.player.y -= this.getMoveSpeed(p, 0, 40 - p.speed);
-                p.dir = "up";
-                p.idle = false;
-                directions.push("up");
-            }
-            //"else" here so if player acidently holds up and down they will just go up
-            else if (p.controls.down.isDown) {
-                p.player.y += this.getMoveSpeed(p, 0, 45);
-                p.dir = "down";
-                p.idle = false;
-                directions.push("down");
-            }
-
-            if (p.controls.left.isDown) {
-                p.player.x -= this.getMoveSpeed(p, -10, 40);
-                p.dir = "left";
-                p.idle = false;
-                directions.push("left");
-            }
-            //"else" here so if player acidently holds left and right they will just go left
-            else if (p.controls.right.isDown) {
-                p.player.x += this.getMoveSpeed(p, 10, 40);
-                p.dir = "right";
-                p.idle = false;
-                directions.push("right");
-            }
-
-            // calculate angle player is walking
-            if (directions.includes("up") && directions.includes("left")) p.angle = 225;
-            else if (directions.includes("up") && directions.includes("right")) p.angle = 315;
-            else if (directions.includes("down") && directions.includes("left")) p.angle = 135;
-            else if (directions.includes("down") && directions.includes("right")) p.angle = 45;
-            else if (directions.includes("up")) p.angle = 270;
-            else if (directions.includes("down")) p.angle = 90;
-            else if (directions.includes("left")) p.angle = 180;
-            else if (directions.includes("right")) p.angle = 0;
-
-            //#endregion movement
-
-            // #region animation
-            // set player animation
-            // replaces "left" dir with "right" animation because it's just mirred right
-            if (!p.attacking) {
-                var anim = `${p.idle ? "idle" : "walk"}_${p.dir == "left" ? "right" : p.dir}`;
-                if (p.player.anims.currentAnim.key != anim) p.player.play(anim);
-
-                if (p.dir == "left") p.player.flipX = true;
-                if (p.dir == "right") p.player.flipX = false;
-
-                p.MeleeHithox.x = -100;
-                p.MeleeHithox.y = -100;
-            }
-            //#endregion animation
-
-            // #region fire
-            var properties = this.getTileProperties(p.player.x,p.player.y + 30 - p.speed);
-            if (properties.fire) {
-                p.onFire = true;
-                p.fireTick = Date.now();
-                
-                if (!p.fireEmitter) {
-                    p.fireParticles = this.add.particles('fire');
-                    p.fireEmitter = p.fireParticles.createEmitter({ x: p.player.x, y: p.player.y + 30, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
-                }
-
-            }
-
-            if (p.onFire && Date.now() - p.fireTick > 2000) {
-                p.onFire = false;
-                p.fireParticles.destroy()
-                p.fireEmitter = undefined
-            }
-
-            if (p.onFire) {
-                p.fireEmitter.setPosition(p.player.x, p.player.y + 30);
-            }
-            //#endregion fire
-
             // #region door
 
+            var properties = this.getTileProperties(player.sprite.x, player.sprite.y + 30 - player.speed);
             if (properties.door) {
                 playersDoor++;
 
@@ -752,7 +480,7 @@ class GameLevel extends Phaser.Scene {
                     var maxDist = 0;
                     for (var p1 of players) {
                         for (var p2 of players) {
-                            maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p1.player.x, p1.player.y, p2.player.x, p2.player.y));
+                            maxDist = Math.max(maxDist, Phaser.Math.Distance.Between(p1.sprite.x, p1.sprite.y, p2.sprite.x, p2.sprite.y));
                         }
                     }
                     
@@ -762,7 +490,7 @@ class GameLevel extends Phaser.Scene {
                         // move this.circularProgress to front
                         this.children.bringToTop(this.circularProgress);
 
-                        this.circularProgress.setPosition(p.player.x, p.player.y);
+                        this.circularProgress.setPosition(player.sprite.x, player.sprite.y);
                         this.circularProgress.visible = true;
                         this.progress = this.tweens.add({
                             targets: this.circularProgress,
@@ -777,7 +505,7 @@ class GameLevel extends Phaser.Scene {
 
                                 // find nearby door
                                 levels[this.id].doors.forEach(door => {
-                                    var dist = Phaser.Math.Distance.Between(p.player.x/32, p.player.y/32, door.x, door.y);
+                                    var dist = Phaser.Math.Distance.Between(p.sprite.x/32, p.sprite.y/32, door.x, door.y);
                                     if (dist < 2) {
 
                                         // if door doesn't have a destination set, generate one
@@ -818,9 +546,9 @@ class GameLevel extends Phaser.Scene {
             // #endregion door
 
             // #region check if camera needs to zoom
-            var angle = Math.atan2(p.player.x - this.camera.x, p.player.y - this.camera.y);
-            var x = p.player.x + Math.sin(angle) * camPadding;
-            var y = p.player.y + Math.cos(angle) * camPadding;
+            var angle = Math.atan2(player.sprite.x - this.camera.x, player.sprite.y - this.camera.y);
+            var x = player.sprite.x + Math.sin(angle) * camPadding;
+            var y = player.sprite.y + Math.cos(angle) * camPadding;
 
             // player is out of bounds, zoom camera out
             if (!this.cameras.main.worldView.contains(x, y)) {
@@ -831,8 +559,8 @@ class GameLevel extends Phaser.Scene {
             }
             
             // zoom back in if everyone is away from the edges
-            var x2 = p.player.x + Math.sin(angle) * (camPadding + 30);
-            var y2 = p.player.y + Math.cos(angle) * (camPadding + 30);
+            var x2 = player.sprite.x + Math.sin(angle) * (camPadding + 30);
+            var y2 = player.sprite.y + Math.cos(angle) * (camPadding + 30);
             if (!this.cameras.main.worldView.contains(x2, y2)) {
                 outOfBounds++;
             }
