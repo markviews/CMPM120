@@ -47,7 +47,7 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('kid', { frames: [ 37,37,38,39 ] }), frameRate: 16 });
         this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('kid', { frames: [ 42,43,44,45 ] }), frameRate: 10 });
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('kid', { frames: [ 48,49,50,51 ] }), frameRate: 16 });
-        this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 8 });
+        this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('kid', { frames: [ 54,55,56 ] }), frameRate: 16 });
         
         // create players
         players.push(new Player());
@@ -75,10 +75,10 @@ class GameLevel extends Phaser.Scene {
         // get nearest player
         var nearestPlayer = undefined;
         var nearestDistance = viewDistance;
-        players.forEach(p => {
-            var distance = Phaser.Math.Distance.Between(x, y, p.sprite.x, p.sprite.y);
+        players.forEach(player => {
+            var distance = Phaser.Math.Distance.Between(x, y, player.sprite.x, player.sprite.y);
             if (distance < nearestDistance) {
-                nearestPlayer = p;
+                nearestPlayer = player;
                 nearestDistance = distance;
             }
         });
@@ -163,6 +163,10 @@ class GameLevel extends Phaser.Scene {
         var tileset = this.map.addTilesetImage('tiles');
         var level = levels[this.id].level;
         this.layer_tiles = this.map.createLayer(level, tileset, 0, 0);
+
+        this.physics.world.enable(this.layer_tiles);
+        this.layer_tiles.setCollisionByProperty({ solid: true });
+        
 
         // store location of door players are coming from
         this.tp_door = {};
@@ -297,8 +301,8 @@ class GameLevel extends Phaser.Scene {
 
         this.slimes = this.physics.add.group({ classType: Slime, runChildUpdate: true })
         this.slimes.get(500, 500);
-        this.slimes.get(400, 500);
-        this.slimes.get(400, 400);
+        //this.slimes.get(400, 500);
+        //this.slimes.get(400, 400);
 
         // create players in new scene
         for (var player of players) {
@@ -505,7 +509,7 @@ class GameLevel extends Phaser.Scene {
 
                                 // find nearby door
                                 levels[this.id].doors.forEach(door => {
-                                    var dist = Phaser.Math.Distance.Between(p.sprite.x/32, p.sprite.y/32, door.x, door.y);
+                                    var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
                                     if (dist < 2) {
 
                                         // if door doesn't have a destination set, generate one
@@ -617,7 +621,6 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 0 },
             debug: false
         }
     }

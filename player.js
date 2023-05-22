@@ -236,7 +236,7 @@ class Player {
             this.fireTick = Date.now();
             
             if (!this.fireEmitter) {
-                this.fireParticles = this.add.particles('fire');
+                this.fireParticles = scene.add.particles('fire');
                 this.fireEmitter = this.fireParticles.createEmitter({ x: this.sprite.x, y: this.sprite.y + 30, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
             }
 
@@ -264,7 +264,7 @@ class Player {
         var properties = scene.getTileProperties(this.sprite.x + xTileOffset, this.sprite.y + yTileOffset);
         if (properties.solid) return 0;
         if (properties.speed) return Math.max(properties.speed + this.speed, minSpeed)
-
+        
         return this.speed;
     }
 

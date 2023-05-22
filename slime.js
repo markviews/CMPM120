@@ -1,5 +1,6 @@
 
 const viewDistance = 500;
+var bruh = [];
 
 class Slime extends Phaser.GameObjects.Sprite {
 
@@ -13,14 +14,25 @@ class Slime extends Phaser.GameObjects.Sprite {
         this.body.setSize(15, 15);
         this.setInteractive();
 
-        this.health = 3;
+        this.body.setCollideWorldBounds(true);
+        this.body.setBounce(0.2);
+        this.body.setFriction(1);
+        scene.physics.add.collider(this, scene.layer_tiles);
+
+        this.health = 1000;
+        this.stunned = false;
 
         // idle after jump
         this.on('animationcomplete', function (anim, frame) {
+            this.stunned = false;
+            this.body.setVelocity(0, 0);
+
             if (anim.key == 'slime_jump' || anim.key == 'slime_ouch') {
                 this.play('slime_idle');
             }
+
             if (anim.key == 'slime_die') {
+                console.log(`slime ${this.intervalID} died and was destroyed. health: ` + this.health);
                 this.destroy();
             }
         });
@@ -41,35 +53,24 @@ class Slime extends Phaser.GameObjects.Sprite {
                 return;
             }
 
-            // knock slime back
-            var dx = this.x - player.sprite.x;
-            var dy = this.y - player.sprite.y;
-            var angle = Math.atan2(dy, dx);
-
-            this.play('slime_ouch');
-
-            this.knockback = this.scene.tweens.add({
-                targets: this,
-                x: this.x + Math.cos(angle) * 30,
-                y: this.y + Math.sin(angle) * 30,
-                ease: 'Power1',
-                duration: 500,
-                onComplete: function() {
-                    if (this.scene == null) return;
-                    
-                    this.health--;
-                    if (this.health <= 0) {
-                        this.play('slime_die');
-                    }
-                },
-                onCompleteScope: this
-            });
+            this.stunned = true;
+            this.health--;
             
+            if (this.health <= 0) {
+                this.play('slime_die');
+            } else {
+                this.play('slime_ouch');
+            }
+
+            // knock slime back
+            var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
+            scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
         });
 
     }
 
     jump() {
+        if (this.stunned) return;
         
         // if we change scenes, destroy self
         if (this.scene == null) {
@@ -98,31 +99,23 @@ class Slime extends Phaser.GameObjects.Sprite {
             delay: 200,
             onComplete: function() {
                 if (this.scene == null) return;
+                if (this.stunned) return;
 
                 // if touching player
                 if (this.scene.physics.world.overlap(this, player.sprite)) {
 
-                    // knock player back
-                    var dx = player.sprite.x - this.x;
-                    var dy = player.sprite.y - this.y;
-                    var angle = Math.atan2(dy, dx);
-
                     // should probably make a "stunned" state for the player, but this does the same thing
                     player.attacking = true;
-
                     player.sprite.play('fall');
 
-                    this.scene.tweens.add({
-                        targets: player.sprite,
-                        x: player.sprite.x + Math.cos(angle) * 30,
-                        y: player.sprite.y + Math.sin(angle) * 30,
-                        ease: 'Power1',
-                        duration: 500,
-                        onComplete: function() {
-                            player.attacking = false;
-                        },
-                        onCompleteScope: this
-                    });
+                    // knock player back
+                    var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);
+                    this.scene.physics.velocityFromRotation(angle, 100, player.sprite.body.velocity);
+
+                    setTimeout(function() {
+                        player.attacking = false;
+                        player.sprite.body.setVelocity(0, 0);
+                    }, 400);
 
                 }
 
