@@ -224,7 +224,7 @@ class Player {
             const velocityY = Math.sin(Joyangle) * this.speed;
             this.sprite.x += velocityX;
             this.sprite.y += velocityY;
-            console.log(scene.joyStick.angle);
+            //console.log(scene.joyStick.angle);
             if (scene.joyStick.angle > 45 && scene.joyStick.angle < 135) this.dir = "down";
             else if (scene.joyStick.angle > 135 || scene.joyStick.angle < -135) this.dir = "left";
             else if (scene.joyStick.angle > -135 && scene.joyStick.angle < -45) this.dir = "up";
@@ -233,7 +233,7 @@ class Player {
             this.idle = false;
         }
         //#endregion Joystick Movement
-        
+
         // #region animation
         // set player animation
         // replaces "left" dir with "right" animation because it's just mirred right
