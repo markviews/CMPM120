@@ -26,7 +26,9 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
-        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);  
+        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
+        this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+  
     }
 
     create() {
@@ -54,6 +56,7 @@ class SetupLevel extends Phaser.Scene {
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.start('gamelevel', id);
+        
     }
 
 }
@@ -167,6 +170,25 @@ class GameLevel extends Phaser.Scene {
         this.physics.world.enable(this.layer_tiles);
         this.layer_tiles.setCollisionByProperty({ solid: true });
         
+
+        //JOYSTICK STUFF------------------------------------------------------------------------------------
+        //CIRCLES FOR JOYSTICK-------------------------
+        //----------------------------------------------
+        this.joyStick = this.plugins
+      .get("rexvirtualjoystickplugin")
+      .add(this, {
+        x: 450,
+        y: 550,
+        radius: 200,
+        base: this.add.circle(0, 0, 50, 0x888888),
+        thumb: this.add.circle(0, 0, 20, 0xcccccc),
+        dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+        forceMin: 16,
+        enable: true
+      });
+
+      
+      //END OF JOYSTICK --------------------------------------------------------------------------------------
 
         // store location of door players are coming from
         this.tp_door = {};
@@ -623,7 +645,7 @@ var config = {
         arcade: {
             debug: false
         }
-    }
+    },
 };
 
 new Phaser.Game(config);

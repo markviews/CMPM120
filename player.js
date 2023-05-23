@@ -1,5 +1,8 @@
 var index = 0;
-
+//Touch Control variables-----
+var isDrag = false;
+var startDragPos;
+//----------------------------
 class Player {
 
     constructor() {
@@ -118,7 +121,7 @@ class Player {
             }
         });
         
-        // controlls
+
         switch(this.playerID) {
             case 0:
                 this.controls = { 
@@ -214,6 +217,23 @@ class Player {
         else if (directions.includes("right")) this.angle = 0;
         //#endregion movement
 
+        //# region Joystick Movement
+        if (scene.joyStick.angle != 0) {
+            let Joyangle = Phaser.Math.DegToRad(scene.joyStick.angle);
+            const velocityX = Math.cos(Joyangle) * this.speed;
+            const velocityY = Math.sin(Joyangle) * this.speed;
+            this.sprite.x += velocityX;
+            this.sprite.y += velocityY;
+            console.log(scene.joyStick.angle);
+            if (scene.joyStick.angle > 45 && scene.joyStick.angle < 135) this.dir = "down";
+            else if (scene.joyStick.angle > 135 || scene.joyStick.angle < -135) this.dir = "left";
+            else if (scene.joyStick.angle > -135 && scene.joyStick.angle < -45) this.dir = "up";
+            else if (scene.joyStick.angle > -45 || scene.joyStick.angle < 45) this.dir = "right";
+
+            this.idle = false;
+        }
+        //#endregion Joystick Movement
+        
         // #region animation
         // set player animation
         // replaces "left" dir with "right" animation because it's just mirred right
@@ -267,5 +287,24 @@ class Player {
         
         return this.speed;
     }
+
+    //TOUCH CONTROL FUNCTIONS
+    startDrag(pointer){
+        isDrag = true;
+        startDragPos = {
+            x: pointer.x,
+            y: pointer.y
+        };
+    }
+    drag(pointer){
+        if(isDrag){
+            var deltaX = pointer.x - startDragPos.x;
+            var deltaY = pointer.y - startDragPos.y;
+        }
+    }
+    stopDrag(){
+        isDrag = false;
+    }
+    
 
 }
