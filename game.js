@@ -46,9 +46,9 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
         this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
         this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65,66,67,68,69 ] }), frameRate: 16 });
-        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76,77,78,79,80,81] }), frameRate: 10 });
-        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54,55,56,57,58] }), frameRate: 16 });
+        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
+        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
+        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
         
         // create players
         players.push(new Player());
@@ -292,11 +292,10 @@ class GameLevel extends Phaser.Scene {
         });
 
         // a camera object used to keep track of center camera position
-        this.camera = this.add.image(100, 100);
-        this.camera.visible = false;
+        
     
         this.cameras.main.roundPixels = true;
-        this.cameras.main.startFollow(this.camera);
+        
         this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
         this.cameras.main.zoomTo(camMinZoom, 0);
         this.cameras.main.fadeIn(1000);
@@ -325,6 +324,7 @@ class GameLevel extends Phaser.Scene {
         for (var player of players) {
             player.newScene(this);
         }
+        this.cameras.main.startFollow(players[0].sprite);
 
         // #region map editor
         this.editMode = EditMode.NotEditing;
@@ -566,32 +566,11 @@ class GameLevel extends Phaser.Scene {
 
             // #endregion door
 
-            // #region check if camera needs to zoom
-            var angle = Math.atan2(player.sprite.x - this.camera.x, player.sprite.y - this.camera.y);
-            var x = player.sprite.x + Math.sin(angle) * camPadding;
-            var y = player.sprite.y + Math.cos(angle) * camPadding;
-
-            // player is out of bounds, zoom camera out
-            if (!this.cameras.main.worldView.contains(x, y)) {
-                if (this.cameras.main._bounds.contains(x,y)) {
-                    this.cameras.main.zoomTo(this.cameras.main.zoom - 0.01, 1);
-                    //console.log("zooming out");
-                }
-            }
-            
-            // zoom back in if everyone is away from the edges
-            var x2 = player.sprite.x + Math.sin(angle) * (camPadding + 30);
-            var y2 = player.sprite.y + Math.cos(angle) * (camPadding + 30);
-            if (!this.cameras.main.worldView.contains(x2, y2)) {
-                outOfBounds++;
-            }
-            //#endregion check if camera needs to zoom
-
         }
 
         if (this.editMode == EditMode.NotEditing) {
             // normal camera movement
-            this.camera.setPosition((minX + maxX) / 2, (minY + maxY) / 2);
+            
             
             // zoom camera in if all players are away from edges
             if (outOfBounds <= 1 && this.cameras.main.zoom < camMinZoom) {
