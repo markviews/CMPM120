@@ -177,7 +177,6 @@ class Player {
         }
 
         // #region movement
-        this.sprite.body.setVelocity(0, 0);
 
         this.idle = true;
         var directions = [];
@@ -202,6 +201,7 @@ class Player {
             else if (directions.includes("right")) this.angle = 0;
         }
 
+        // joystick input
         if (scene.joyStick.angle != 0) {
             this.angle = scene.joyStick.angle;
             if (this.angle < 0) this.angle += 360;
@@ -214,13 +214,13 @@ class Player {
             this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
             
              // set this.dir based on angle
-             if (this.angle > 45 && this.angle < 135) this.dir = "down";
-             else if (this.angle > 135 && this.angle < 225) this.dir = "left";
-             else if (this.angle > 225 && this.angle < 315) this.dir = "up";
-             else this.dir = "right";
+             if (this.angle >= 315 || this.angle <= 45) this.dir = "right";
+             else if (this.angle >= 135 && this.angle <= 225) this.dir = "left";
+             else if (this.angle > 45 && this.angle <= 135) this.dir = "down";
+             else this.dir = "up";
+        } else {
+            this.sprite.body.setVelocity(0, 0);
         }
-
-
 
         //#endregion movement
 

@@ -465,7 +465,7 @@ class GameLevel extends Phaser.Scene {
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
-
+        
     }
 
     update() {
@@ -528,7 +528,7 @@ class GameLevel extends Phaser.Scene {
                                 // find nearby door
                                 levels[this.id].doors.forEach(door => {
                                     var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
-                                    if (dist < 2) {
+                                    if (dist < 4) {
 
                                         // if door doesn't have a destination set, generate one
                                         if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
