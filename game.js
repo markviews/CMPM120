@@ -163,13 +163,9 @@ class GameLevel extends Phaser.Scene {
         window.inst = this;
 
         this.map = this.make.tilemap({ key: 'map' });
-        var tileset = this.map.addTilesetImage('tiles');
-        var level = levels[this.id].level;
-        this.layer_tiles = this.map.createLayer(level, tileset, 0, 0);
-
-        this.physics.world.enable(this.layer_tiles);
-        this.layer_tiles.setCollisionByProperty({ solid: true });
-        
+        const tileset = this.map.addTilesetImage('tiles');
+        this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
+        this.map.setCollision([ 41, 26 ]);
 
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
@@ -194,9 +190,8 @@ class GameLevel extends Phaser.Scene {
         this.tp_door = {};
 
         // set tile properties
-        this.layer_tiles.forEachTile(function (tile) {
-            var properties = this.map.tilesets[0].tileProperties[tile.index];
-            tile.properties = properties;
+        this.layer_tiles.forEachTile(tile => {
+            var properties = tile.properties;
 
             // check door connections
             if (properties && properties.door) {
@@ -236,7 +231,7 @@ class GameLevel extends Phaser.Scene {
 
             }
 
-        }, this);
+        });
 
         // create door connection / teleport player to proper door
         if (levels[this.id].from_wall) {
@@ -276,8 +271,8 @@ class GameLevel extends Phaser.Scene {
 
         }
 
-        // make physics group for items
-        this.items = this.physics.add.group();
+        // make group for items
+        this.items = this.add.group();
 
         // load items into data
         if (levels[this.id].items == undefined) {
@@ -291,6 +286,7 @@ class GameLevel extends Phaser.Scene {
             var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
             item.setOrigin(0.5, 0.5);
             item.setScale(itemScale);
+            item.setImmovable(true);
 
             // add item to group
             this.items.add(item);

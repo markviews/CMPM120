@@ -25,10 +25,11 @@ class Player {
         this.sprite.id = this.playerID;
         
         // physics
-        scene.physics.world.enable(this.sprite);
+        scene.physics.add.existing(this.sprite);
+        this.sprite.body.setCollideWorldBounds(true);
+        this.sprite.body.setSize(12, 20);
+        this.sprite.body.setOffset(18, 22);
         this.sprite.body.onCollide = true;
-        this.sprite.body.setSize(15, 20);
-        this.sprite.body.setOffset(17, 22);
         
         // melee hitbox
         this.MeleeHithox = scene.add.rectangle(-100, -100, 0, 0);
@@ -41,6 +42,7 @@ class Player {
         scene.physics.add.collider(this.sprite, scene.items);
         scene.physics.add.collider(this.sprite, scene.slimes);
         scene.physics.add.collider(this.MeleeHithox, scene.slimes);
+        scene.physics.add.collider(this.sprite, scene.layer_tiles);
 
         // set position
         if (scene.tp_door?.x && scene.tp_door?.y) {
@@ -64,9 +66,9 @@ class Player {
         this.sprite.play(`idle_${this.dir}`);
         
         // pick up item event
-        scene.physics.world.on('collide', (gameObject1, gameObject2, body1, body2) => {
+        scene.physics.world.on('collide', (gameObject1, gameObject2) => {
             if (gameObject1 =! this) return;
-            if (gameObject2.texture.key != "items") return;
+            if (gameObject2?.texture?.key != "items") return;
 
             scene.items.remove(gameObject2);
 
@@ -175,64 +177,52 @@ class Player {
         }
 
         // #region movement
+        this.sprite.body.setVelocity(0, 0);
+
         this.idle = true;
         var directions = [];
     
-        if (this.controls.up.isDown) {
-            this.sprite.y -= this.getMoveSpeed(0, 40 - this.speed);
-            this.dir = "up";
+        // keyboard input
+        if (this.controls.up.isDown) directions.push("up");
+        else if (this.controls.down.isDown) directions.push("down");
+        if (this.controls.left.isDown) directions.push("left");
+        else if (this.controls.right.isDown) directions.push("right");
+
+        if (directions.length != 0) {
             this.idle = false;
-            directions.push("up");
-        }
-        //"else" here so if player acidently holds up and down they will just go up
-        else if (this.controls.down.isDown) {
-            this.sprite.y += this.getMoveSpeed(0, 45);
-            this.dir = "down";
-            this.idle = false;
-            directions.push("down");
+
+            // calculate angle player is walking
+            if (directions.includes("up") && directions.includes("left")) this.angle = 225;
+            else if (directions.includes("up") && directions.includes("right")) this.angle = 315;
+            else if (directions.includes("down") && directions.includes("left")) this.angle = 135;
+            else if (directions.includes("down") && directions.includes("right")) this.angle = 45;
+            else if (directions.includes("up")) this.angle = 270;
+            else if (directions.includes("down")) this.angle = 90;
+            else if (directions.includes("left")) this.angle = 180;
+            else if (directions.includes("right")) this.angle = 0;
         }
 
-        if (this.controls.left.isDown) {
-            this.sprite.x -= this.getMoveSpeed(-10, 40);
-            this.dir = "left";
-            this.idle = false;
-            directions.push("left");
-        }
-        //"else" here so if player acidently holds left and right they will just go left
-        else if (this.controls.right.isDown) {
-            this.sprite.x += this.getMoveSpeed(10, 40);
-            this.dir = "right";
-            this.idle = false;
-            directions.push("right");
-        }
-
-        // calculate angle player is walking
-        if (directions.includes("up") && directions.includes("left")) this.angle = 225;
-        else if (directions.includes("up") && directions.includes("right")) this.angle = 315;
-        else if (directions.includes("down") && directions.includes("left")) this.angle = 135;
-        else if (directions.includes("down") && directions.includes("right")) this.angle = 45;
-        else if (directions.includes("up")) this.angle = 270;
-        else if (directions.includes("down")) this.angle = 90;
-        else if (directions.includes("left")) this.angle = 180;
-        else if (directions.includes("right")) this.angle = 0;
-        //#endregion movement
-
-        //# region Joystick Movement
         if (scene.joyStick.angle != 0) {
-            let Joyangle = Phaser.Math.DegToRad(scene.joyStick.angle);
-            const velocityX = Math.cos(Joyangle) * this.speed;
-            const velocityY = Math.sin(Joyangle) * this.speed;
-            this.sprite.x += velocityX;
-            this.sprite.y += velocityY;
-            //console.log(scene.joyStick.angle);
-            if (scene.joyStick.angle > 45 && scene.joyStick.angle < 135) this.dir = "down";
-            else if (scene.joyStick.angle > 135 || scene.joyStick.angle < -135) this.dir = "left";
-            else if (scene.joyStick.angle > -135 && scene.joyStick.angle < -45) this.dir = "up";
-            else if (scene.joyStick.angle > -45 || scene.joyStick.angle < 45) this.dir = "right";
-
+            this.angle = scene.joyStick.angle;
+            if (this.angle < 0) this.angle += 360;
             this.idle = false;
         }
-        //#endregion Joystick Movement
+
+        // if moving this frame
+        if (!this.idle) {
+            this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
+            this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
+            
+             // set this.dir based on angle
+             if (this.angle > 45 && this.angle < 135) this.dir = "down";
+             else if (this.angle > 135 && this.angle < 225) this.dir = "left";
+             else if (this.angle > 225 && this.angle < 315) this.dir = "up";
+             else this.dir = "right";
+        }
+
+
+
+        //#endregion movement
 
         // #region animation
         // set player animation
@@ -273,19 +263,6 @@ class Player {
         }
         //#endregion fire
 
-    }
-
-    getMoveSpeed(xTileOffset, yTileOffset) {
-        let scene = this.scene;
-
-        // freeze player if attacking
-        if (freezeMelee && this.attacking) return 0;
-
-        var properties = scene.getTileProperties(this.sprite.x + xTileOffset, this.sprite.y + yTileOffset);
-        if (properties.solid) return 0;
-        if (properties.speed) return Math.max(properties.speed + this.speed, minSpeed)
-        
-        return this.speed;
     }
 
     //TOUCH CONTROL FUNCTIONS
