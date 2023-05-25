@@ -169,14 +169,18 @@ class GameLevel extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
+        let cir1 = this.add.circle(0, 0, 50, 0x888888);
+        cir1.setAlpha(0.4);
+        let cir2 = this.add.circle(0, 0, 20, 0xcccccc);
+        cir2.setAlpha(0.3);
         this.joyStick = this.plugins
       .get("rexvirtualjoystickplugin")
       .add(this, {
         x: 450,
         y: 550,
         radius: 200,
-        base: this.add.circle(0, 0, 50, 0x888888),
-        thumb: this.add.circle(0, 0, 20, 0xcccccc),
+        base: cir1,
+        thumb: cir2,
         dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
         forceMin: 16,
         enable: true
