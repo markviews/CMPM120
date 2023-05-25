@@ -161,9 +161,9 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnEnemy(type, x, y) {
-        
+
         if (this.enemies == undefined) {
-            this.enemies = this.add.group({ classType: Enemy })
+            this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true })
         }
 
         switch (type) {
@@ -172,6 +172,14 @@ class GameLevel extends Phaser.Scene {
             break;
         }
         
+    }
+
+    goToLevel(id) {
+        // unload current level
+        this.enemies = undefined;
+
+        // go new level
+        this.scene.start('gamelevel', id);
     }
 
     create() {
@@ -202,6 +210,16 @@ class GameLevel extends Phaser.Scene {
         });
       
         //END OF JOYSTICK --------------------------------------------------------------------------------------
+
+        // toggle fullscreen button
+        const fullscreenKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+        fullscreenKey.on('down', () => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+            } else {
+                this.scale.startFullscreen();
+            }
+        });
 
         // store location of door players are coming from
         this.tp_door = {};
@@ -316,7 +334,7 @@ class GameLevel extends Phaser.Scene {
         this.projectiles = this.add.group();
 
          // task progress bar
-         this.circularProgress = this.add.rexCircularProgress({
+        this.circularProgress = this.add.rexCircularProgress({
             x: 0, y: 0,
             radius: 40,
             //trackColor: 0xe8e8e8,
@@ -324,7 +342,7 @@ class GameLevel extends Phaser.Scene {
             //centerColor: 0x4e342e,
             anticlockwise: false,
             value: 0,
-        })
+        });
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
 
@@ -537,7 +555,7 @@ class GameLevel extends Phaser.Scene {
                                         levels[door.dest_id].from_wall = door.wall;
                                         levels[door.dest_id].from_id = this.id;
 
-                                        this.scene.start('gamelevel', door.dest_id);
+                                        this.goToLevel(door.dest_id);
                                         foundDoor = true;
                                     }
                                 });
@@ -595,8 +613,9 @@ class GameLevel extends Phaser.Scene {
 
 var config = {
     type: Phaser.AUTO,
-    width: window.innerWidth - 20,
-    height: window.innerHeight - 20,
+    width: 1920,
+    height: 1080,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,

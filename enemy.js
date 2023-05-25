@@ -22,12 +22,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
             this.body.setVelocity(0, 0);
 
             if (anim.key.endsWith('_die')) {
-
-                var index = scene.enemies.indexOf(this);
-                if (index > -1) {
-                    scene.enemies.splice(index, 1);
-                }
-
                 this.destroy();
             } else {
                 this.play(this.type + '_idle');

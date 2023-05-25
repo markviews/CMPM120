@@ -13,18 +13,8 @@ class Slime extends Enemy {
 
     jump() {
         if (this.stunned) return;
-
+        
         if (this.scene == null) {
-            return;
-
-            console.log("clearing interval");
-
-            // remove from scene.enemies
-            var index = this.scene.enemies.indexOf(this);
-            if (index > -1) {
-                this.scene.enemies.splice(index, 1);
-            }
-
             clearInterval(this.intervalID);
             return;
         }
