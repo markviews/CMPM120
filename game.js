@@ -189,21 +189,19 @@ class GameLevel extends Phaser.Scene {
         cir1.setAlpha(0.4);
         let cir2 = this.add.circle(0, 0, 20, 0xcccccc);
         cir2.setAlpha(0.3);
-        this.joyStick = this.plugins
-      .get("rexvirtualjoystickplugin")
-      .add(this, {
-        x: 450,
-        y: 550,
-        radius: 200,
-        base: cir1,
-        thumb: cir2,
-        dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
-        forceMin: 16,
-        enable: true
-      });
-
+        
+        this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
+            x: 450,
+            y: 550,
+            radius: 200,
+            base: cir1,
+            thumb: cir2,
+            dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+            forceMin: 16,
+            enable: true
+        });
       
-      //END OF JOYSTICK --------------------------------------------------------------------------------------
+        //END OF JOYSTICK --------------------------------------------------------------------------------------
 
         // store location of door players are coming from
         this.tp_door = {};
@@ -606,7 +604,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 };

@@ -4,9 +4,6 @@ var dodgeDuration = 100;
 var dodging = false;
 var xdir = 0;
 var ydir = 0;
-
-
-
 //Touch Control variables-----
 var isDrag = false;
 var startDragPos;
@@ -26,7 +23,6 @@ class Player {
     // called when player enters a new scene
     newScene(scene) {
         this.scene = scene;
-        
 
         this.sprite = scene.add.sprite();
         this.sprite.setScale(2.5);
@@ -42,16 +38,16 @@ class Player {
         this.sprite.setOrigin(0.5, 0.5);
         
         // melee hitbox
-        this.MeleeHitbox = scene.add.rectangle(-100, -100, 0, 0);
-        scene.physics.world.enable(this.MeleeHitbox);
-        this.MeleeHitbox.body.onCollide = true;
-        this.MeleeHitbox.name = "melee_hitbox";
-        this.MeleeHitbox.id = this.playerID;
+        this.Meleehitbox = scene.add.rectangle(-100, -100, 0, 0);
+        scene.physics.world.enable(this.Meleehitbox);
+        this.Meleehitbox.body.onCollide = true;
+        this.Meleehitbox.name = "melee_hitbox";
+        this.Meleehitbox.id = this.playerID;
         
         // hixbox colliders
         scene.physics.add.collider(this.sprite, scene.items);
         scene.physics.add.collider(this.sprite, scene.enemies);
-        scene.physics.add.collider(this.MeleeHithox, scene.enemies);
+        scene.physics.add.collider(this.Meleehitbox, scene.enemies);
         scene.physics.add.collider(this.sprite, scene.layer_tiles);
 
         // set position
@@ -117,19 +113,19 @@ class Player {
         // melee attack hitbox
         this.sprite.on('animationupdate', (anim) => {
             if (anim.key.startsWith("attack_right")) {
-                this.MeleeHitbox.x = this.sprite.x - 2;
-                this.MeleeHitbox.y = this.sprite.y + 35;
-                this.MeleeHitbox.body.setSize(90, 35);
+                this.Meleehitbox.x = this.sprite.x - 2;
+                this.Meleehitbox.y = this.sprite.y + 35;
+                this.Meleehitbox.body.setSize(90, 35);
             }
             if (anim.key.startsWith("attack_up")) {
-                this.MeleeHitbox.x = this.sprite.x;
-                this.MeleeHitbox.y = this.sprite.y + 15;
-                this.MeleeHitbox.body.setSize(60, 40);
+                this.Meleehitbox.x = this.sprite.x;
+                this.Meleehitbox.y = this.sprite.y + 15;
+                this.Meleehitbox.body.setSize(60, 40);
             }
             if (anim.key.startsWith("attack_down")) {
-                this.MeleeHitbox.x = this.sprite.x - 5;
-                this.MeleeHitbox.y = this.sprite.y + 40;
-                this.MeleeHitbox.body.setSize(70, 40);
+                this.Meleehitbox.x = this.sprite.x - 5;
+                this.Meleehitbox.y = this.sprite.y + 40;
+                this.Meleehitbox.body.setSize(70, 40);
             }
         });
         
@@ -170,7 +166,6 @@ class Player {
             this.sprite.play(anim);
         }
 
-
         // projectile attack
         if (Phaser.Input.Keyboard.JustDown(this.controls.attack_projectile)) {
             let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y + 30, 'bullet');
@@ -188,8 +183,8 @@ class Player {
             });
         }
 
-        //dodge
-        
+        // #region dodge
+
         if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && dodging == false){
             var flashes = 3;
             dodging = true;
@@ -203,11 +198,11 @@ class Player {
                     this.sprite.alpha = 1;
                     setTimeout(function(){
                         dodging = false;
-                        clone.destroy();  
+                        //clone.destroy();  
                     },1000);
                 },
             });
-            console.log(this.angle);
+            //console.log(this.angle);
             if(this.sprite.dir == "left"){
                 xdir = this.sprite.x - Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
                 ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
@@ -261,9 +256,10 @@ class Player {
                     },
                 });
             }
-            
+
         }
-        //dodge_end
+        
+        // #endregion dodge
 
         // #region movement
 
@@ -327,8 +323,8 @@ class Player {
             if (this.dir == "left") this.sprite.flipX = true;
             if (this.dir == "right") this.sprite.flipX = false;
 
-            this.MeleeHitbox.x = -100;
-            this.MeleeHitbox.y = -100;
+            this.Meleehitbox.x = -100;
+            this.Meleehitbox.y = -100;
         }
         //#endregion animation
 
