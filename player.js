@@ -23,13 +23,14 @@ class Player {
         this.sprite.setScale(2.5);
         this.sprite.play('walk_right');
         this.sprite.id = this.playerID;
+        this.sprite.name = "player"
         
         // physics
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
         this.sprite.body.setSize(12, 20);
-        this.sprite.body.setOffset(18, 22);
-        this.sprite.body.onCollide = true;
+        this.sprite.body.setOffset(18, 10);
+        this.sprite.setOrigin(0.5, 0.5);
         
         // melee hitbox
         this.MeleeHithox = scene.add.rectangle(-100, -100, 0, 0);
@@ -40,8 +41,8 @@ class Player {
         
         // hixbox colliders
         scene.physics.add.collider(this.sprite, scene.items);
-        scene.physics.add.collider(this.sprite, scene.slimes);
-        scene.physics.add.collider(this.MeleeHithox, scene.slimes);
+        scene.physics.add.collider(this.sprite, scene.enemies);
+        scene.physics.add.collider(this.MeleeHithox, scene.enemies);
         scene.physics.add.collider(this.sprite, scene.layer_tiles);
 
         // set position
@@ -210,8 +211,10 @@ class Player {
 
         // if moving this frame
         if (!this.idle) {
-            this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
-            this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
+            if (!this.attacking) {
+                this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
+                this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
+            }
             
              // set this.dir based on angle
              if (this.angle >= 315 || this.angle <= 45) this.dir = "right";
@@ -219,7 +222,9 @@ class Player {
              else if (this.angle > 45 && this.angle <= 135) this.dir = "down";
              else this.dir = "up";
         } else {
-            this.sprite.body.setVelocity(0, 0);
+            if (!this.attacking) {
+                this.sprite.body.setVelocity(0, 0);
+            }
         }
 
         //#endregion movement

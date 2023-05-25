@@ -55,7 +55,6 @@ class SetupLevel extends Phaser.Scene {
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.start('gamelevel', id);
-        
     }
 
 }
@@ -120,6 +119,7 @@ class GameLevel extends Phaser.Scene {
         this.text_item.setVisible(false);
         this.text_JSON.setVisible(false);
         this.text_delItem.setVisible(false);
+        
 
         switch(mode) {
             case EditMode.NotEditing:
@@ -127,9 +127,10 @@ class GameLevel extends Phaser.Scene {
                 this.helpText.setText('EditMode: Not editing');
                 this.marker.x = -100;
                 this.marker.y = -100;
-
+            
                 this.helpText.setVisible(false);
                 this.propertiesText.setVisible(false);
+                this.cameras.main.zoomTo(camMinZoom);
             break;
             case EditMode.Selecting:
                 this.helpText.setText('EditMode: Pick Block');
@@ -141,6 +142,7 @@ class GameLevel extends Phaser.Scene {
                 this.text_delItem.setVisible(true);
                 this.helpText.setVisible(true);
                 this.propertiesText.setVisible(true);
+                this.cameras.main.zoomTo(1);
             break;
             case EditMode.PlaceBlock:
                 this.helpText.setText('EditMode: Painting Tile');
@@ -156,6 +158,20 @@ class GameLevel extends Phaser.Scene {
 
         }
 
+    }
+
+    spawnEnemy(type, x, y) {
+        
+        if (this.enemies == undefined) {
+            this.enemies = this.add.group({ classType: Enemy })
+        }
+
+        switch (type) {
+            case 'slime':
+                this.enemies.add(new Slime(this, x, y));
+            break;
+        }
+        
     }
 
     create() {
@@ -201,7 +217,7 @@ class GameLevel extends Phaser.Scene {
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
                     var distance = Phaser.Math.Distance.Between(door.x, door.y, tile.x, tile.y);
-                    if (distance < 2) {
+                    if (distance < 6) {
                         nearDoor = true;
                         break;
                     }
@@ -286,16 +302,11 @@ class GameLevel extends Phaser.Scene {
             item.setOrigin(0.5, 0.5);
             item.setScale(itemScale);
             item.setImmovable(true);
-
-            // add item to group
+            item.body.onCollide = true;
             this.items.add(item);
         });
 
-        // a camera object used to keep track of center camera position
-        
-    
         this.cameras.main.roundPixels = true;
-        
         this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
         this.cameras.main.zoomTo(camMinZoom, 0);
         this.cameras.main.fadeIn(1000);
@@ -315,10 +326,9 @@ class GameLevel extends Phaser.Scene {
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
 
-        this.slimes = this.physics.add.group({ classType: Slime, runChildUpdate: true })
-        this.slimes.get(500, 500);
-        //this.slimes.get(400, 500);
-        //this.slimes.get(400, 400);
+        // spawn enemies
+        this.spawnEnemy('slime', 400, 400);
+        this.spawnEnemy('slime', 400, 500);
 
         // create players in new scene
         for (var player of players) {
@@ -469,22 +479,10 @@ class GameLevel extends Phaser.Scene {
 
     update() {
         // camera variables
-        var outOfBounds = 0; // number of players out of bounds this frame
-        var minX = players[0].sprite.x;
-        var maxX = players[0].sprite.x;
-        var minY = players[0].sprite.y;
-        var maxY = players[0].sprite.y;
-
         var playersDoor = 0; // number of players at door this frame
 
         for (var player of players) {
             player.update();
-
-            // camera variables
-            minX = Math.min(minX, player.sprite.x);
-            maxX = Math.max(maxX, player.sprite.x);
-            minY = Math.min(minY, player.sprite.y);
-            maxY = Math.max(maxY, player.sprite.y);
             
             // #region door
 
@@ -568,19 +566,6 @@ class GameLevel extends Phaser.Scene {
 
         }
 
-        if (this.editMode == EditMode.NotEditing) {
-            // normal camera movement
-            
-            
-            // zoom camera in if all players are away from edges
-            if (outOfBounds <= 1 && this.cameras.main.zoom < camMinZoom) {
-                this.cameras.main.zoomTo(this.cameras.main.zoom + 0.01, 1);
-            }
-        } else {
-            // zoom out in edit mode
-            this.cameras.main.zoomTo(1);
-        }
-
         // #region tile editor
 
         if (Phaser.Input.Keyboard.JustDown(this.button_edit)) {
@@ -608,8 +593,8 @@ class GameLevel extends Phaser.Scene {
 
 var config = {
     type: Phaser.AUTO,
-    width: 1215,
-    height: 896,
+    width: window.innerWidth - 20,
+    height: window.innerHeight - 20,
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
@@ -617,7 +602,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
 };
