@@ -1,4 +1,12 @@
 var index = 0;
+var dodgeDistance = 150;
+var dodgeDuration = 100;
+var dodging = false;
+var xdir = 0;
+var ydir = 0;
+
+
+
 //Touch Control variables-----
 var isDrag = false;
 var startDragPos;
@@ -18,6 +26,7 @@ class Player {
     // called when player enters a new scene
     newScene(scene) {
         this.scene = scene;
+        
 
         this.sprite = scene.add.sprite();
         this.sprite.setScale(2.5);
@@ -33,11 +42,11 @@ class Player {
         this.sprite.setOrigin(0.5, 0.5);
         
         // melee hitbox
-        this.MeleeHithox = scene.add.rectangle(-100, -100, 0, 0);
-        scene.physics.world.enable(this.MeleeHithox);
-        this.MeleeHithox.body.onCollide = true;
-        this.MeleeHithox.name = "melee_hitbox";
-        this.MeleeHithox.id = this.playerID;
+        this.MeleeHitbox = scene.add.rectangle(-100, -100, 0, 0);
+        scene.physics.world.enable(this.MeleeHitbox);
+        this.MeleeHitbox.body.onCollide = true;
+        this.MeleeHitbox.name = "melee_hitbox";
+        this.MeleeHitbox.id = this.playerID;
         
         // hixbox colliders
         scene.physics.add.collider(this.sprite, scene.items);
@@ -108,19 +117,19 @@ class Player {
         // melee attack hitbox
         this.sprite.on('animationupdate', (anim) => {
             if (anim.key.startsWith("attack_right")) {
-                this.MeleeHithox.x = this.sprite.x - 2;
-                this.MeleeHithox.y = this.sprite.y + 35;
-                this.MeleeHithox.body.setSize(90, 35);
+                this.MeleeHitbox.x = this.sprite.x - 2;
+                this.MeleeHitbox.y = this.sprite.y + 35;
+                this.MeleeHitbox.body.setSize(90, 35);
             }
             if (anim.key.startsWith("attack_up")) {
-                this.MeleeHithox.x = this.sprite.x;
-                this.MeleeHithox.y = this.sprite.y + 15;
-                this.MeleeHithox.body.setSize(60, 40);
+                this.MeleeHitbox.x = this.sprite.x;
+                this.MeleeHitbox.y = this.sprite.y + 15;
+                this.MeleeHitbox.body.setSize(60, 40);
             }
             if (anim.key.startsWith("attack_down")) {
-                this.MeleeHithox.x = this.sprite.x - 5;
-                this.MeleeHithox.y = this.sprite.y + 40;
-                this.MeleeHithox.body.setSize(70, 40);
+                this.MeleeHitbox.x = this.sprite.x - 5;
+                this.MeleeHitbox.y = this.sprite.y + 40;
+                this.MeleeHitbox.body.setSize(70, 40);
             }
         });
         
@@ -133,7 +142,8 @@ class Player {
                     left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
                     attack_melee: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
-                    attack_projectile: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E)
+                    attack_projectile: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
+                    dodge: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
                 }
             break;
             case 1:
@@ -160,6 +170,7 @@ class Player {
             this.sprite.play(anim);
         }
 
+
         // projectile attack
         if (Phaser.Input.Keyboard.JustDown(this.controls.attack_projectile)) {
             let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y + 30, 'bullet');
@@ -176,6 +187,83 @@ class Player {
                 mySprite.destroy();
             });
         }
+
+        //dodge
+        
+        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && dodging == false){
+            var flashes = 3;
+            dodging = true;
+            scene.tweens.add({
+                targets: this.sprite,
+                alpha: 0,
+                duration: 50,
+                repeat: flashes * 2 -1,
+                yoyo: true,
+                onComplete: () =>{
+                    this.sprite.alpha = 1;
+                    setTimeout(function(){
+                        dodging = false;
+                        clone.destroy();  
+                    },1000);
+                },
+            });
+            console.log(this.angle);
+            if(this.sprite.dir == "left"){
+                xdir = this.sprite.x - Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            }
+            else if (this.sprite.dir == "right"){
+                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            }
+            else if (this.sprite.dir == "down"){
+                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                ydir = this.sprite.y - Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            }
+            else{
+                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            }
+            this.sprite.inputEnabled = false;
+            scene.tweens.add({
+                targets: this.sprite,
+                x: xdir, // Move the sprite 100 pixels to the right
+                y: ydir,
+                duration: dodgeDuration, // Half the duration for the first part of the dodge
+                repeat: 0, // Repeat the tween once to complete the dodge motion
+                onComplete: () => {
+                    this.sprite.inputEnabled = true;
+                },
+            });
+            for(let i = 0; i <= 8; i ++){
+                let clone = scene.add.sprite();
+                clone.setScale(2.5);
+                clone.id = this.sprite.id;
+                clone.setPosition(this.sprite.x, this.sprite.y);
+                clone.dir = this.sprite.dir;
+                let animation_key = this.sprite.anims.currentAnim.key;
+                clone.play(animation_key);
+                if (this.dir == "left") clone.flipX = true;
+                if (this.dir == "right") clone.flipX = false;
+                clone.anims.stop();
+                clone.alpha = 1;
+
+                scene.tweens.add({
+                    targets: clone,
+                    x: xdir, // Move the sprite 100 pixels to the right
+                    y: ydir,
+                    alpha: clone.alpha - 0.2 * i,
+                    duration: dodgeDuration + 50 * i, // Half the duration for the first part of the dodge
+                    repeat: 0, // Repeat the tween once to complete the dodge motion
+                    onComplete: () => {
+                        this.sprite.inputEnabled = true;
+                        clone.destroy();
+                    },
+                });
+            }
+            
+        }
+        //dodge_end
 
         // #region movement
 
@@ -239,8 +327,8 @@ class Player {
             if (this.dir == "left") this.sprite.flipX = true;
             if (this.dir == "right") this.sprite.flipX = false;
 
-            this.MeleeHithox.x = -100;
-            this.MeleeHithox.y = -100;
+            this.MeleeHitbox.x = -100;
+            this.MeleeHitbox.y = -100;
         }
         //#endregion animation
 
