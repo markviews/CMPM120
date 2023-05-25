@@ -612,8 +612,8 @@ class GameLevel extends Phaser.Scene {
 
 var config = {
     type: Phaser.AUTO,
-    width: 1215,
-    height: 896,
+    width: window.innerWidth - 20,
+    height: window.innerHeight - 20,
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
