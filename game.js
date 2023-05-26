@@ -162,10 +162,6 @@ class GameLevel extends Phaser.Scene {
 
     spawnEnemy(type, x, y) {
 
-        if (this.enemies == undefined) {
-            this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true })
-        }
-
         switch (type) {
             case 'slime':
                 this.enemies.add(new Slime(this, x, y));
@@ -305,6 +301,11 @@ class GameLevel extends Phaser.Scene {
                 }
 
         }
+
+        
+        this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true })
+        this.projectile_player = this.add.group(); // projectiles launched by players
+        this.physics.add.collider(this.projectile_player, this.enemies);
 
         // make group for items
         this.items = this.add.group();
@@ -497,12 +498,12 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    update() {
+    update(time, delta) {
         // camera variables
         var playersDoor = 0; // number of players at door this frame
 
         for (var player of players) {
-            player.update();
+            player.update(time, delta);
             
             // #region door
 
@@ -613,8 +614,8 @@ class GameLevel extends Phaser.Scene {
 
 var config = {
     type: Phaser.AUTO,
-    width: 1920,
-    height: 1080,
+    width: window.innerWidth,
+    height: window.innerHeight,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     backgroundColor: '#000000',
     parent: 'phaser-example',
@@ -623,7 +624,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
 };

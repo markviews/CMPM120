@@ -33,11 +33,18 @@ class Player {
         // physics
         scene.physics.add.existing(this.sprite);
         this.sprite.body.setCollideWorldBounds(true);
-        this.sprite.body.setSize(12, 20);
-        this.sprite.body.setOffset(18, 10);
+        this.sprite.body.setSize(12, 10);
+        this.sprite.body.setOffset(18,20);
         this.sprite.setOrigin(0.5, 0.5);
-        
-        // melee hitbox
+
+        // player hitbox
+        this.hithox = scene.add.rectangle(0, 0, 30, 50);
+        scene.physics.world.enable(this.hithox);
+        this.hithox.body.setOffset(15, 0);
+        this.hithox.id = this.playerID;
+        this.hithox.name = "player"
+
+        // melee attack hitbox
         this.Meleehitbox = scene.add.rectangle(-100, -100, 0, 0);
         scene.physics.world.enable(this.Meleehitbox);
         this.Meleehitbox.body.onCollide = true;
@@ -45,8 +52,8 @@ class Player {
         this.Meleehitbox.id = this.playerID;
         
         // hixbox colliders
-        scene.physics.add.collider(this.sprite, scene.items);
-        scene.physics.add.collider(this.sprite, scene.enemies);
+        scene.physics.add.collider(this.hithox, scene.items);
+        scene.physics.add.collider(this.hithox, scene.enemies);
         scene.physics.add.collider(this.Meleehitbox, scene.enemies);
         scene.physics.add.collider(this.sprite, scene.layer_tiles);
 
@@ -113,19 +120,26 @@ class Player {
         // melee attack hitbox
         this.sprite.on('animationupdate', (anim) => {
             if (anim.key.startsWith("attack_right")) {
-                this.Meleehitbox.x = this.sprite.x - 2;
-                this.Meleehitbox.y = this.sprite.y + 35;
-                this.Meleehitbox.body.setSize(90, 35);
+                if (this.dir == "right") {
+                    this.Meleehitbox.x = this.sprite.x + 10;
+                    this.Meleehitbox.y = this.sprite.y - 10;
+                    this.Meleehitbox.body.setSize(70, 70);
+                }
+                if (this.dir == "left") {
+                    this.Meleehitbox.x = this.sprite.x - 10;
+                    this.Meleehitbox.y = this.sprite.y - 10;
+                    this.Meleehitbox.body.setSize(70, 70);
+                }
             }
             if (anim.key.startsWith("attack_up")) {
                 this.Meleehitbox.x = this.sprite.x;
-                this.Meleehitbox.y = this.sprite.y + 15;
+                this.Meleehitbox.y = this.sprite.y - 30;
                 this.Meleehitbox.body.setSize(60, 40);
             }
             if (anim.key.startsWith("attack_down")) {
-                this.Meleehitbox.x = this.sprite.x - 5;
-                this.Meleehitbox.y = this.sprite.y + 40;
-                this.Meleehitbox.body.setSize(70, 40);
+                this.Meleehitbox.x = this.sprite.x;
+                this.Meleehitbox.y = this.sprite.y;
+                this.Meleehitbox.body.setSize(80, 80);
             }
         });
         
@@ -153,35 +167,62 @@ class Player {
                 }
             break;
         }
-        
+        this.attackTick = 0;
     }
 
-    update() {
+    update(time, delta) {
         let scene = this.scene;
 
-        // melee attack
-        if (Phaser.Input.Keyboard.JustDown(this.controls.attack_melee)) {
-            this.attacking = true;
-            var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
-            this.sprite.play(anim);
-        }
+        this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);
 
-        // projectile attack
-        if (Phaser.Input.Keyboard.JustDown(this.controls.attack_projectile)) {
-            let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y + 30, 'bullet');
-            mySprite.setScale(0.05);
-            scene.projectiles.add(mySprite);
-            scene.physics.add.existing(mySprite);
+        // #region attacks
 
-            let projectileSpeed = 500;
-            let a = Phaser.Math.DegToRad(this.angle);
-            mySprite.body.setVelocity(Math.cos(a) * projectileSpeed, Math.sin(a) * projectileSpeed);
+        // auto attacks
+        this.attackTick += delta
+        if (this.attackTick > 1000 && scene.enemies != null && scene.enemies.getChildren().length != 0) {
+            this.attackTick = 0;
 
-            // destroy projectile after 1 second
-            scene.time.delayedCall(1000, function() {
-                mySprite.destroy();
+            // get nearest enemy
+            let nearestEnemy = scene.enemies.getChildren().reduce((prev, curr) => {
+                let prevDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, prev.x, prev.y);
+                let currDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, curr.x, curr.y);
+                return (prevDist < currDist) ? prev : curr;
             });
+
+            let enemy_angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
+            let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
+
+            // melee attack
+            if (enemy_dist < 100) {
+                this.attacking = true;
+                var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
+                this.sprite.play(anim);
+            }
+            
+            // projectile attack
+            else if (enemy_dist < 500) {
+                let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y, 'bullet');
+                mySprite.setScale(0.05);
+
+                mySprite.name = "projectile";
+                // could add other attribues like damage here
+
+                scene.physics.add.existing(mySprite);
+                scene.projectile_player.add(mySprite);
+                mySprite.body.setImmovable(true);
+
+                let projectileSpeed = 500;
+                mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
+
+                // destroy projectile after 1 second
+                scene.time.delayedCall(1000, function() {
+                    mySprite.destroy();
+                });
+            }
+
         }
+
+        // #endregion attacks
 
         // #region dodge
 
@@ -287,7 +328,7 @@ class Player {
         }
 
         // joystick input
-        if (scene.joyStick.angle != 0) {
+        if (scene.joyStick && scene.joyStick.angle != 0) {
             this.angle = scene.joyStick.angle;
             if (this.angle < 0) this.angle += 360;
             this.idle = false;
@@ -295,10 +336,8 @@ class Player {
 
         // if moving this frame
         if (!this.idle) {
-            if (!this.attacking) {
-                this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
-                this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
-            }
+            this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
+            this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
             
              // set this.dir based on angle
              if (this.angle >= 315 || this.angle <= 45) this.dir = "right";
@@ -316,12 +355,12 @@ class Player {
         // #region animation
         // set player animation
         // replaces "left" dir with "right" animation because it's just mirred right
+        if (this.dir == "left") this.sprite.flipX = true;
+        if (this.dir == "right") this.sprite.flipX = false;
+
         if (!this.attacking) {
             var anim = `${this.idle ? "idle" : "walk"}_${this.dir == "left" ? "right" : this.dir}`;
             if (this.sprite.anims.currentAnim.key != anim) this.sprite.play(anim);
-
-            if (this.dir == "left") this.sprite.flipX = true;
-            if (this.dir == "right") this.sprite.flipX = false;
 
             this.Meleehitbox.x = -100;
             this.Meleehitbox.y = -100;

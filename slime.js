@@ -1,5 +1,5 @@
 const viewDistance = 500;
-const health = 1;
+const health = 500;
 
 class Slime extends Enemy {
 

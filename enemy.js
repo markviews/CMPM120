@@ -35,6 +35,24 @@ class Enemy extends Phaser.GameObjects.Sprite {
             
             var player = players[gameObject1.id]
 
+            // player getting hit by enemy
+            if (gameObject1.name == "player") {
+                
+                // should probably make a "stunned" state for the player, but this does the same thing
+                player.attacking = true;
+                player.sprite.play('fall');
+
+                // knock player back
+                var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);
+                scene.physics.velocityFromRotation(angle, 100, player.sprite.body.velocity);
+
+                setTimeout(() => {
+                    player.attacking = false;
+                }, 400);
+
+                return;
+            }
+
             // enemy getting hit by player's sword
             if (gameObject1.name == "melee_hitbox") {
                 this.stunned = true;
@@ -51,22 +69,21 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
                 return;
             }
+            
+            // enemy getting hit by player's projectile
+            if (gameObject1.name == "projectile") {
+                this.stunned = true;
+                this.health--;
 
-            // player getting hit by enemy
-            if (gameObject1.name == "player") {
-                
-                // should probably make a "stunned" state for the player, but this does the same thing
-                player.attacking = true;
-                player.sprite.play('fall');
+                if (this.health <= 0) {
+                    this.play(this.type + '_die');
+                } else {
+                    this.play(this.type + '_ouch');
+                }
 
-                // knock player back
-                var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);
-                scene.physics.velocityFromRotation(angle, 100, player.sprite.body.velocity);
-
-                setTimeout(() => {
-                    player.attacking = false;
-                }, 400);
-
+                // knockback
+                var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
+                scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
                 return;
             }
             
