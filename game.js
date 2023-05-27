@@ -9,6 +9,27 @@ const itemsGrid = true;         // items snap to grid when placed
 
 // list of random levels to choose from
 const RandLevels = ["level1", "level2"];
+const RandItems = [
+    0, 1, 2, 3, 4, 5, 
+    7, 8, 9, 10, 11, 12,
+    14, 15, 16, 17, 18, 19,
+    21, 22, 23, 24, 25, 26,
+
+    27, 28, 29, 30, 31, 32,
+    34, 35, 36, 37, 38, 39,
+    41, 42, 43, 44, 45, 46,
+    48, 49, 50, 51, 52, 53,
+
+    54, 55, 56, 57, 58, 59,
+    61, 62, 63, 64, 65, 66,
+    68, 69, 70, 71, 72, 73,
+    75, 76, 77, 78, 79, 80,
+
+    81, 82, 83, 84, 85, 86,
+    88, 89, 90, 91, 92, 93,
+    95, 96, 97, 98, 99, 100,
+    102, 103, 104, 105, 106, 107
+]
 
 // global variables
 var levels = {};
@@ -76,7 +97,89 @@ class Inventory extends Phaser.Scene {
         this.textures.addBase64("bg", data.screenshot.src);
     }
 
+    enableHighlight(itemSprite) {
+        this.disableHighlight();
+        
+        this.highlightSquare = this.add.graphics();
+        this.highlightSquare.lineStyle(3, 0xffffff);
+        var squareWidth = itemSprite.displayWidth + 15;
+        var squareHeight = itemSprite.displayHeight + 15;
+        this.highlightSquare.strokeRect(itemSprite.x - squareWidth / 2, itemSprite.y - squareHeight / 2, squareWidth, squareHeight);
+    }
+
+    disableHighlight() {
+        if (this.highlightSquare != null)
+            this.highlightSquare.clear();
+    }
+
+    addItemSlot(x,y) {
+        let itemSlot = this.add.image(0, 0, 'items',  6);
+        itemSlot.setPosition(this.inv.x - this.invScale * x, this.inv.y - this.invScale * y);
+        itemSlot.setScale(this.invScale * 0.7);
+        this.addEvents(itemSlot, 0);
+    }
+
+    addEvents(itemSprite, itemCount) {
+        itemSprite.homeX = itemSprite.x;
+        itemSprite.homeY = itemSprite.y;
+        itemSprite.setInteractive();
+
+        let itemScale = itemSprite._scaleX;
+
+        itemSprite.on('pointerover', () => {
+            if (this.holding != undefined) return;
+            this.enableHighlight(itemSprite);
+        });
+
+        itemSprite.on('pointerout', () => {
+            this.disableHighlight();
+        });
+
+        itemSprite.on('pointerdown', () => {
+            // if item is empty, return
+            if (itemSprite.frame.name == 6) return;
+
+            this.holding = itemSprite;
+            this.disableHighlight();
+
+            // create a clone if there is more than one item
+            if (itemCount > 1) {
+                this.itemSpriteClone = this.add.image(0, 0, 'items',  itemSprite.frame.name);
+                this.itemSpriteClone.x = itemSprite.x;
+                this.itemSpriteClone.y = itemSprite.y;
+                this.itemSpriteClone.setScale(itemScale);
+                itemSprite.setDepth(1.1);
+            }
+
+        });
+
+        // add pointer up event to entire scene
+        this.input.on('pointerup', (pointer) => {
+            if (this.holding == undefined) return;
+
+            // teleport back where it came from
+            this.holding.setPosition(this.holding.homeX, this.holding.homeY);
+
+            // if mouse is above item still
+            if (this.holding.getBounds().contains(pointer.x, pointer.y)) {
+                this.enableHighlight(itemSprite);
+            }
+
+            this.holding = undefined;
+
+            // destroy clone
+            if (this.itemSpriteClone != undefined) {
+                this.itemSpriteClone.destroy();
+                this.itemSpriteClone = undefined;
+            }
+
+        });
+
+        this.allItems.push(itemSprite);
+    }
+
     create() {
+        this.allItems = [];
         this.resumeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         // wait for base64 background image to be loaded
@@ -89,22 +192,59 @@ class Inventory extends Phaser.Scene {
             overlay.fillStyle(0x000000, 0.5);
             overlay.fillRect(0, 0, this.game.config.width, this.game.config.height);
 
-            let inv = this.add.image(0, 0, 'inventory');
-            inv.x = this.game.config.width / 2;
-            inv.y = this.game.config.height / 2;
-            inv.setScale(4);
+            this.inv = this.add.image(0, 0, 'inventory');
+            this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
+            this.invScale = Math.min(this.scale.width / this.inv.width, this.scale.height / this.inv.height) * 0.8;
+            this.inv.setScale(this.invScale);
+            this.inv.setOrigin(0.5);
+            this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
 
-            // loop through inventory items
+            // item slots that display at the left
+            this.addItemSlot(71, 51);
+
+            this.addItemSlot(45.5, 25);
+            this.addItemSlot(71.5, 25);
+            this.addItemSlot(96.5, 25);
+
+            this.addItemSlot(46.5, 2.5);
+            this.addItemSlot(71.5, 2.5);
+            this.addItemSlot(96.5, 2.5);
+
+            this.addItemSlot(31, -76);
+            this.addItemSlot(114, -76);
+
             let items = this.player.items;
-            let i = 0;
 
+            let itemsPerRow = 4;
+            let itemsCount = Object.keys(items).length;
+            if (itemsCount > 4 * 6) itemsPerRow = 5;
+            if (itemsCount > 5 * 8) itemsPerRow = 6;
+            if (itemsCount > 6 * 9) itemsPerRow = 7;
+            if (itemsCount > 7 * 10) itemsPerRow = 8;
+            if (itemsCount > 8 * 12) itemsPerRow = 9;
+            // more than 126 unique items will clip off the inventory
+
+            let padding = this.invScale * 17 * (5 / itemsPerRow);
+            let itemScale = this.invScale * 0.7 * (5 / itemsPerRow);
+
+            let i = 0;
             for (var item in items) {
                 let itemCount = items[item];
 
-                var itemSprite = this.add.image(0, 0, 'items',  item);
-                itemSprite.x = 875 + (i % 5) * 68;
-                itemSprite.y = 300 + Math.floor(i / 5) * 68;
-                itemSprite.setScale(3.3);
+                let itemSprite = this.add.image(0, 0, 'items',  item);
+                itemSprite.x = this.inv.x + (i % itemsPerRow) * padding + (38 * this.invScale);
+                itemSprite.y = this.inv.y + Math.floor(i / itemsPerRow) * padding - (46 * this.invScale);
+                itemSprite.setScale(itemScale);
+
+                // add text with item count
+                if (itemCount > 1) {
+                    let text = this.add.text(itemSprite.x + (itemSprite.width * itemScale) / 2, itemSprite.y + (itemSprite.height * itemScale) / 2, itemCount, 
+                    { fontFamily: 'Arial', fontSize: 20, color: '#000000', fontWeight: 'bold' });
+                    text.setOrigin(0.5);
+                    text.setDepth(1.1);
+                }
+
+                this.addEvents(itemSprite, itemCount);
                 i++;
             }
 
@@ -114,6 +254,27 @@ class Inventory extends Phaser.Scene {
     }
 
     update() {
+
+        if (this.holding != undefined) {
+            this.holding.x = this.input.x;
+            this.holding.y = this.input.y;
+
+            // for each this.allItems
+            for (let i = 0; i < this.allItems.length; i++) {
+                const itemSprite = this.allItems[i];
+                if (itemSprite == this.holding) continue;
+
+                if (itemSprite.getBounds().contains(this.input.x, this.input.y)) {
+                    this.enableHighlight(itemSprite);
+                    break;
+                } else {
+                    this.disableHighlight(itemSprite);
+                }
+
+            };
+            
+
+        }
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
             this.scene.resume('gamelevel');
@@ -262,7 +423,9 @@ class GameLevel extends Phaser.Scene {
         // spawn items
         for (var i = 0; i < itemCount; i++) {
             var {x, y} = this.getRandSpawnPoint();
-            var index = Phaser.Math.Between(0, 400);
+            
+            // pick random item from RandItems
+            var index = RandItems[Math.floor(Math.random() * RandItems.length)];
             levels[this.id].items.push({x: x, y: y, index: index});
         }
 
@@ -415,7 +578,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(10, 1000);
+            this.spawnStuff(0, 1000);
         }
 
         // spawn items
