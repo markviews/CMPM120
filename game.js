@@ -25,6 +25,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
+        this.load.image('inventory', 'assets/HUD Player Inventory.png');
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
@@ -55,6 +56,54 @@ class SetupLevel extends Phaser.Scene {
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.start('gamelevel', id);
+    }
+
+}
+
+class Inventory extends Phaser.Scene {
+    constructor() {
+        super('inventory')
+    }
+
+    init(data) {
+
+        // destroy previous background image
+        const bgTexture = this.textures.get("bg");
+        if (bgTexture) bgTexture.destroy();
+
+        // load new background image
+        this.textures.addBase64("bg", data.screenshot.src);
+    }
+
+    create() {
+        this.resumeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+
+        // wait for base64 background image to be loaded
+        this.textures.once('addtexture', function () {
+
+            this.add.image(0, 0, "bg").setOrigin(0);
+
+            // add gray overlay
+            let overlay = this.add.graphics();
+            overlay.fillStyle(0x000000, 0.5);
+            overlay.fillRect(0, 0, this.game.config.width, this.game.config.height);
+
+            let inv = this.add.image(0, 0, 'inventory');
+            inv.x = this.game.config.width / 2;
+            inv.y = this.game.config.height / 2;
+            inv.setScale(4);
+
+        }, this);
+
+    }
+
+    update() {
+
+        if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
+            this.scene.resume('gamelevel');
+            this.scene.stop('inventory');
+        }
+
     }
 
 }
@@ -350,7 +399,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(1, 2000);
+            this.spawnStuff(10, 10);
         }
 
         // spawn items
@@ -522,8 +571,6 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
-        
-
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
@@ -539,7 +586,7 @@ class GameLevel extends Phaser.Scene {
             
             // #region door
 
-            var properties = this.getTileProperties(player.sprite.x, player.sprite.y + 30 - player.speed);
+            var properties = this.getTileProperties(player.sprite.x, player.sprite.y);
             if (properties.door) {
                 playersDoor++;
 
@@ -680,7 +727,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel],
+    scene: [SetupLevel, GameLevel, Inventory],
     physics: {
         default: 'arcade',
         arcade: {

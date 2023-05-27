@@ -1,40 +1,41 @@
 const viewDistance = 500;
-const health = 2;
+const health = 3;
 
 class Slime extends Enemy {
 
     constructor(scene, x, y) {
         super(scene, 'slime', x, y);
         this.scene = scene;
-        
-        var randTick = Phaser.Math.Between(1500, 2000);
-        this.intervalID = setInterval(this.jump.bind(this), randTick);
+        this.attackTick = 0;
+        this.autoAttackTick = Phaser.Math.Between(1500, 2000);
     }
 
-    jump() {
-        if (this.stunned) return;
-        
-        if (this.scene == null) {
-            clearInterval(this.intervalID);
-            return;
+    update(time, delta) {
+
+        this.attackTick += delta
+        if (this.attackTick > this.autoAttackTick) {
+            this.attackTick = 0;
+
+            if (this.stunned) return;
+
+            var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
+            if (player == null) return;
+
+            this.play('slime_jump');
+
+            // jump towards nearest player
+            var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
+            this.scene.tweens.add({
+                targets: this,
+                x: this.x + Math.cos(angle) * 30,
+                y: this.y + Math.sin(angle) * 30,
+                duration: 500,
+                ease: 'Power2',
+                repeat: 0,
+                delay: 200
+            });
+
         }
-
-        var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
-        if (player == null) return;
-
-        this.play('slime_jump');
-
-        // jump towards nearest player
-        var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-        this.scene.tweens.add({
-            targets: this,
-            x: this.x + Math.cos(angle) * 30,
-            y: this.y + Math.sin(angle) * 30,
-            duration: 500,
-            ease: 'Power2',
-            repeat: 0,
-            delay: 200
-        });
 
     }
 

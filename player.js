@@ -1,4 +1,4 @@
-const autoAttackTick = 100;
+const autoAttackTick = 300;
 
 var index = 0;
 var dodgeDistance = 150;
@@ -154,9 +154,8 @@ class Player {
                     down: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
                     left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
-                    attack_melee: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q),
-                    attack_projectile: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E),
                     dodge: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+                    pause: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC),
                 }
             break;
             case 1:
@@ -165,8 +164,6 @@ class Player {
                     down: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
                     left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
-                    attack_melee: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
-                    attack_projectile: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.PAGE_DOWN)
                 }
             break;
         }
@@ -177,6 +174,19 @@ class Player {
         let scene = this.scene;
 
         this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);
+
+        // #region inventory
+
+        if (Phaser.Input.Keyboard.JustDown(this.controls.pause)){
+            
+            scene.game.renderer.snapshot((image) => {
+                scene.scene.launch('inventory', { screenshot: image });
+                scene.scene.pause();
+            });
+
+        }
+
+        // #endregion inventory
 
         // #region attacks
 
