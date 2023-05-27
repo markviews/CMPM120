@@ -15,6 +15,7 @@ class Player {
         this.idle = false;
         this.onFire = false;
         this.attacking = false;
+        this.stunned = false;
         this.speed = 3.5;
         this.items = {};
         this.playerID = index++
@@ -179,7 +180,7 @@ class Player {
 
         // auto attacks
         this.attackTick += delta
-        if (this.attackTick > 1000 && scene.enemies != null && scene.enemies.getChildren().length != 0) {
+        if (this.attackTick > 500 && scene.enemies != null && scene.enemies.getChildren().length != 0) {
             this.attackTick = 0;
 
             // get nearest enemy
@@ -345,7 +346,7 @@ class Player {
              else if (this.angle > 45 && this.angle <= 135) this.dir = "down";
              else this.dir = "up";
         } else {
-            if (!this.attacking) {
+            if (!this.stunned) {
                 this.sprite.body.setVelocity(0, 0);
             }
         }

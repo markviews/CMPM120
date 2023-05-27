@@ -38,8 +38,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             // player getting hit by enemy
             if (gameObject1.name == "player") {
                 
-                // should probably make a "stunned" state for the player, but this does the same thing
-                player.attacking = true;
+                player.stunned = true;
                 player.sprite.play('fall');
 
                 // knock player back
@@ -47,7 +46,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 scene.physics.velocityFromRotation(angle, 100, player.sprite.body.velocity);
 
                 setTimeout(() => {
-                    player.attacking = false;
+                    player.stunned = false;
                 }, 400);
 
                 return;
@@ -72,6 +71,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
             
             // enemy getting hit by player's projectile
             if (gameObject1.name == "projectile") {
+                gameObject1.destroy();
                 this.stunned = true;
                 this.health--;
 
@@ -83,7 +83,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
                 // knockback
                 var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
-                scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
+                scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
                 return;
             }
             

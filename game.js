@@ -526,45 +526,73 @@ class GameLevel extends Phaser.Scene {
                     
                     // if all players are on the same door, and progress hasn't started yet
                     if (maxDist < 60 && !(this.progress && this.progress.isPlaying())) {
+                        
+                        // if all enemies are dead
+                        if (this.enemies != null && this.enemies.getChildren().length == 0) {
 
-                        // move this.circularProgress to front
-                        this.children.bringToTop(this.circularProgress);
+                            this.children.bringToTop(this.circularProgress);
+                            this.circularProgress.setPosition(player.sprite.x, player.sprite.y);
+                            this.circularProgress.visible = true;
+                            this.circularProgress.barColor = 0x23751a;
+                            this.progress = this.tweens.add({
+                                targets: this.circularProgress,
+                                value: 1,
+                                duration: 1000,
+                                ease: 'Linear ',
+                                callbackScope: this,
+                                onComplete: function () {
+                                    this.circularProgress.visible = false;
+                                    this.circularProgress.value = 0;
+                                    var foundDoor = false;
 
-                        this.circularProgress.setPosition(player.sprite.x, player.sprite.y);
-                        this.circularProgress.visible = true;
-                        this.progress = this.tweens.add({
-                            targets: this.circularProgress,
-                            value: 1,
-                            duration: 1000,
-                            ease: 'Linear ',
-                            callbackScope: this,
-                            onComplete: function () {
-                                this.circularProgress.visible = false;
-                                this.circularProgress.value = 0;
-                                var foundDoor = false;
+                                    // find nearby door
+                                    levels[this.id].doors.forEach(door => {
+                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
+                                        if (dist < 4) {
 
-                                // find nearby door
-                                levels[this.id].doors.forEach(door => {
-                                    var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
-                                    if (dist < 4) {
+                                            // if door doesn't have a destination set, generate one
+                                            if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
 
-                                        // if door doesn't have a destination set, generate one
-                                        if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
+                                            // setup new level
+                                            if (levels[door.dest_id] == undefined) levels[door.dest_id] = {};
+                                            levels[door.dest_id].from_wall = door.wall;
+                                            levels[door.dest_id].from_id = this.id;
 
-                                        // setup new level
-                                        if (levels[door.dest_id] == undefined) levels[door.dest_id] = {};
-                                        levels[door.dest_id].from_wall = door.wall;
-                                        levels[door.dest_id].from_id = this.id;
+                                            this.goToLevel(door.dest_id);
+                                            foundDoor = true;
+                                        }
+                                    });
 
-                                        this.goToLevel(door.dest_id);
-                                        foundDoor = true;
-                                    }
-                                });
+                                    if (!foundDoor)
+                                        console.log("Failed to find door... (not good)");
+                                }
+                            });
 
-                                if (!foundDoor)
-                                    console.log("Failed to find door... (not good)");
-                            }
-                        });
+                        } 
+                        
+                        // all enemies not dead, door locked
+                        else {
+
+                            this.children.bringToTop(this.circularProgress);
+                            this.circularProgress.setPosition(player.sprite.x, player.sprite.y);
+                            this.circularProgress.visible = true;
+                            this.circularProgress.barColor = 0xa83240;
+                            this.progress = this.tweens.add({
+                                targets: this.circularProgress,
+                                value: 0.75,
+                                duration: 750,
+                                ease: 'Linear ',
+                                callbackScope: this,
+                                onComplete: function () {
+                                    this.circularProgress.visible = false;
+                                    this.circularProgress.value = 0;
+                                }
+                            });
+
+                        }
+
+
+                        
 
                     }
 
@@ -624,7 +652,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 };
