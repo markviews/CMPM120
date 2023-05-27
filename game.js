@@ -161,13 +161,46 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnEnemy(type, x, y) {
-
         switch (type) {
             case 'slime':
                 this.enemies.add(new Slime(this, x, y));
             break;
         }
-        
+    }
+
+    // returns a random location that is not solid
+    getRandSpawnPoint() {
+
+        while (true) {
+            var x = Phaser.Math.Between(32, this.layer_tiles.width - 32);
+            var y = Phaser.Math.Between(32, this.layer_tiles.height - 32);
+
+            // try again if picked solid block
+            var properties = this.getTileProperties(x, y);
+            if (properties && properties.solid) {
+                continue;
+            }
+
+            return {x: x, y: y};
+        }
+
+    }
+
+    spawnStuff(slimeCount, itemCount) {
+
+        // spawn slimes
+        for (var i = 0; i < slimeCount; i++) {
+            var {x, y} = this.getRandSpawnPoint();
+            this.spawnEnemy('slime', x, y);
+        }
+
+        // spawn items
+        for (var i = 0; i < itemCount; i++) {
+            var {x, y} = this.getRandSpawnPoint();
+            var index = Phaser.Math.Between(0, 400);
+            levels[this.id].items.push({x: x, y: y, index: index});
+        }
+
     }
 
     goToLevel(id) {
@@ -317,7 +350,10 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
         }
 
-        // load items
+        // spawn enemies and load random items
+        this.spawnStuff(20, 2000);
+
+        // spawn items
         levels[this.id].items.forEach(item => {
             var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
             item.setOrigin(0.5, 0.5);
@@ -331,8 +367,6 @@ class GameLevel extends Phaser.Scene {
         this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
         this.cameras.main.zoomTo(camMinZoom, 0);
         this.cameras.main.fadeIn(1000);
-        
-        this.projectiles = this.add.group();
 
          // task progress bar
         this.circularProgress = this.add.rexCircularProgress({
@@ -346,10 +380,6 @@ class GameLevel extends Phaser.Scene {
         });
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
-
-        // spawn enemies
-        this.spawnEnemy('slime', 400, 400);
-        this.spawnEnemy('slime', 400, 500);
 
         // create players in new scene
         for (var player of players) {
@@ -492,6 +522,8 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
+        
+
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
@@ -526,7 +558,7 @@ class GameLevel extends Phaser.Scene {
                     
                     // if all players are on the same door, and progress hasn't started yet
                     if (maxDist < 60 && !(this.progress && this.progress.isPlaying())) {
-                        
+
                         // if all enemies are dead
                         if (this.enemies != null && this.enemies.getChildren().length == 0) {
 

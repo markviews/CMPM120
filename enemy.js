@@ -71,7 +71,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
             
             // enemy getting hit by player's projectile
             if (gameObject1.name == "projectile") {
-                gameObject1.destroy();
                 this.stunned = true;
                 this.health--;
 
@@ -84,6 +83,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 // knockback
                 var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
                 scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
+                gameObject1.destroy();
                 return;
             }
             

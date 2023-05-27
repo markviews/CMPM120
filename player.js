@@ -1,3 +1,5 @@
+const autoAttackTick = 100;
+
 var index = 0;
 var dodgeDistance = 150;
 var dodgeDuration = 100;
@@ -180,7 +182,7 @@ class Player {
 
         // auto attacks
         this.attackTick += delta
-        if (this.attackTick > 500 && scene.enemies != null && scene.enemies.getChildren().length != 0) {
+        if (this.attackTick > autoAttackTick && scene.enemies != null && scene.enemies.getChildren().length != 0) {
             this.attackTick = 0;
 
             // get nearest enemy
