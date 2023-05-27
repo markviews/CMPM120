@@ -348,10 +348,10 @@ class GameLevel extends Phaser.Scene {
             let items = this.map.layers[this.layer_tiles.layerIndex].properties.items;
             if (!items) items = {};
             levels[this.id].items = items;
-        }
 
-        // spawn enemies and load random items
-        this.spawnStuff(20, 2000);
+            // spawn enemies and load random items
+            this.spawnStuff(1, 2000);
+        }
 
         // spawn items
         levels[this.id].items.forEach(item => {
