@@ -180,7 +180,7 @@ class Player {
         if (Phaser.Input.Keyboard.JustDown(this.controls.pause)){
             
             scene.game.renderer.snapshot((image) => {
-                scene.scene.launch('inventory', { screenshot: image });
+                scene.scene.launch('inventory', { screenshot: image, player: this });
                 scene.scene.pause();
             });
 

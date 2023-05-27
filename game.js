@@ -66,6 +66,7 @@ class Inventory extends Phaser.Scene {
     }
 
     init(data) {
+        this.player = data.player;
 
         // destroy previous background image
         const bgTexture = this.textures.get("bg");
@@ -92,6 +93,21 @@ class Inventory extends Phaser.Scene {
             inv.x = this.game.config.width / 2;
             inv.y = this.game.config.height / 2;
             inv.setScale(4);
+
+            // loop through inventory items
+            let items = this.player.items;
+            let i = 0;
+
+            for (var item in items) {
+                let itemCount = items[item];
+
+                var itemSprite = this.add.image(0, 0, 'items',  item);
+                itemSprite.x = 875 + (i % 5) * 68;
+                itemSprite.y = 300 + Math.floor(i / 5) * 68;
+                itemSprite.setScale(3.3);
+                i++;
+            }
+
 
         }, this);
 
@@ -399,7 +415,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(10, 10);
+            this.spawnStuff(10, 1000);
         }
 
         // spawn items
