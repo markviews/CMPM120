@@ -99,7 +99,7 @@ class Inventory extends Phaser.Scene {
 
     enableHighlight(itemSprite) {
         this.disableHighlight();
-        
+
         this.highlightSquare = this.add.graphics();
         this.highlightSquare.lineStyle(3, 0xffffff);
         var squareWidth = itemSprite.displayWidth + 15;
@@ -113,9 +113,14 @@ class Inventory extends Phaser.Scene {
     }
 
     addItemSlot(x,y) {
-        let itemSlot = this.add.image(0, 0, 'items',  6);
+        let slotID = this.slotID++;
+        let itemInSlot = players[0].slots[slotID];
+        if (itemInSlot == undefined) itemInSlot = 6;
+
+        let itemSlot = this.add.image(0, 0, 'items',  itemInSlot);
         itemSlot.setPosition(this.inv.x - this.invScale * x, this.inv.y - this.invScale * y);
         itemSlot.setScale(this.invScale * 0.7);
+        itemSlot.slotID = slotID;
         this.addEvents(itemSlot, 0);
     }
 
@@ -139,32 +144,104 @@ class Inventory extends Phaser.Scene {
             // if item is empty, return
             if (itemSprite.frame.name == 6) return;
 
-            this.holding = itemSprite;
             this.disableHighlight();
 
-            // create a clone if there is more than one item
-            if (itemCount > 1) {
-                this.itemSpriteClone = this.add.image(0, 0, 'items',  itemSprite.frame.name);
-                this.itemSpriteClone.x = itemSprite.x;
-                this.itemSpriteClone.y = itemSprite.y;
-                this.itemSpriteClone.setScale(itemScale);
-                itemSprite.setDepth(1.1);
+            this.itemSpriteClone = this.add.image(0, 0, 'items',  itemSprite.frame.name);
+            this.itemSpriteClone.x = itemSprite.x;
+            this.itemSpriteClone.y = itemSprite.y;
+            this.itemSpriteClone.setScale(itemScale);
+
+            //sprite that it dragged around with mouse
+            this.holding = this.itemSpriteClone;
+            
+            // sprite that is in the original slot
+            this.holdingSprite = itemSprite;
+
+            // number of items in the original slot
+            this.holdingCount = itemCount;
+
+            if (itemCount <= 1) {
+                itemSprite.visible = false;
             }
 
         });
 
-        // add pointer up event to entire scene
         this.input.on('pointerup', (pointer) => {
             if (this.holding == undefined) return;
 
-            // teleport back where it came from
-            this.holding.setPosition(this.holding.homeX, this.holding.homeY);
+            // if dropped over another item slot
+            for (let i = 0; i < this.allItems.length; i++) {
+                const itemSprite = this.allItems[i];
+                let itemID = this.holding.frame.name;
 
-            // if mouse is above item still
-            if (this.holding.getBounds().contains(pointer.x, pointer.y)) {
-                this.enableHighlight(itemSprite);
+                if (itemSprite.getBounds().contains(this.input.x, this.input.y)) {
+
+                    let slotID = itemSprite.slotID;
+                    let inSlot = players[0].slots[slotID];
+                    let fromInv = this.holdingCount != 0;
+
+                    // if dropped over the same slot, return
+                    if (slotID != undefined && slotID == this.holdingSprite.slotID) break;
+
+                    if (!fromInv) {
+                        // remove item from previous slot
+                        let fromSlotID = this.holdingSprite.slotID;
+                        delete players[0].slots[fromSlotID];
+                    }
+
+                    // moved from slot to inventory
+                    if (!fromInv && slotID == undefined) {
+
+                        // add to inventory
+                        if (players[0].items[itemID] == undefined) {
+                            players[0].items[itemID] = 0;
+                        }
+                        players[0].items[itemID]++;
+
+                        break;
+                    }
+
+                    // move item to slot, if empty
+                    if (inSlot == undefined) {
+                        itemSprite.setFrame(itemID);
+
+                        // moved to slot (left)
+                        if (slotID != undefined) {
+
+                            // moved to slot from inventory
+                            if (fromInv) {
+
+                                // remove item from inventory
+                                players[0].items[itemID]--;
+                                if (players[0].items[itemID] <= 0) {
+                                    delete players[0].items[itemID];
+                                }
+
+                                
+                            }
+
+                            players[0].slots[slotID] = itemID;
+
+                        }
+
+                        if (this.holdingCount <= 1) {
+                            this.holdingSprite.setFrame(6);
+                            this.holdingSprite.visible = true;
+                        } 
+
+                    }
+
+                    break;
+                }
+
             }
 
+            if (this.holdingSprite != undefined) {
+                this.holdingSprite.visible = true;
+                this.holdingSprite = undefined;
+            }
+
+            this.holding.destroy();
             this.holding = undefined;
 
             // destroy clone
@@ -173,13 +250,70 @@ class Inventory extends Phaser.Scene {
                 this.itemSpriteClone = undefined;
             }
 
+            this.reloadInv();
         });
 
         this.allItems.push(itemSprite);
     }
 
+    reloadInv() {
+
+        // destroy previous inventory
+        this.allItems.forEach(item => item.destroy());
+        this.allItemTexts.forEach(text => text.destroy());
+
+        // item slots that display at the left
+        this.slotID = 0;
+        this.addItemSlot(71, 51);
+        this.addItemSlot(45.5, 25);
+        this.addItemSlot(71.5, 25);
+        this.addItemSlot(96.5, 25);
+        this.addItemSlot(46.5, 2.5);
+        this.addItemSlot(71.5, 2.5);
+        this.addItemSlot(96.5, 2.5);
+        this.addItemSlot(31, -76);
+        this.addItemSlot(114, -76);
+
+        let items = this.player.items;
+
+        let itemsPerRow = 4;
+        let itemsCount = Object.keys(items).length;
+        if (itemsCount > 4 * 6) itemsPerRow = 5;
+        if (itemsCount > 5 * 8) itemsPerRow = 6;
+        if (itemsCount > 6 * 9) itemsPerRow = 7;
+        if (itemsCount > 7 * 10) itemsPerRow = 8;
+        if (itemsCount > 8 * 12) itemsPerRow = 9;
+        // more than 126 unique items will clip off the inventory
+
+        let padding = this.invScale * 17 * (5 / itemsPerRow);
+        let itemScale = this.invScale * 0.7 * (5 / itemsPerRow);
+
+        let i = 0;
+        for (var item in items) {
+            let itemCount = items[item];
+
+            let itemSprite = this.add.image(0, 0, 'items',  item);
+            itemSprite.x = this.inv.x + (i % itemsPerRow) * padding + (38 * this.invScale);
+            itemSprite.y = this.inv.y + Math.floor(i / itemsPerRow) * padding - (46 * this.invScale);
+            itemSprite.setScale(itemScale);
+
+            // add text with item count
+            if (itemCount > 1) {
+                let text = this.add.text(itemSprite.x + (itemSprite.width * itemScale) / 2, itemSprite.y + (itemSprite.height * itemScale) / 2, itemCount, 
+                { fontFamily: 'Arial', fontSize: 20, color: '#000000', fontWeight: 'bold' });
+                text.setOrigin(0.5);
+                text.setDepth(1.1);
+                this.allItemTexts.push(text);
+            }
+
+            this.addEvents(itemSprite, itemCount);
+            i++;
+        }
+    }
+
     create() {
         this.allItems = [];
+        this.allItemTexts = [];
         this.resumeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 
         // wait for base64 background image to be loaded
@@ -199,55 +333,8 @@ class Inventory extends Phaser.Scene {
             this.inv.setOrigin(0.5);
             this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
 
-            // item slots that display at the left
-            this.addItemSlot(71, 51);
 
-            this.addItemSlot(45.5, 25);
-            this.addItemSlot(71.5, 25);
-            this.addItemSlot(96.5, 25);
-
-            this.addItemSlot(46.5, 2.5);
-            this.addItemSlot(71.5, 2.5);
-            this.addItemSlot(96.5, 2.5);
-
-            this.addItemSlot(31, -76);
-            this.addItemSlot(114, -76);
-
-            let items = this.player.items;
-
-            let itemsPerRow = 4;
-            let itemsCount = Object.keys(items).length;
-            if (itemsCount > 4 * 6) itemsPerRow = 5;
-            if (itemsCount > 5 * 8) itemsPerRow = 6;
-            if (itemsCount > 6 * 9) itemsPerRow = 7;
-            if (itemsCount > 7 * 10) itemsPerRow = 8;
-            if (itemsCount > 8 * 12) itemsPerRow = 9;
-            // more than 126 unique items will clip off the inventory
-
-            let padding = this.invScale * 17 * (5 / itemsPerRow);
-            let itemScale = this.invScale * 0.7 * (5 / itemsPerRow);
-
-            let i = 0;
-            for (var item in items) {
-                let itemCount = items[item];
-
-                let itemSprite = this.add.image(0, 0, 'items',  item);
-                itemSprite.x = this.inv.x + (i % itemsPerRow) * padding + (38 * this.invScale);
-                itemSprite.y = this.inv.y + Math.floor(i / itemsPerRow) * padding - (46 * this.invScale);
-                itemSprite.setScale(itemScale);
-
-                // add text with item count
-                if (itemCount > 1) {
-                    let text = this.add.text(itemSprite.x + (itemSprite.width * itemScale) / 2, itemSprite.y + (itemSprite.height * itemScale) / 2, itemCount, 
-                    { fontFamily: 'Arial', fontSize: 20, color: '#000000', fontWeight: 'bold' });
-                    text.setOrigin(0.5);
-                    text.setDepth(1.1);
-                }
-
-                this.addEvents(itemSprite, itemCount);
-                i++;
-            }
-
+            this.reloadInv();
 
         }, this);
 
