@@ -20,6 +20,7 @@ class Player {
         this.stunned = false;
         this.speed = 3.5;
         this.items = {};
+        this.slots = {};
         this.playerID = index++
     }
 
@@ -88,6 +89,10 @@ class Player {
 
             scene.items.remove(gameObject2);
 
+            var itemID = gameObject2.frame.name;
+            if (this.items[itemID] == undefined) this.items[itemID] = 0;
+            this.items[itemID]++;
+
             // fade item out when picked up
             scene.tweens.add({
                 targets: gameObject2,
@@ -98,11 +103,7 @@ class Player {
                 ease: 'Power2',
                 onComplete: () => {
                     gameObject2.destroy();
-
-                    var itemID = gameObject2.frame.name;
-                    if (this.items[itemID] == undefined) this.items[itemID] = 0;
-                    this.items[itemID]++;
-
+                    
                     // remove item from level data
                     levels[scene.id].items = levels[scene.id].items.filter(item => {
                         return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
