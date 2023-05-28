@@ -7,6 +7,7 @@ const camPadding = 80;          // area between player and edge of screen
 const itemScale = 1.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 
+
 // list of random levels to choose from
 const RandLevels = ["level1", "level2"];
 const RandItems = [
@@ -172,7 +173,10 @@ class Inventory extends Phaser.Scene {
                 this.itemSpriteClone.destroy();
                 this.itemSpriteClone = undefined;
             }
-
+            //set cursor to invis
+            cir1.setAlpha(0);
+            cir2.setAlpha(0);
+        
         });
 
         this.allItems.push(itemSprite);
@@ -250,7 +254,7 @@ class Inventory extends Phaser.Scene {
 
 
         }, this);
-
+        
     }
 
     update() {
@@ -450,22 +454,39 @@ class GameLevel extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
+        
         let cir1 = this.add.circle(0, 0, 50, 0x888888);
         cir1.setAlpha(0.4);
         let cir2 = this.add.circle(0, 0, 20, 0xcccccc);
         cir2.setAlpha(0.3);
         
         this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-            x: 450,
-            y: 550,
-            radius: 200,
+            x: 0,
+            y: 0,
+            radius: 50,
             base: cir1,
             thumb: cir2,
             dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
             forceMin: 16,
-            enable: true
+            enable: true,
+            fixed: false,
         });
-      
+       
+        var visible = this.joyStick.visible;
+        this.input.on('pointerdown', () => {
+            this.joyStick.setVisible(visible);
+            this.joyStick.setPosition(this.input.activePointer.worldX, this.input.activePointer.worldY);
+            //this.joyStick.fixed = true;
+            //this.joyStick.setScrollFactor(0.8);
+
+        });
+        this.input.on('pointerup', () => {
+            this.joyStick.setVisible(false);
+            this.joyStick.fixed = false;
+            //this.joyStick.setScrollFactor(0);
+
+        });
+
         //END OF JOYSTICK --------------------------------------------------------------------------------------
 
         // toggle fullscreen button
@@ -652,13 +673,14 @@ class GameLevel extends Phaser.Scene {
 
         this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
         this.setEditMode(EditMode.NotEditing);
-
+        
         //mouse click event
         this.input.on('pointerdown', () => {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
             var x = this.map.worldToTileX(worldPoint.x);
             var y = this.map.worldToTileY(worldPoint.y);
-
+            
+        
             switch(this.editMode) {
                 case EditMode.NotEditing:
                 break;
@@ -759,7 +781,7 @@ class GameLevel extends Phaser.Scene {
     update(time, delta) {
         // camera variables
         var playersDoor = 0; // number of players at door this frame
-
+        
         for (var player of players) {
             player.update(time, delta);
             
@@ -874,7 +896,6 @@ class GameLevel extends Phaser.Scene {
         }
 
         // #region tile editor
-
         if (Phaser.Input.Keyboard.JustDown(this.button_edit)) {
 
             if (this.editMode == EditMode.NotEditing) {
@@ -892,6 +913,8 @@ class GameLevel extends Phaser.Scene {
             var pointerTileY = this.map.worldToTileY(worldPoint.y);
             this.marker.x = this.map.tileToWorldX(pointerTileX);
             this.marker.y = this.map.tileToWorldY(pointerTileY);
+            
+            
         }
 
         //#endregion tile editor
@@ -914,5 +937,6 @@ var config = {
         }
     },
 };
+
 
 new Phaser.Game(config);
