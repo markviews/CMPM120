@@ -36,7 +36,7 @@ class Player {
         
         // physics
         scene.physics.add.existing(this.sprite);
-        this.sprite.body.setCollideWorldBounds(true);
+        //this.sprite.body.setCollideWorldBounds(true);
         this.sprite.body.setSize(12, 10);
         this.sprite.body.setOffset(18,20);
         this.sprite.setOrigin(0.5, 0.5);

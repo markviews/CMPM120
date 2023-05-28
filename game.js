@@ -1004,12 +1004,20 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
-
+window.addEventListener('resize', function () {
+    gameWidth = window.innerWidth;
+    gameHeight = window.innerHeight;
+    inst.game.resize(gameWidth, gameHeight);
+});
 var config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        parent: 'game-container',
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
