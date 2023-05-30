@@ -37,12 +37,12 @@ class Player {
         // physics
         scene.physics.add.existing(this.sprite);
         //this.sprite.body.setCollideWorldBounds(true);
-        this.sprite.body.setSize(12, 10);
-        this.sprite.body.setOffset(18,20);
+        this.sprite.body.setSize(12, 12);
+        this.sprite.body.setOffset(25,25);
         this.sprite.setOrigin(0.5, 0.5);
 
         // player hitbox
-        this.hithox = scene.add.rectangle(0, 0, 30, 50);
+        this.hithox = scene.add.rectangle(0, 0, 30, 60);
         scene.physics.world.enable(this.hithox);
         this.hithox.body.setOffset(15, 0);
         this.hithox.id = this.playerID;
@@ -215,8 +215,9 @@ class Player {
             
             // projectile attack
             else if (enemy_dist < 500) {
-                let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y, 'bullet');
-                mySprite.setScale(0.05);
+                let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y);
+                mySprite.play('moveFire');
+                mySprite.setScale(3);
 
                 mySprite.name = "projectile";
                 // could add other attribues like damage here
@@ -229,7 +230,7 @@ class Player {
                 mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
 
                 // destroy projectile after 1 second
-                scene.time.delayedCall(1000, function() {
+                scene.time.delayedCall(5000, function() {
                     mySprite.destroy();
                 });
             }
