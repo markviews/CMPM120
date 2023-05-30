@@ -53,6 +53,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+        this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
     }
 
     create() {
@@ -88,6 +90,13 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
         this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
         this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
+
+        //Fireball Animations
+        this.anims.create({key: 'moveFire', frames: this.anims.generateFrameNumbers('FireBall', { frames: [ 0,1,2,3,4,5,6] }), frameRate: 8, repeat: -1 });
+
+        //Iceball Animations
+        this.anims.create({key: 'moveIce', frames: this.anims.generateFrameNumbers('Ice',{frames: [0,1,2,3,4,5]}), frameRate: 8, repeat: -1});
+
         // create players
         players.push(new Player());
 
@@ -554,15 +563,15 @@ class GameLevel extends Phaser.Scene {
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
         
-        let cir1 = this.add.circle(0, 0, 50, 0x888888);
+        let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
         cir1.setAlpha(0.4);
-        let cir2 = this.add.circle(0, 0, 20, 0xcccccc);
+        let cir2 = this.add.circle(0, 0, 20, 0x541675);
         cir2.setAlpha(0.3);
         
         this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
             x: 0,
             y: 0,
-            radius: 50,
+            radius: 100,
             base: cir1,
             thumb: cir2,
             dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
@@ -1035,7 +1044,7 @@ class UI extends Phaser.Scene {
 window.addEventListener('resize', function () {
     gameWidth = window.innerWidth;
     gameHeight = window.innerHeight;
-    inst.game.resize(gameWidth, gameHeight);
+    //inst.game.resize(gameWidth, gameHeight);
 });
 var config = {
     type: Phaser.AUTO,
