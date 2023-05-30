@@ -35,6 +35,7 @@ const RandItems = [
 // global variables
 var levels = {};
 var players = [];
+var playMusic = true;
 
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4 }
 
@@ -47,7 +48,12 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
-        this.load.image('inventory', 'assets/HUD Player Inventory.png');
+        this.load.image('inventory', 'assets/ui/Inventory Book.png');
+        this.load.image('inventory_empty', 'assets/ui/Inventory Book Blank.png');
+        this.load.image('inventory_esc', 'assets/ui/Escape Button.png');
+        this.load.image('inventory_escpull', 'assets/ui/Escape_Button_Hover.png');
+        this.load.image('inventory_menu', 'assets/ui/Menu Button.png');
+        this.load.image('inventory_menupull', 'assets/ui/Menu_Button_Hover.png');
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
@@ -78,297 +84,6 @@ class SetupLevel extends Phaser.Scene {
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.start('gamelevel', id);
-    }
-
-}
-
-class Inventory extends Phaser.Scene {
-    constructor() {
-        super('inventory')
-    }
-
-    init(data) {
-        this.player = data.player;
-
-        // destroy previous background image
-        const bgTexture = this.textures.get("bg");
-        if (bgTexture) bgTexture.destroy();
-
-        // load new background image
-        this.textures.addBase64("bg", data.screenshot.src);
-    }
-
-    enableHighlight(itemSprite) {
-        this.disableHighlight();
-
-        this.highlightSquare = this.add.graphics();
-        this.highlightSquare.lineStyle(3, 0xffffff);
-        var squareWidth = itemSprite.displayWidth + 15;
-        var squareHeight = itemSprite.displayHeight + 15;
-        this.highlightSquare.strokeRect(itemSprite.x - squareWidth / 2, itemSprite.y - squareHeight / 2, squareWidth, squareHeight);
-    }
-
-    disableHighlight() {
-        if (this.highlightSquare != null)
-            this.highlightSquare.clear();
-    }
-
-    addItemSlot(x,y) {
-        let slotID = this.slotID++;
-        let itemInSlot = players[0].slots[slotID];
-        if (itemInSlot == undefined) itemInSlot = 6;
-
-        let itemSlot = this.add.image(0, 0, 'items',  itemInSlot);
-        itemSlot.setPosition(this.inv.x - this.invScale * x, this.inv.y - this.invScale * y);
-        itemSlot.setScale(this.invScale * 0.7);
-        itemSlot.slotID = slotID;
-        this.addEvents(itemSlot, 0);
-    }
-
-    addEvents(itemSprite, itemCount) {
-        itemSprite.homeX = itemSprite.x;
-        itemSprite.homeY = itemSprite.y;
-        itemSprite.setInteractive();
-
-        let itemScale = itemSprite._scaleX;
-
-        itemSprite.on('pointerover', () => {
-            if (this.holding != undefined) return;
-            this.enableHighlight(itemSprite);
-        });
-
-        itemSprite.on('pointerout', () => {
-            this.disableHighlight();
-        });
-
-        itemSprite.on('pointerdown', () => {
-            // if item is empty, return
-            if (itemSprite.frame.name == 6) return;
-
-            this.disableHighlight();
-
-            this.itemSpriteClone = this.add.image(0, 0, 'items',  itemSprite.frame.name);
-            this.itemSpriteClone.x = itemSprite.x;
-            this.itemSpriteClone.y = itemSprite.y;
-            this.itemSpriteClone.setScale(itemScale);
-
-            //sprite that it dragged around with mouse
-            this.holding = this.itemSpriteClone;
-            
-            // sprite that is in the original slot
-            this.holdingSprite = itemSprite;
-
-            // number of items in the original slot
-            this.holdingCount = itemCount;
-
-            if (itemCount <= 1) {
-                itemSprite.visible = false;
-            }
-
-        });
-
-        this.input.on('pointerup', (pointer) => {
-            if (this.holding == undefined) return;
-
-            // if dropped over another item slot
-            for (let i = 0; i < this.allItems.length; i++) {
-                const itemSprite = this.allItems[i];
-                let itemID = this.holding.frame.name;
-
-                if (itemSprite.getBounds().contains(this.input.x, this.input.y)) {
-
-                    let slotID = itemSprite.slotID;
-                    let inSlot = players[0].slots[slotID];
-                    let fromInv = this.holdingCount != 0;
-
-                    // if dropped over the same slot, return
-                    if (slotID != undefined && slotID == this.holdingSprite.slotID) break;
-
-                    if (!fromInv) {
-                        // remove item from previous slot
-                        let fromSlotID = this.holdingSprite.slotID;
-                        delete players[0].slots[fromSlotID];
-                    }
-
-                    // moved from slot to inventory
-                    if (!fromInv && slotID == undefined) {
-
-                        // add to inventory
-                        if (players[0].items[itemID] == undefined) {
-                            players[0].items[itemID] = 0;
-                        }
-                        players[0].items[itemID]++;
-
-                        break;
-                    }
-
-                    // move item to slot, if empty
-                    if (inSlot == undefined) {
-                        itemSprite.setFrame(itemID);
-
-                        // moved to slot (left)
-                        if (slotID != undefined) {
-
-                            // moved to slot from inventory
-                            if (fromInv) {
-
-                                // remove item from inventory
-                                players[0].items[itemID]--;
-                                if (players[0].items[itemID] <= 0) {
-                                    delete players[0].items[itemID];
-                                }
-
-                                
-                            }
-
-                            players[0].slots[slotID] = itemID;
-
-                        }
-
-                        if (this.holdingCount <= 1) {
-                            this.holdingSprite.setFrame(6);
-                            this.holdingSprite.visible = true;
-                        } 
-
-                    }
-
-                    break;
-                }
-
-            }
-
-            if (this.holdingSprite != undefined) {
-                this.holdingSprite.visible = true;
-                this.holdingSprite = undefined;
-            }
-
-            this.holding.destroy();
-            this.holding = undefined;
-
-            // destroy clone
-            if (this.itemSpriteClone != undefined) {
-                this.itemSpriteClone.destroy();
-                this.itemSpriteClone = undefined;
-            }
-
-            this.reloadInv();
-        });
-
-        this.allItems.push(itemSprite);
-    }
-
-    reloadInv() {
-
-        // destroy previous inventory
-        this.allItems.forEach(item => item.destroy());
-        this.allItemTexts.forEach(text => text.destroy());
-
-        // item slots that display at the left
-        this.slotID = 0;
-        this.addItemSlot(71, 51);
-        this.addItemSlot(45.5, 25);
-        this.addItemSlot(71.5, 25);
-        this.addItemSlot(96.5, 25);
-        this.addItemSlot(46.5, 2.5);
-        this.addItemSlot(71.5, 2.5);
-        this.addItemSlot(96.5, 2.5);
-        this.addItemSlot(31, -76);
-        this.addItemSlot(114, -76);
-
-        let items = this.player.items;
-
-        let itemsPerRow = 4;
-        let itemsCount = Object.keys(items).length;
-        if (itemsCount > 4 * 6) itemsPerRow = 5;
-        if (itemsCount > 5 * 8) itemsPerRow = 6;
-        if (itemsCount > 6 * 9) itemsPerRow = 7;
-        if (itemsCount > 7 * 10) itemsPerRow = 8;
-        if (itemsCount > 8 * 12) itemsPerRow = 9;
-        // more than 126 unique items will clip off the inventory
-
-        let padding = this.invScale * 17 * (5 / itemsPerRow);
-        let itemScale = this.invScale * 0.7 * (5 / itemsPerRow);
-
-        let i = 0;
-        for (var item in items) {
-            let itemCount = items[item];
-
-            let itemSprite = this.add.image(0, 0, 'items',  item);
-            itemSprite.x = this.inv.x + (i % itemsPerRow) * padding + (38 * this.invScale);
-            itemSprite.y = this.inv.y + Math.floor(i / itemsPerRow) * padding - (46 * this.invScale);
-            itemSprite.setScale(itemScale);
-
-            // add text with item count
-            if (itemCount > 1) {
-                let text = this.add.text(itemSprite.x + (itemSprite.width * itemScale) / 2, itemSprite.y + (itemSprite.height * itemScale) / 2, itemCount, 
-                { fontFamily: 'Arial', fontSize: 20, color: '#000000', fontWeight: 'bold' });
-                text.setOrigin(0.5);
-                text.setDepth(1.1);
-                this.allItemTexts.push(text);
-            }
-
-            this.addEvents(itemSprite, itemCount);
-            i++;
-        }
-    }
-
-    create() {
-        this.allItems = [];
-        this.allItemTexts = [];
-        this.resumeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-
-        // wait for base64 background image to be loaded
-        this.textures.once('addtexture', function () {
-
-            this.add.image(0, 0, "bg").setOrigin(0);
-
-            // add gray overlay
-            let overlay = this.add.graphics();
-            overlay.fillStyle(0x000000, 0.5);
-            overlay.fillRect(0, 0, this.game.config.width, this.game.config.height);
-
-            this.inv = this.add.image(0, 0, 'inventory');
-            this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
-            this.invScale = Math.min(this.scale.width / this.inv.width, this.scale.height / this.inv.height) * 0.8;
-            this.inv.setScale(this.invScale);
-            this.inv.setOrigin(0.5);
-            this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
-
-
-            this.reloadInv();
-
-        }, this);
-        
-    }
-
-    update() {
-
-        if (this.holding != undefined) {
-            this.holding.x = this.input.x;
-            this.holding.y = this.input.y;
-
-            // for each this.allItems
-            for (let i = 0; i < this.allItems.length; i++) {
-                const itemSprite = this.allItems[i];
-                if (itemSprite == this.holding) continue;
-
-                if (itemSprite.getBounds().contains(this.input.x, this.input.y)) {
-                    this.enableHighlight(itemSprite);
-                    break;
-                } else {
-                    this.disableHighlight(itemSprite);
-                }
-
-            };
-            
-
-        }
-
-        if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
-            this.scene.resume('gamelevel');
-            this.scene.stop('inventory');
-        }
-
     }
 
 }
@@ -573,16 +288,6 @@ class GameLevel extends Phaser.Scene {
 
         //END OF JOYSTICK --------------------------------------------------------------------------------------
 
-        // toggle fullscreen button
-        const fullscreenKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
-        fullscreenKey.on('down', () => {
-            if (this.scale.isFullscreen) {
-                this.scale.stopFullscreen();
-            } else {
-                this.scale.startFullscreen();
-            }
-        });
-
         // store location of door players are coming from
         this.tp_door = {};
 
@@ -683,7 +388,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(0, 1000);
+            this.spawnStuff(10, 100);
         }
 
         // spawn items
@@ -1004,24 +709,16 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
-window.addEventListener('resize', function () {
-    gameWidth = window.innerWidth;
-    gameHeight = window.innerHeight;
-    inst.game.resize(gameWidth, gameHeight);
-});
+
 var config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
     height: window.innerHeight,
-    scale: {
-        mode: Phaser.Scale.RESIZE,
-        parent: 'game-container',
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
+    autoCenter: Phaser.Scale.CENTER_BOTH,
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel, Inventory],
+    scene: [SetupLevel, GameLevel, Inventory, Settings],
     physics: {
         default: 'arcade',
         arcade: {
@@ -1029,6 +726,5 @@ var config = {
         }
     },
 };
-
 
 new Phaser.Game(config);
