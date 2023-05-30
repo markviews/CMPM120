@@ -42,10 +42,12 @@ const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, Del
 class SetupLevel extends Phaser.Scene {
 
     preload() {
+        //this.load.spritesheet('slime', 'assets/sprites/characters/name here.png', { frameWidth: 32, frameHeight: 32 });
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/gridtiles.png');
         this.load.spritesheet('slime', 'assets/sprites/characters/slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
+        this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
         this.load.image('inventory', 'assets/ui/Inventory Book.png');
@@ -57,6 +59,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+        this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
     }
 
     create() {
@@ -66,19 +70,39 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 14,15,16,17,18,19,20 ] }), frameRate: 8 });
         this.anims.create({key: 'slime_ouch', frames: this.anims.generateFrameNumbers('slime', { frames: [ 21,22,23 ] }), frameRate: 6 });
         this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 8 });
+        //Enemy Drone animatins
+        //this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3 ] }), frameRate: 6, repeat: -1 });
+
+        // player animations Girl
+        // this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
+        // this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
+        // this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
+        // this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
+        // this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
         
-        // player animations
-        this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
-        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
-        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
-        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
-        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
-        
+        //player animations Guy
+        this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('guy', { frames: [ 107,108,109,110] }), frameRate: 8});
+        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 36,37,38,39,40 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 60,61,62,63,64 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 48,49,50,51,52] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
+        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
+        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
+
+        //Fireball Animations
+        this.anims.create({key: 'moveFire', frames: this.anims.generateFrameNumbers('FireBall', { frames: [ 0,1,2,3,4,5,6] }), frameRate: 8, repeat: -1 });
+
+        //Iceball Animations
+        this.anims.create({key: 'moveIce', frames: this.anims.generateFrameNumbers('Ice',{frames: [0,1,2,3,4,5]}), frameRate: 8, repeat: -1});
+
         // create players
         players.push(new Player());
 
@@ -249,20 +273,20 @@ class GameLevel extends Phaser.Scene {
         const tileset = this.map.addTilesetImage('tiles');
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
         this.map.setCollision([ 41, 26 ]);
-
+   
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
         
-        let cir1 = this.add.circle(0, 0, 50, 0x888888);
+        let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
         cir1.setAlpha(0.4);
-        let cir2 = this.add.circle(0, 0, 20, 0xcccccc);
+        let cir2 = this.add.circle(0, 0, 20, 0x541675);
         cir2.setAlpha(0.3);
         
         this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
             x: 0,
             y: 0,
-            radius: 50,
+            radius: 100,
             base: cir1,
             thumb: cir2,
             dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
@@ -388,7 +412,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(10, 100);
+            this.spawnStuff(20, 12);
         }
 
         // spawn items
@@ -564,13 +588,15 @@ class GameLevel extends Phaser.Scene {
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
-
+        //UI STUFF------------------------------------------------------------------------------------
+       
+        //UI END---------------------------------------------------------------------------------------
     }
 
     update(time, delta) {
         // camera variables
         var playersDoor = 0; // number of players at door this frame
-        
+       // this.uiGroup.setPosition(players[0].x, players[0].y);
         for (var player of players) {
             player.update(time, delta);
             
@@ -709,7 +735,22 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
+class UI extends Phaser.Scene {
 
+    constructor(){
+        super('ui');
+    }
+
+    create() {
+        this.add.text(0, 0, 'Health: ', { font: '32px Arial', fill: '#000000' });
+        
+    }
+}
+window.addEventListener('resize', function () {
+    gameWidth = window.innerWidth;
+    gameHeight = window.innerHeight;
+    //inst.game.resize(gameWidth, gameHeight);
+});
 var config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
