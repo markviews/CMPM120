@@ -59,6 +59,7 @@ class Player {
         this.Meleehitbox.id = this.playerID;
         
         // hixbox colliders
+        scene.physics.add.collider(this.hithox, scene.chests);
         scene.physics.add.collider(this.hithox, scene.items);
         scene.physics.add.collider(this.hithox, scene.enemies);
         scene.physics.add.collider(this.Meleehitbox, scene.enemies);
@@ -88,32 +89,40 @@ class Player {
         // pick up item event
         scene.physics.world.on('collide', (gameObject1, gameObject2) => {
             if (gameObject1 =! this) return;
-            if (gameObject2?.texture?.key != "items") return;
 
-            scene.items.remove(gameObject2);
+            if (gameObject2?.texture?.key == "items") {
+                scene.items.remove(gameObject2);
 
-            var itemID = gameObject2.frame.name;
-            if (this.items[itemID] == undefined) this.items[itemID] = 0;
-            this.items[itemID]++;
+                var itemID = gameObject2.frame.name;
+                if (this.items[itemID] == undefined) this.items[itemID] = 0;
+                this.items[itemID]++;
 
-            // fade item out when picked up
-            scene.tweens.add({
-                targets: gameObject2,
-                scaleX: 0,
-                scaleY: 0,
-                alpha: 0,
-                duration: 1000,
-                ease: 'Power2',
-                onComplete: () => {
-                    gameObject2.destroy();
-                    
-                    // remove item from level data
-                    levels[scene.id].items = levels[scene.id].items.filter(item => {
-                        return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
-                    });
+                // fade item out when picked up
+                scene.tweens.add({
+                    targets: gameObject2,
+                    scaleX: 0,
+                    scaleY: 0,
+                    alpha: 0,
+                    duration: 1000,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        gameObject2.destroy();
+                        
+                        // remove item from level data
+                        levels[scene.id].items = levels[scene.id].items.filter(item => {
+                            return !(item.x == gameObject2.x && item.y == gameObject2.y && item.index == itemID);
+                        });
 
-                }
-            });
+                    }
+                });
+                return;
+            }
+
+            // break chest
+            if (gameObject2?.texture?.key == "props") {
+                gameObject2.setFrame(gameObject2.frame.name - 10);
+                scene.chests.remove(gameObject2);
+            }
             
         });
 

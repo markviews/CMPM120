@@ -17,7 +17,24 @@ const RandItems = [
     24,25,26,27,28,29,30,31,
     32,33,34,35,36,37,38,39,
     40,41
-]
+];
+const RandProps_Wall = [
+    20, 21, 22, 23, 26, 27, 28, 29,
+    42, 43, 55, 45, 46, 47,
+    60, 61, 62, 63, 64, 65, 66, 67,
+    70, 71, 72, 73, 74, 75
+];
+const RandProps_Floor = [
+    10, 11, 12, 13, 14, 15, 16,
+    24, 25, // NEAR walls
+    30, 31, 32, 33, 34, 35, 36, 37, 38,
+    40, 41, 48, 49,
+    50, 51, 52, 53, 54, 56, 57, 58, 59,
+    65, 66, 67,
+];
+const RandProps_nearWall = [ 24, 25 ];
+const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
+const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
 
 // global variables
 var levels = {};
@@ -36,7 +53,6 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
         this.load.image('fire', 'assets/red.png');
-        this.load.image('bullet', 'assets/emoji.png');
         this.load.image('inventory', 'assets/ui/Inventory Book.png');
         this.load.image('inventory_empty', 'assets/ui/Inventory Book Blank.png');
         this.load.image('inventory_esc', 'assets/ui/Escape Button.png');
@@ -46,6 +62,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
@@ -229,6 +246,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff(slimeCount, itemCount) {
+        let floorPropCount = 10;
+        let wallPropCount = 20;
 
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
@@ -245,6 +264,76 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items.push({x: x, y: y, index: index});
         }
 
+        // spawn props
+        for (var i = 0; i < floorPropCount; i++) {
+            var {x, y} = this.getRandSpawnPoint();
+            
+            // pick random item from RandItems
+            var index = RandProps_Floor[Math.floor(Math.random() * RandProps_Floor.length)];
+            
+
+            // if chest, add physics
+            if (RandProps_Chest.includes(index)) {
+                var prop = this.physics.add.image(x, y, 'props',  index);
+                this.physics.add.existing(prop);
+                prop.setScale(2);
+                prop.setOrigin(0.5, 0.5);
+                prop.body.setSize(12, 12);
+                prop.body.setOffset(10,20);
+                prop.body.setImmovable(true);
+                prop.body.onCollide = true;
+                this.chests.add(prop);
+
+                continue;
+            }
+
+            // non collision prop
+            var prop = this.add.image(x, y, 'props', index);
+            prop.setScale(2);
+            prop.setOrigin(0.5, 0.5);
+            if (!RandProps_DontRotate.includes(index))
+                prop.rotation = Math.random() * Math.PI * 2;
+
+            // if near wall prop
+            if (RandProps_nearWall.includes(index)) {
+                prop.setOrigin(0.5, 0);
+
+                // get random location near wall
+                var wall = this.nearWalls[Math.floor(Math.random() * this.nearWalls.length)];
+                var x = wall.x * 32;
+                var y = wall.y * 32;
+
+                if (wall.wall == "left") {
+                    prop.rotation = Math.PI / 2;
+                    x += 48;
+                } else if (wall.wall == "right") {
+                    prop.rotation = 90;
+                    x+= 0;
+                } else if (wall.wall == "up") {
+                    prop.rotation = 45;
+                    y -= 32;
+                } else if (wall.wall == "down") {
+                    prop.rotation = 135;
+                    y +=75
+                }
+
+                prop.setPosition(x, y);
+            }
+
+        }
+
+        // spawn wall decor
+        for (var i = 0; i < wallPropCount; i++) {
+            var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
+            var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
+            var prop = this.add.image(x * 32, y * 32, 'props', index);
+            prop.setScale(2);
+            prop.setOrigin(0, 0);
+
+            // remove value so we don't pick it again
+            this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
+        }
+
     }
 
     goToLevel(id) {
@@ -253,6 +342,14 @@ class GameLevel extends Phaser.Scene {
 
         // go new level
         this.scene.start('gamelevel', id);
+    }
+
+    solidAt(x, y) {
+        var tile = this.layer_tiles.getTileAt(x, y);
+        if (tile && tile.properties && tile.properties.solid) {
+            return true;
+        }
+        return false;
     }
 
     create() {
@@ -266,7 +363,7 @@ class GameLevel extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
-        
+
         let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
         cir1.setAlpha(0.4);
         let cir2 = this.add.circle(0, 0, 20, 0x541675);
@@ -303,6 +400,34 @@ class GameLevel extends Phaser.Scene {
 
         // store location of door players are coming from
         this.tp_door = {};
+
+        // find walls to put decorations on
+        this.decorWalls = [];
+        this.nearWalls = [];
+        this.layer_tiles.forEachTile(tile => {
+            var properties = tile.properties;
+            var solid = properties && properties.solid;
+            var x = tile.x;
+            var y = tile.y;
+            let left = this.solidAt(x - 1, y);
+            let right = this.solidAt(x + 1, y);
+            let down = this.solidAt(x, y + 1);
+            let up = this.solidAt(x, y - 1);
+            
+            if (solid) {
+                if (left && right && down) {
+                    this.decorWalls.push({x: x, y: y});
+                    //tile.index = 57;
+                }
+            } else {
+                //if (left || right || down || up) tile.index = 57;
+
+                if (left) { this.nearWalls.push({x: x, y: y, wall: "left"}); return; }
+                if (right) { this.nearWalls.push({x: x, y: y, wall: "right"}); return; }
+                if (down) { this.nearWalls.push({x: x, y: y, wall: "down"}); return; }
+                if (up) { this.nearWalls.push({x: x, y: y, wall: "up"}); return; }
+            }
+        });
 
         // set tile properties
         this.layer_tiles.forEachTile(tile => {
@@ -393,6 +518,7 @@ class GameLevel extends Phaser.Scene {
 
         // make group for items
         this.items = this.add.group();
+        this.chests = this.add.group();
 
         // load items into data
         if (levels[this.id].items == undefined) {
@@ -412,6 +538,18 @@ class GameLevel extends Phaser.Scene {
             item.setImmovable(true);
             item.body.onCollide = true;
             this.items.add(item);
+            
+            // get slightly bigger and smaller forever
+            this.tweens.add({
+                targets: item,
+                scaleX: itemScale * 1.1,
+                scaleY: itemScale * 1.1,
+                duration: 1000,
+                ease: 'Linear',
+                yoyo: true,
+                repeat: -1
+            });
+
         });
 
         this.cameras.main.roundPixels = true;
