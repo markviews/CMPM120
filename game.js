@@ -29,12 +29,13 @@ const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, Del
 class SetupLevel extends Phaser.Scene {
 
     preload() {
-        //this.load.spritesheet('slime', 'assets/sprites/characters/name here.png', { frameWidth: 32, frameHeight: 32 });
+        
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/gridtiles.png');
         this.load.spritesheet('slime', 'assets/sprites/characters/slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
+        this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 32, frameHeight: 32 });
         this.load.image('fire', 'assets/red.png');
         this.load.image('bullet', 'assets/emoji.png');
         this.load.image('inventory', 'assets/ui/Inventory Book.png');
@@ -50,6 +51,11 @@ class SetupLevel extends Phaser.Scene {
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
     }
 
     create() {
@@ -59,8 +65,39 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 14,15,16,17,18,19,20 ] }), frameRate: 8 });
         this.anims.create({key: 'slime_ouch', frames: this.anims.generateFrameNumbers('slime', { frames: [ 21,22,23 ] }), frameRate: 6 });
         this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 8 });
-        //Enemy Drone animatins
-        //this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3 ] }), frameRate: 6, repeat: -1 });
+        //Enemy Drone animations
+        this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3,4,5,6 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'drone_die', frames: this.anims.generateFrameNumbers('drone', { frames: [ 9,10,11,12,13,14,15,16,17 ] }), frameRate: 8 });
+        this.anims.create({key: 'drone_shot', frames: this.anims.generateFrameNumbers('slime', { frames: [ 18,19,20,21,22 ] }), frameRate: 6, repeat: -1 });
+        //Enemy Cyberjelly animatons
+        this.anims.create({key: 'cyberjelly_idle', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'cyberjelly_die', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 50,51,52,53,54,55,56,57,58,59,60,61,62,63 ] }), frameRate: 8 });
+        //Enemy Hunger animatons
+        this.anims.create({key: 'hunger_attack', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 0,1,2,3,4,5,6,7 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'hunger_die', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 9,10,11 ] }), frameRate: 6 });
+        this.anims.create({key: 'hunger_idle', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 18,19 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'hunger_move', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 27,28,29,30 ] }), frameRate: 6 });
+        //Enemy Slime (Green) animatons
+        this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNumbers('slime', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 11,12,13,14,15,16,17 ] }), frameRate: 6});
+        this.anims.create({key: 'slime_attack', frames: this.anims.generateFrameNumbers('slime', { frames: [ 22,23,24,25,26,27,28,29,30,31,32 ] }), frameRate: 6});
+        this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 33,34,35,36,37,38,39,40,41 ] }), frameRate: 8 });
+        //Enemy Slime Blue animatons
+        this.anims.create({key: 'slimeBlue_attack', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 0,1,2,3,4,5,6,7,8,11 ] }), frameRate: 6});
+        this.anims.create({key: 'slimeBlue_die', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 14,15,16,17,18,19,20,21,22,23,24 ] }), frameRate: 8});
+        this.anims.create({key: 'slimeBlue_idle', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'slimeBlue_jump', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 42,43,44,45,46,47,48,49,50,51,52,52,53,54,55 ] }), frameRate: 6});
+        //Enemy Magister animatons
+        this.anims.create({key: 'magister_castMagic', frames: this.anims.generateFrameNumbers('magister', { frames: [ 0,1,2,3,4,5,6,7,8,11,12,13,14,15 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_castSword', frames: this.anims.generateFrameNumbers('magister', { frames: [ 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_die', frames: this.anims.generateFrameNumbers('magister', { frames: [ 34,35,36,37,38,39,40,41,42,43,44 ] }), frameRate: 8});
+        this.anims.create({key: 'magister_idle', frames: this.anims.generateFrameNumbers('magister', { frames: [ 51,52,53 ] }), frameRate: 3, repeat: -1 });
+        this.anims.create({key: 'magister_teleport', frames: this.anims.generateFrameNumbers('magister', { frames: [ 68,69,70,71,72,73,74,75,76,77,78,79,80,81 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_magic', frames: this.anims.generateFrameNumbers('magister', { frames: [ 85,86,87,88,89 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_sword', frames: this.anims.generateFrameNumbers('magister', { frames: [ 102 ] }), frameRate: 1, repeat: -1});
+        this.anims.create({key: 'magister_magicTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 119,120] }), frameRate: 6});
+        this.anims.create({key: 'magister_swordTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 136,137,138,139,140 ] }), frameRate: 6});
+        //Last 3 line above im not sure about in terms of after the frames
 
         // player animations Girl
         // this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
