@@ -24,7 +24,8 @@ class Player {
         this.playerID = index++
         this.exp = 0;
         this.level = 0;
-        this.health = 0;
+        this.health = 10;
+        this.maxHealth = 10;
     }
 
     // called when player enters a new scene

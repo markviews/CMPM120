@@ -17,15 +17,13 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.setScale(2.5);
         this.body.setSize(15, 15);
         
-        this.on('animationcomplete', function (anim) {
-            this.stunned = false;
-            this.body.setVelocity(0, 0);
+        this.on('animationcomplete', (anim) => {
 
             if (anim.key.endsWith('_die')) {
                 this.destroy();
-            } else {
-                this.play(this.type + '_idle');
+                players[0].exp++;
             }
+
         });
         
          // collide event
@@ -40,6 +38,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 
                 player.stunned = true;
                 player.sprite.play('fall');
+                player.health--;
 
                 // knock player back
                 var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);
@@ -57,15 +56,21 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 this.stunned = true;
                 this.health--;
 
-                if (this.health <= 0) {
-                    this.play(this.type + '_die');
-                } else {
-                    this.play(this.type + '_ouch');
-                }
-
                 // knockback
                 var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
                 scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
+
+                if (this.health <= 0) {
+                    this.play(this.type + '_die');
+                    return;
+                }
+
+                setTimeout(() => {
+                    this.body.setVelocity(0, 0);
+                    this.play(this.type + '_idle');
+                    this.stunned = false;
+                }, 400);
+
                 return;
             }
             
@@ -74,16 +79,22 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 this.stunned = true;
                 this.health--;
 
-                if (this.health <= 0) {
-                    this.play(this.type + '_die');
-                } else {
-                    this.play(this.type + '_ouch');
-                }
-
                 // knockback
                 var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
                 scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
                 gameObject1.destroy();
+
+                if (this.health <= 0) {
+                    this.play(this.type + '_die');
+                    return;
+                }
+
+                setTimeout(() => {
+                    this.body.setVelocity(0, 0);
+                    this.play(this.type + '_idle');
+                    this.stunned = false;
+                }, 400);
+
                 return;
             }
             
