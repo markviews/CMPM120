@@ -43,6 +43,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_escpull', 'assets/ui/Escape_Button_Hover.png');
         this.load.image('inventory_menu', 'assets/ui/Menu Button.png');
         this.load.image('inventory_menupull', 'assets/ui/Menu_Button_Hover.png');
+        this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
+        this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);

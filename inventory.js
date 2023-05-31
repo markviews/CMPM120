@@ -17,6 +17,7 @@ class Inventory extends Phaser.Scene {
         this.textures.addBase64("bg", data.screenshot.src);
     }
 
+    // show a white square around the item and description
     enableHighlight(itemSprite) {
         this.disableHighlight();
 
@@ -27,11 +28,26 @@ class Inventory extends Phaser.Scene {
         var x = itemSprite.x - width / 2;
         var y = itemSprite.y - height / 2;
         this.highlightSquare.strokeRect(x, y, width, height);
+
+        // set empty slot description
+        if (itemSprite.frame.name == 40) {
+            let slotType = itemSprite.slotType;
+            let slotDescription = this.getEmptySlotDescription(slotType);
+            this.description.text = slotDescription;
+            return;
+        }
+
+        // set item description
+        let itemID = itemSprite.frame.name;
+        let itemDescription = this.getItemDescription(itemID);
+        this.description.text = itemDescription;
     }
 
     disableHighlight() {
         if (this.highlightSquare != null)
             this.highlightSquare.clear();
+
+        this.description.text = "";
     }
 
     addItemSlot(x,y,slotType) {
@@ -49,28 +65,86 @@ class Inventory extends Phaser.Scene {
     }
 
     getItemType(itemID) {
-        // 0 - 3 = circle
-        if (itemID >= 0 && itemID <= 3) return "circle";
-
-        // 4 - 9 = crystal
+        if (itemID >= 0 && itemID <= 3) return "unique";
         if (itemID >= 4 && itemID <= 9) return "crystal";
-
-        // 10 - 15 = gem
         if (itemID >= 10 && itemID <= 15) return "gem";
-
-        // 16 - 21 = anklet
         if (itemID >= 16 && itemID <= 21) return "anklet";
-
-        // 22 - 27 = ring
         if (itemID >= 22 && itemID <= 27) return "ring";
-
-        // 28 - 33 = bracelet
         if (itemID >= 28 && itemID <= 33) return "bracelet";
-
-        // 34 - 39 = amulet
         if (itemID >= 34 && itemID <= 39) return "amulet";
+    }
 
+    getItemDescription(itemID) {
 
+        switch(itemID) {
+            case 0: return "Abner's Banana";
+            case 1: return "Mark's Coffee";
+            case 2: return "Nico's Brush";
+            case 3: return "Oliver's Oil";
+
+            case 4: return "Turquoise crystal";
+            case 5: return "Green crystal";
+            case 6: return "Pink crystal";
+            case 7: return "Purple crystal";
+            case 8: return "Red crystal";
+            case 9: return "Yellow crystal";
+
+            case 10: return "Adamantite gem";
+            case 11: return "Platinum gem";
+            case 12: return "Gold gem";
+            case 13: return "Silver gem";
+            case 14: return "Brass gem";
+            case 15: return "Iron gem";
+
+            case 16: return "Adamantite anklet";
+            case 17: return "Platinum anklet";
+            case 18: return "Gold anklet";
+            case 19: return "Silver anklet";
+            case 20: return "Brass anklet";
+            case 21: return "Iron anklet";
+
+            case 22: return "Adamantite ring";
+            case 23: return "Platinum ring";
+            case 24: return "Gold ring";
+            case 25: return "Silver ring";
+            case 26: return "Brass ring";
+            case 27: return "Iron ring";
+
+            case 28: return "Adamantite bracelet";
+            case 29: return "Platinum bracelet";
+            case 30: return "Gold bracelet";
+            case 31: return "Silver bracelet";
+            case 32: return "Brass bracelet";
+            case 33: return "Iron bracelet";
+
+            case 34: return "Adamantite amulet";
+            case 35: return "Platinum amulet";
+            case 36: return "Gold amulet";
+            case 37: return "Silver amulet";
+            case 38: return "Brass amulet";
+            case 39: return "Iron amulet";
+        }
+
+        if (itemID >= 0 && itemID <= 3) return "circle";
+        if (itemID >= 4 && itemID <= 9) return "crystal";
+        if (itemID >= 10 && itemID <= 15) return "gem";
+        if (itemID >= 16 && itemID <= 21) return "anklet";
+        if (itemID >= 22 && itemID <= 27) return "ring";
+        if (itemID >= 28 && itemID <= 33) return "bracelet";
+        if (itemID >= 34 && itemID <= 39) return "amulet";
+    }
+
+    getEmptySlotDescription(slotType) {
+        switch(slotType) {
+            case "crystal": return "Crystal slot";
+            case "gem": return "Gem slot";
+            case "anklet": return "Anklet slot";
+            case "ring": return "Ring slot";
+            case "bracelet": return "Bracelet slot";
+            case "amulet": return "Amulet slot";
+            case "trash": return "Trash (destroy item)";
+            case "item": return "Use item slot";
+        }
     }
 
     addEvents(itemSprite, itemCount) {
@@ -134,6 +208,20 @@ class Inventory extends Phaser.Scene {
 
                     // if dropped over the same slot, return
                     if (toSlotID != undefined && toSlotID == fromSlotID) break;
+
+                    // if dropped over trash slot, delete
+                    if (toSlotType == "trash") {
+                        if (fromInv) {
+                            players[0].items[itemID]--;
+                            if (players[0].items[itemID] <= 0) {
+                                delete players[0].items[itemID];
+                            }
+                        } else {
+                            delete players[0].slots[fromSlotID];
+                        }
+                        break;
+                    }
+
 
                     // if dropped over empty slot, delete from previous slot
                     if (!fromInv && toSlotItem == undefined) {
@@ -292,9 +380,15 @@ class Inventory extends Phaser.Scene {
             this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
 
             // text
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 80, "50", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 72, "50", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 63, "50", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            let health = players[0].health;
+            let exp = players[0].exp;
+            let level = players[0].level;
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 80, health, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 72, exp, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 63, level, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+
+            // description text
+            this.description = this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * -20, "", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
 
             // escape button
             let resumeButton = this.add.image(0, 0, 'inventory_esc');
@@ -365,6 +459,7 @@ class Settings extends Phaser.Scene {
     }
 
     init(data) {
+        this.data = data;
         // destroy previous background image
         const bgTexture = this.textures.get("bg");
         if (bgTexture) bgTexture.destroy();
@@ -451,6 +546,18 @@ class Settings extends Phaser.Scene {
             resumeButton.on('pointerdown', () => {
                 this.scene.resume('gamelevel');
                 this.scene.stop('settings');
+            });
+
+            // inventory button
+            let invButton = this.add.image(0, 0, 'inventory_inv');
+            invButton.setScale(this.invScale);
+            invButton.setPosition(this.inv.x + this.invScale * -60, this.inv.y - this.invScale * 87);
+            invButton.setInteractive();
+            invButton.setOrigin(0, 0);
+            invButton.on('pointerover', () => invButton.setTexture('inventory_invpull'));
+            invButton.on('pointerout', () => invButton.setTexture('inventory_inv'));
+            invButton.on('pointerdown', () => {
+                this.scene.start('inventory', { screenshot: this.data.screenshot, player: this.data.player });
             });
 
         });

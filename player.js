@@ -22,6 +22,9 @@ class Player {
         this.items = {};
         this.slots = {};
         this.playerID = index++
+        this.exp = 0;
+        this.level = 0;
+        this.health = 0;
     }
 
     // called when player enters a new scene
@@ -228,6 +231,7 @@ class Player {
 
                 let projectileSpeed = 500;
                 mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
+                mySprite.angle = Phaser.Math.RadToDeg(enemy_angle);
 
                 // destroy projectile after 1 second
                 scene.time.delayedCall(5000, function() {
@@ -399,14 +403,14 @@ class Player {
         //#endregion animation
 
         // #region fire
-        var properties = scene.getTileProperties(this.sprite.x, this.sprite.y + 30 - this.speed);
+        var properties = scene.getTileProperties(this.sprite.x, this.sprite.y);
         if (properties.fire) {
             this.onFire = true;
             this.fireTick = Date.now();
             
             if (!this.fireEmitter) {
                 this.fireParticles = scene.add.particles('fire');
-                this.fireEmitter = this.fireParticles.createEmitter({ x: this.sprite.x, y: this.sprite.y + 30, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
+                this.fireEmitter = this.fireParticles.createEmitter({ x: this.sprite.x, y: this.sprite.y, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
             }
 
         }
@@ -418,7 +422,7 @@ class Player {
         }
 
         if (this.onFire) {
-            this.fireEmitter.setPosition(this.sprite.x, this.sprite.y + 30);
+            this.fireEmitter.setPosition(this.sprite.x, this.sprite.y);
         }
         //#endregion fire
 
