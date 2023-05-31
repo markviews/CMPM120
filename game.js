@@ -6,7 +6,7 @@ const camMinZoom = 2.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
-
+let uiContainer;
 
 // list of random levels to choose from
 const RandLevels = ["level1", "level2"];
@@ -71,6 +71,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
     }
 
     create() {
@@ -146,11 +147,14 @@ class SetupLevel extends Phaser.Scene {
         //Iceball Animations
         this.anims.create({key: 'moveIce', frames: this.anims.generateFrameNumbers('Ice',{frames: [0,1,2,3,4,5]}), frameRate: 8, repeat: -1});
 
+        //HP Bar  Animations
+       
+        this.anims.create({key: 'hpBar', frames: this.anims.generateFrameNumbers('Health',{frames: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]}), frameRate: 8});
         // create players
         players.push(new Player());
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.start('gamelevel', id);
+        this.scene.launch('gamelevel', id).launch('ui').remove();
     }
 
 }
@@ -900,15 +904,30 @@ class GameLevel extends Phaser.Scene {
     }
 }
 class UI extends Phaser.Scene {
-
+    
     constructor(){
         super('ui');
     }
-
+    
     create() {
-        this.add.text(0, 0, 'Health: ', { font: '32px Arial', fill: '#000000' });
+        // if(players[0].stunned == true){
+        //     hpBar.anims.nextFrame();
+        //     initalHP = players[0].hp;
+        // }
         
-    }
+        uiContainer = this.add.container(0, 0);
+        uiContainer.setVisible(true);
+        let hpBar = this.add.sprite(250, 0);
+        hpBar.setScale(10);
+        hpBar.play('hpBar', true);
+        hpBar.stop();
+        hpBar.anims.nextFrame();
+        hpBar.anims.nextFrame();
+        hpBar.anims.nextFrame();
+        hpBar.anims.nextFrame();
+        uiContainer.add(hpBar);
+    }    
+
 }
 window.addEventListener('resize', function () {
     gameWidth = window.innerWidth;
@@ -923,7 +942,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel, Inventory, Settings],
+    scene: [SetupLevel, GameLevel, Inventory, Settings, UI],
     physics: {
         default: 'arcade',
         arcade: {
