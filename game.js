@@ -68,10 +68,11 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
+        this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
+        this.load.spritesheet('XP', 'assets/ui/XPBar.png', {frameWidth: 48, frameHeight: 48});
     }
 
     create() {
@@ -150,6 +151,9 @@ class SetupLevel extends Phaser.Scene {
         //HP Bar  Animations
        
         this.anims.create({key: 'hpBar', frames: this.anims.generateFrameNumbers('Health',{frames: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]}), frameRate: 8});
+        
+        //XP Bar Animations
+        this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
         // create players
         players.push(new Player());
 
@@ -918,14 +922,14 @@ class UI extends Phaser.Scene {
         uiContainer = this.add.container(0, 0);
         uiContainer.setVisible(true);
         let hpBar = this.add.sprite(250, 0);
+        let XPBAR = this.add.sprite(250, 40);
+        XPBAR.setScale(10);
         hpBar.setScale(10);
+        XPBAR.play('XPBar', true);
         hpBar.play('hpBar', true);
         hpBar.stop();
-        hpBar.anims.nextFrame();
-        hpBar.anims.nextFrame();
-        hpBar.anims.nextFrame();
-        hpBar.anims.nextFrame();
         uiContainer.add(hpBar);
+        uiContainer.add(XPBAR);
     }    
 
 }
