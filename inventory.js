@@ -22,9 +22,11 @@ class Inventory extends Phaser.Scene {
 
         this.highlightSquare = this.add.graphics();
         this.highlightSquare.lineStyle(3, 0xffffff);
-        var squareWidth = itemSprite.displayWidth + 15;
-        var squareHeight = itemSprite.displayHeight + 15;
-        this.highlightSquare.strokeRect(itemSprite.x - squareWidth / 2, itemSprite.y - squareHeight / 2, squareWidth, squareHeight);
+        var width = itemSprite.displayWidth;
+        var height = itemSprite.displayHeight;
+        var x = itemSprite.x - width / 2;
+        var y = itemSprite.y - height / 2;
+        this.highlightSquare.strokeRect(x, y, width, height);
     }
 
     disableHighlight() {
@@ -32,16 +34,43 @@ class Inventory extends Phaser.Scene {
             this.highlightSquare.clear();
     }
 
-    addItemSlot(x,y) {
+    addItemSlot(x,y,slotType) {
         let slotID = this.slotID++;
         let itemInSlot = players[0].slots[slotID];
-        if (itemInSlot == undefined) itemInSlot = 6;
+        if (itemInSlot == undefined) itemInSlot = 40;
 
         let itemSlot = this.add.image(0, 0, 'items',  itemInSlot);
+        itemSlot.setOrigin(0.25, 0.25);
         itemSlot.setPosition(this.inv.x - this.invScale * x, this.inv.y - this.invScale * y);
-        itemSlot.setScale(this.invScale * 0.7);
+        itemSlot.setScale(this.invScale * 1.2);
         itemSlot.slotID = slotID;
+        itemSlot.slotType = slotType;
         this.addEvents(itemSlot, 0);
+    }
+
+    getItemType(itemID) {
+        // 0 - 3 = circle
+        if (itemID >= 0 && itemID <= 3) return "circle";
+
+        // 4 - 9 = crystal
+        if (itemID >= 4 && itemID <= 9) return "crystal";
+
+        // 10 - 15 = gem
+        if (itemID >= 10 && itemID <= 15) return "gem";
+
+        // 16 - 21 = anklet
+        if (itemID >= 16 && itemID <= 21) return "anklet";
+
+        // 22 - 27 = ring
+        if (itemID >= 22 && itemID <= 27) return "ring";
+
+        // 28 - 33 = bracelet
+        if (itemID >= 28 && itemID <= 33) return "bracelet";
+
+        // 34 - 39 = amulet
+        if (itemID >= 34 && itemID <= 39) return "amulet";
+
+
     }
 
     addEvents(itemSprite, itemCount) {
@@ -62,7 +91,7 @@ class Inventory extends Phaser.Scene {
 
         itemSprite.on('pointerdown', () => {
             // if item is empty, return
-            if (itemSprite.frame.name == 6) return;
+            if (itemSprite.frame.name == 40) return;
 
             this.disableHighlight();
 
@@ -97,16 +126,23 @@ class Inventory extends Phaser.Scene {
                 if (itemSprite.getBounds().contains(this.input.x, this.input.y)) {
 
                     let toSlotID = itemSprite.slotID;            // slot ID being dropped over
+                    let toSlotType = itemSprite.slotType;        // slot type being dropped over
                     let toSlotItem = players[0].slots[toSlotID]; // item ID in slot being dropped over
                     let fromInv = this.holdingCount != 0;        // true if item is being dragged from inventory
                     let fromSlotID = this.holdingSprite.slotID;  // slot ID being dragged from
+                    let fromItemType = this.getItemType(itemID); // item type being dragged
 
                     // if dropped over the same slot, return
                     if (toSlotID != undefined && toSlotID == fromSlotID) break;
 
                     // if dropped over empty slot, delete from previous slot
                     if (!fromInv && toSlotItem == undefined) {
-                        delete players[0].slots[fromSlotID];
+
+                        // if slot matches item type
+                        if (fromItemType == toSlotType || toSlotType == undefined) {
+                            delete players[0].slots[fromSlotID];
+                        }
+
                     }
 
                     // if dropped from slot to inventory, add to inventory
@@ -121,8 +157,8 @@ class Inventory extends Phaser.Scene {
                         break;
                     }
 
-                    // move item to slot, if empty
-                    if (toSlotItem == undefined) {
+                    // move item to slot, if empty and matches type
+                    if (toSlotItem == undefined && fromItemType == toSlotType) {
                         itemSprite.setFrame(itemID);
 
                         // moved to slot (left)
@@ -145,7 +181,7 @@ class Inventory extends Phaser.Scene {
                         }
 
                         if (this.holdingCount <= 1) {
-                            this.holdingSprite.setFrame(6);
+                            this.holdingSprite.setFrame(40);
                             this.holdingSprite.visible = true;
                         } 
 
@@ -184,15 +220,15 @@ class Inventory extends Phaser.Scene {
 
         // item slots that display at the left
         this.slotID = 0;
-        this.addItemSlot(71, 51);
-        this.addItemSlot(45.5, 25);
-        this.addItemSlot(71.5, 25);
-        this.addItemSlot(96.5, 25);
-        this.addItemSlot(46.5, 2.5);
-        this.addItemSlot(71.5, 2.5);
-        this.addItemSlot(96.5, 2.5);
-        this.addItemSlot(31, -76);
-        this.addItemSlot(114, -76);
+        this.addItemSlot(72, 54, "amulet");
+        this.addItemSlot(45.5, 25, "ring");
+        this.addItemSlot(72, 26, "bracelet");
+        this.addItemSlot(96.5, 25, "ring");
+        this.addItemSlot(46.5, 2.5, "anklet");
+        this.addItemSlot(70.5, 1.5, "gem");
+        this.addItemSlot(96.5, 2.5, "anklet");
+        this.addItemSlot(31, -76, "trash");
+        this.addItemSlot(114, -76, "item");
 
         let items = this.player.items;
 
@@ -206,16 +242,18 @@ class Inventory extends Phaser.Scene {
         // more than 126 unique items will clip off the inventory
 
         let padding = this.invScale * 17 * (5 / itemsPerRow);
-        let itemScale = this.invScale * 0.7 * (5 / itemsPerRow);
+        let itemScale = this.invScale * 0.8 * (5 / itemsPerRow);
 
         let i = 0;
         for (var item in items) {
             let itemCount = items[item];
 
             let itemSprite = this.add.image(0, 0, 'items',  item);
+            itemSprite.setOrigin(0.25, 0.25);
+            itemSprite.setScale(itemScale);
             itemSprite.x = this.inv.x + (i % itemsPerRow) * padding + (38 * this.invScale);
             itemSprite.y = this.inv.y + Math.floor(i / itemsPerRow) * padding - (46 * this.invScale);
-            itemSprite.setScale(itemScale);
+            
 
             // add text with item count
             if (itemCount > 1) {

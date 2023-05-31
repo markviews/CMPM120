@@ -4,32 +4,19 @@ const freezeMelee = true;       // freeze player movement while using melee atta
 const freezeProjectile = false; // freeze player movement while using projectile attacks
 const camMinZoom = 2.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
-const itemScale = 1.5;          // scale of items
+const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 
 
 // list of random levels to choose from
 const RandLevels = ["level1", "level2"];
 const RandItems = [
-    0, 1, 2, 3, 4, 5, 
-    7, 8, 9, 10, 11, 12,
-    14, 15, 16, 17, 18, 19,
-    21, 22, 23, 24, 25, 26,
-
-    27, 28, 29, 30, 31, 32,
-    34, 35, 36, 37, 38, 39,
-    41, 42, 43, 44, 45, 46,
-    48, 49, 50, 51, 52, 53,
-
-    54, 55, 56, 57, 58, 59,
-    61, 62, 63, 64, 65, 66,
-    68, 69, 70, 71, 72, 73,
-    75, 76, 77, 78, 79, 80,
-
-    81, 82, 83, 84, 85, 86,
-    88, 89, 90, 91, 92, 93,
-    95, 96, 97, 98, 99, 100,
-    102, 103, 104, 105, 106, 107
+    0, 1, 2, 3, 4, 5, 6, 7,
+    8, 9,10,11,12,13,14,15,
+    16,17,18,19,20,21,22,23,
+    24,25,26,27,28,29,30,31,
+    32,33,34,35,36,37,38,39,
+    40,41
 ]
 
 // global variables
@@ -56,7 +43,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_escpull', 'assets/ui/Escape_Button_Hover.png');
         this.load.image('inventory_menu', 'assets/ui/Menu Button.png');
         this.load.image('inventory_menupull', 'assets/ui/Menu_Button_Hover.png');
-        this.load.spritesheet('items', 'assets/gridItems.png', { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
