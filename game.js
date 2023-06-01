@@ -9,7 +9,7 @@ const itemsGrid = true;         // items snap to grid when placed
 let uiContainer;
 
 // list of random levels to choose from
-const RandLevels = ["level1", "level2"];
+const RandLevels = ["level1"];
 const RandItems = [
     0, 1, 2, 3, 4, 5, 6, 7,
     8, 9,10,11,12,13,14,15,
@@ -47,7 +47,7 @@ class SetupLevel extends Phaser.Scene {
 
     preload() {
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
-        this.load.image('tiles', 'assets/gridtiles.png');
+        this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 32, frameHeight: 32 });
@@ -67,7 +67,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
@@ -76,14 +76,6 @@ class SetupLevel extends Phaser.Scene {
     }
 
     create() {
-        /*
-        // slime animations
-        this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNumbers('slime', { frames: [ 0,1,2,3 ] }), frameRate: 6, repeat: -1 });
-        this.anims.create({key: 'slime_jump2', frames: this.anims.generateFrameNumbers('slime', { frames: [ 8,9,10,11,12 ] }), frameRate: 6, repeat: -1 });
-        this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 14,15,16,17,18,19,20 ] }), frameRate: 8 });
-        this.anims.create({key: 'slime_ouch', frames: this.anims.generateFrameNumbers('slime', { frames: [ 21,22,23 ] }), frameRate: 6 });
-        this.anims.create({key: 'slime_die', frames: this.anims.generateFrameNumbers('slime', { frames: [ 28,29,30,31,32 ] }), frameRate: 8 });
-        */
         //Enemy Drone animations
         this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3,4,5,6 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'drone_die', frames: this.anims.generateFrameNumbers('drone', { frames: [ 9,10,11,12,13,14,15,16,17 ] }), frameRate: 8 });
@@ -158,7 +150,7 @@ class SetupLevel extends Phaser.Scene {
         players.push(new Player());
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.launch('gamelevel', id).launch('ui').remove();
+        this.scene.launch('gamelevel', id)//.launch('ui').remove();
     }
 
 }
@@ -219,6 +211,7 @@ class GameLevel extends Phaser.Scene {
         this.editMode = mode;
 
         this.layer_tilePicker.setAlpha(0);
+        this.tilePicketBG.setVisible(false);
         this.propertiesText.setText('');
         this.text_item.setVisible(false);
         this.text_JSON.setVisible(false);
@@ -239,6 +232,7 @@ class GameLevel extends Phaser.Scene {
             case EditMode.Selecting:
                 this.helpText.setText('EditMode: Pick Block');
                 this.layer_tilePicker.setAlpha(1);
+                this.tilePicketBG.setVisible(true);
 
                 // show stuff
                 this.text_item.setVisible(true);
@@ -267,7 +261,7 @@ class GameLevel extends Phaser.Scene {
     spawnEnemy(type, x, y) {
         switch (type) {
             case 'slime':
-                this.enemies.add(new Slime(this, x, y));
+                this.enemies.add(new Hunger(this, x, y));
             break;
         }
     }
@@ -276,10 +270,10 @@ class GameLevel extends Phaser.Scene {
     getRandSpawnPoint() {
 
         while (true) {
-            var x = Phaser.Math.Between(32, this.layer_tiles.width - 32);
-            var y = Phaser.Math.Between(32, this.layer_tiles.height - 32);
+            var x = Phaser.Math.Between(100, this.layer_tiles.width * 3 - 100);
+            var y = Phaser.Math.Between(100, this.layer_tiles.height * 3 - 100);
 
-            // try again if picked solid block
+            // try again if picked solid block  
             var properties = this.getTileProperties(x, y);
             if (properties && properties.solid) {
                 continue;
@@ -291,8 +285,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff(slimeCount, itemCount) {
-        let floorPropCount = 10;
-        let wallPropCount = 20;
+        let floorPropCount = 1000;
+        let wallPropCount = 1000;
 
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
@@ -343,10 +337,12 @@ class GameLevel extends Phaser.Scene {
             if (RandProps_nearWall.includes(index)) {
                 prop.setOrigin(0.5, 0);
 
+                if (this.nearWalls == undefined || this.nearWalls.length == 0) return;
+
                 // get random location near wall
                 var wall = this.nearWalls[Math.floor(Math.random() * this.nearWalls.length)];
-                var x = wall.x * 32;
-                var y = wall.y * 32;
+                var x = wall.x * 32 * 3;
+                var y = wall.y * 32 * 3;
 
                 if (wall.wall == "left") {
                     prop.rotation = Math.PI / 2;
@@ -368,11 +364,13 @@ class GameLevel extends Phaser.Scene {
         }
 
         // spawn wall decor
+        
         for (var i = 0; i < wallPropCount; i++) {
+            if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
-            var prop = this.add.image(x * 32, y * 32, 'props', index);
-            prop.setScale(2);
+            var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
+            prop.setScale(5);
             prop.setOrigin(0, 0);
 
             // remove value so we don't pick it again
@@ -400,10 +398,12 @@ class GameLevel extends Phaser.Scene {
     create() {
         window.inst = this;
 
-        this.map = this.make.tilemap({ key: 'map' });
-        const tileset = this.map.addTilesetImage('tiles');
+        this.map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
+        const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
-        this.map.setCollision([ 41, 26 ]);
+        this.map.setCollision([ 2, 63 ]);
+        this.layer_tiles.setScale(3);
+
    
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
@@ -572,7 +572,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(20, 12);
+            this.spawnStuff(0, 12);
         }
 
         // spawn items
@@ -598,7 +598,7 @@ class GameLevel extends Phaser.Scene {
         });
 
         this.cameras.main.roundPixels = true;
-        this.cameras.main.setBounds(0,0,this.layer_tiles.width, this.layer_tiles.height);
+        this.cameras.main.setBounds(0,0,this.layer_tiles.width * 3, this.layer_tiles.height * 3);
         this.cameras.main.zoomTo(camMinZoom, 0);
         this.cameras.main.fadeIn(1000);
 
@@ -627,14 +627,20 @@ class GameLevel extends Phaser.Scene {
         this.mapDisplay = this.make.tilemap({ key: 'map' });
         this.layer_tilePicker = this.mapDisplay.createLayer('display', tileset, 0, 0);
         this.layer_tilePicker.setAlpha(0);
+        this.layer_tilePicker.setScale(3);
+
+        // add a white box behind the tile picker
+        this.tilePicketBG = this.add.graphics().fillStyle(0xffffff, 1).setAlpha(0.5).fillRect(0, 0, this.layer_tilePicker.width * this.layer_tilePicker.scaleX, this.layer_tilePicker.height * this.layer_tilePicker.scaleY)
+        
+        this.children.bringToTop(this.layer_tilePicker);
 
         this.marker = this.add.graphics();
         this.marker.lineStyle(3, 0xffffff, 1);
-        this.marker.strokeRect(0, 0, this.map.tileWidth, this.map.tileHeight);
+        this.marker.strokeRect(0, 0, this.map.tileWidth * 3, this.map.tileHeight * 3);
         this.marker.x = -100;
         this.marker.y = -100;
         this.physics.add.existing(this.marker);
-        this.marker.body.setSize(32, 32);
+        this.marker.body.setSize(32 * 3, 32 * 3);
         // Select Item helper text
         this.text_item = this.add.text(0, 321, 'Select Item', { font: '10px Arial', fill: '#000000' });
         this.text_item.setStroke('#ffffff', 2);

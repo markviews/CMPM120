@@ -321,7 +321,8 @@ class Inventory extends Phaser.Scene {
         let items = this.player.items;
 
         let itemsPerRow = 4;
-        let itemsCount = Object.keys(items).length;
+        let itemsCount = 0;
+        if (items != undefined)itemsCount = Object.keys(items).length;
         if (itemsCount > 4 * 6) itemsPerRow = 5;
         if (itemsCount > 5 * 8) itemsPerRow = 6;
         if (itemsCount > 6 * 9) itemsPerRow = 7;

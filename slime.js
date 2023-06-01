@@ -1,10 +1,13 @@
 const viewDistance = 500;
-const health = 3;
+const attackDistance = 100;
 
 class Slime extends Enemy {
 
     constructor(scene, x, y) {
-        super(scene, 'slime', x, y);
+        let type = "slimeBlue";
+        if (Math.random() > 0.5) type = "slime"; // 50 % chance to spawn a green slime
+        super(scene, type, x, y, 1);
+        this.type = type;
         this.scene = scene;
         this.attackTick = 0;
         this.autoAttackTick = Phaser.Math.Between(1500, 2000);
@@ -21,10 +24,70 @@ class Slime extends Enemy {
             var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
             if (player == null) return;
 
-            this.play('slime_jump');
+            var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
+            if (distance < attackDistance) {
+                this.play(`${this.type}_attack`);
+            } else {
+                this.play(`${this.type}_jump`);
+            }
 
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
+            this.scene.tweens.add({
+                targets: this,
+                x: this.x + Math.cos(angle) * 30,
+                y: this.y + Math.sin(angle) * 30,
+                duration: 500,
+                ease: 'Power2',
+                repeat: 0,
+                delay: 200
+            });
+
+        }
+
+    }
+
+}
+
+class Hunger extends Enemy {
+
+    constructor(scene, x, y) {
+        super(scene, "hunger", x, y, 1);
+        this.scene = scene;
+        this.attackTick = 0;
+        this.autoAttackTick = Phaser.Math.Between(1500, 2000);
+    }
+
+    update(time, delta) {
+
+        this.attackTick += delta
+        if (this.attackTick > this.autoAttackTick) {
+            this.attackTick = 0;
+
+            if (this.stunned) return;
+
+            var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
+            if (player == null) return;
+
+            var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
+            if (distance < attackDistance) {
+                this.play(`hunger_attack`);
+            } else {
+                this.play(`hunger_move`);
+            }
+
+            // jump towards nearest player
+            var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
+            // set angle
+            this.angle = (angle * 180 / Math.PI) - 180;
+
+            // flip if to left of player
+            if (this.angle > 90 || this.angle < -90) {
+                this.flipY = true;
+            } else {
+                this.flipY = false;
+            }
+
             this.scene.tweens.add({
                 targets: this,
                 x: this.x + Math.cos(angle) * 30,
