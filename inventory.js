@@ -77,52 +77,52 @@ class Inventory extends Phaser.Scene {
     getItemDescription(itemID) {
 
         switch(itemID) {
-            case 0: return "Abner's Banana";
-            case 1: return "Mark's Coffee";
-            case 2: return "Nico's Brush";
-            case 3: return "Oliver's Oil";
+            case 0: return "Abner's Banana: \nDamage Invulnerability: +5 seconds";
+            case 1: return "Mark's Coffee: \nDodge Charge +1";
+            case 2: return "Nico's Brush:\n +1 Projectile";
+            case 3: return "Oliver's Oil:\n +5% Damage";
 
-            case 4: return "Turquoise crystal";
-            case 5: return "Green crystal";
-            case 6: return "Pink crystal";
-            case 7: return "Purple crystal";
-            case 8: return "Red crystal";
-            case 9: return "Yellow crystal";
+            case 4: return "Turquoise crystal: \n-6% Dash cooldown";
+            case 5: return "Green crystal: \n-5% Dash cooldown";
+            case 6: return "Pink crystal: \n-4% Dash cooldown";
+            case 7: return "Purple crystal: -3% Dash cooldown";
+            case 8: return "Red crystal: -2% Dash cooldown";
+            case 9: return "Yellow crystal: -1% Dash cooldown";
 
-            case 10: return "Adamantite gem";
-            case 11: return "Platinum gem";
-            case 12: return "Gold gem";
-            case 13: return "Silver gem";
-            case 14: return "Brass gem";
-            case 15: return "Iron gem";
+            case 10: return "Adamantite gem: \n+6% Projectile Speed";
+            case 11: return "Platinum gem: \n+5% Projectile Speed";
+            case 12: return "Gold gem: \n+4% Projectile Speed";
+            case 13: return "Silver gem: +3% Projectile Speed";
+            case 14: return "Brass gem: +2% Projectile Speed";
+            case 15: return "Iron gem: +1% Projectile Speed";
 
-            case 16: return "Adamantite anklet";
-            case 17: return "Platinum anklet";
-            case 18: return "Gold anklet";
-            case 19: return "Silver anklet";
-            case 20: return "Brass anklet";
-            case 21: return "Iron anklet";
+            case 16: return "Adamantite anklet: \n+6% Movement Speed";
+            case 17: return "Platinum anklet: \n+5% Movement Speed";
+            case 18: return "Gold anklet: \n+4% Movement Speed";
+            case 19: return "Silver anklet: \n+3% Movement Speed";
+            case 20: return "Brass anklet: +2% Movement Speed";
+            case 21: return "Iron anklet: +1% Movement Speed";
 
-            case 22: return "Adamantite ring";
-            case 23: return "Platinum ring";
-            case 24: return "Gold ring";
-            case 25: return "Silver ring";
-            case 26: return "Brass ring";
-            case 27: return "Iron ring";
+            case 22: return "Adamantite ring: \n+6% Attack Speed";
+            case 23: return "Platinum ring: \n+5% Attack Speed";
+            case 24: return "Gold ring:\n +4% Attack Speed";
+            case 25: return "Silver ring:\n +3% Attack Speed";
+            case 26: return "Brass ring: +2% Attack Speed";
+            case 27: return "Iron ring: +1% Attack Speed";
 
-            case 28: return "Adamantite bracelet";
-            case 29: return "Platinum bracelet";
-            case 30: return "Gold bracelet";
-            case 31: return "Silver bracelet";
-            case 32: return "Brass bracelet";
-            case 33: return "Iron bracelet";
+            case 28: return "Adamantite bracelet: \n+6% Melee Damage";
+            case 29: return "Platinum bracelet: \n+5% Melee Damage";
+            case 30: return "Gold bracelet: \n+4% Melee Damage";
+            case 31: return "Silver bracelet: \n+3% Melee Damage";
+            case 32: return "Brass bracelet: +2% Melee Damage";
+            case 33: return "Iron bracelet: +1% Melee Damage";
 
-            case 34: return "Adamantite amulet";
-            case 35: return "Platinum amulet";
-            case 36: return "Gold amulet";
-            case 37: return "Silver amulet";
-            case 38: return "Brass amulet";
-            case 39: return "Iron amulet";
+            case 34: return "Adamantite amulet: \n+20 Health";
+            case 35: return "Platinum amulet: \n+15 Health";
+            case 36: return "Gold amulet: +10 Health";
+            case 37: return "Silver amulet: +5 Health";
+            case 38: return "Brass amulet: +3 Health";
+            case 39: return "Iron amulet: +1 Health";
         }
 
         if (itemID >= 0 && itemID <= 3) return "circle";
@@ -390,7 +390,7 @@ class Inventory extends Phaser.Scene {
             this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 63, level, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
 
             // description text
-            this.description = this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * -20, "", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            this.description = this.add.text(this.inv.x - this.invScale * 112, this.inv.y - this.invScale * -20, "", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
 
             // escape button
             let resumeButton = this.add.image(0, 0, 'inventory_esc');

@@ -2,7 +2,7 @@
 const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
 const freezeMelee = true;       // freeze player movement while using melee attacks
 const freezeProjectile = false; // freeze player movement while using projectile attacks
-const camMinZoom = 2.5;         // smallest the camera will zoom
+const camMinZoom = 1.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
@@ -151,7 +151,7 @@ class SetupLevel extends Phaser.Scene {
         players.push(new Player());
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.launch('gamelevel', id)//.launch('ui');
+        this.scene.launch('gamelevel', id).launch('ui');
     }
 
 }
@@ -573,7 +573,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(20, 12);
+            this.spawnStuff(20, 1000);
         }
 
         // spawn items
@@ -946,7 +946,7 @@ class UI extends Phaser.Scene {
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
                 this.game.renderer.snapshot((image) => {
-                    this.scene.launch('inventory', { screenshot: image, player: this });
+                    this.scene.launch('inventory', { screenshot: image, player: players[0] });
                     this.scene.pause();
                 });
         });
