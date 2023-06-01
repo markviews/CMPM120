@@ -20,6 +20,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.on('animationcomplete', (anim) => {
 
             if (anim.key.endsWith('_die')) {
+                players[0].exp++;
                 this.destroy();
             } else {
                 this.play(this.type + '_idle');

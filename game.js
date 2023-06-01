@@ -74,6 +74,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('XP', 'assets/ui/XPBar.png', {frameWidth: 48, frameHeight: 48});
+        //load Dash spritesheet
+        this.load.spritesheet('dash', 'assets/ui/Dash.png', { frameWidth: 32, frameHeight: 32 });
     }
 
     create() {
@@ -109,6 +111,8 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'magister_sword', frames: this.anims.generateFrameNumbers('magister', { frames: [ 102 ] }), frameRate: 1, repeat: -1});
         this.anims.create({key: 'magister_magicTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 119,120] }), frameRate: 6});
         this.anims.create({key: 'magister_swordTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 136,137,138,139,140 ] }), frameRate: 6});
+        
+        
         //Last 3 line above im not sure about in terms of after the frames
 
         // player animations Girl
@@ -149,7 +153,8 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
         // create players
         players.push(new Player());
-
+        //Dash animations
+        this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.launch('gamelevel', id).launch('ui');
     }
@@ -931,14 +936,19 @@ class UI extends Phaser.Scene {
         this.icon = this.add.image(42, 170, 'inv_icon');
         this.hpBar = this.add.sprite(250, 0);
         this.XPBAR = this.add.sprite(250, 40);
+        this.Dash = this.add.sprite(120, 170);
         this.XPBAR.setScale(10);
         this.hpBar.setScale(10);
+        this.Dash.setScale(3);
         this.icon.setScale(8);
         this.icon.setInteractive();
         this.XPBAR.play('XPBar', true);
         this.XPBAR.stop();
         this.hpBar.play('hpBar', true);
         this.hpBar.stop();
+        this.Dash.play('dash', true);
+        this.Dash.stop();
+        this.Dash.setFrame(30);
         uiContainer.add(this.hpBar);
         uiContainer.add(this.XPBAR);
     }
@@ -958,8 +968,9 @@ class UI extends Phaser.Scene {
         var frameIndex = 39 - Math.round(players[0].health/ players[0].maxHealth * 38);
         this.hpBar.setFrame(frameIndex);
         this.XPBAR.setFrame(players[0].exp);
-        
-        
+        if(players[0].dodging == true){
+            this.Dash.play('dash', true);  
+        }
     }    
 }
 window.addEventListener('resize', function () {

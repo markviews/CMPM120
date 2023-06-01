@@ -3,7 +3,6 @@ const autoAttackTick = 300;
 var index = 0;
 var dodgeDistance = 150;
 var dodgeDuration = 100;
-var dodging = false;
 var xdir = 0;
 var ydir = 0;
 //Touch Control variables-----
@@ -26,6 +25,9 @@ class Player {
         this.level = 0;
         this.health = 10;
         this.maxHealth = 10;
+        this.dashTimer = 1000;
+        this.dodging = false;
+        this.invincible = false;
     }
 
     // called when player enters a new scene
@@ -255,9 +257,10 @@ class Player {
 
         // #region dodge
 
-        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && dodging == false){
+        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && players[0].dodging == false){
             var flashes = 3;
-            dodging = true;
+            players[0].dodging = true;
+            players[0].invincible = true;
             scene.tweens.add({
                 targets: this.sprite,
                 alpha: 0,
@@ -267,9 +270,10 @@ class Player {
                 onComplete: () =>{
                     this.sprite.alpha = 1;
                     setTimeout(function(){
-                        dodging = false;
+                        players[0].dodging = false;
+                        players[0].invincible = false;
                         //clone.destroy();  
-                    },1000);
+                    },players[0].dashTimer);
                 },
             });
             //console.log(this.angle);
