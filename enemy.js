@@ -18,7 +18,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.body.setSize(15, 15);
         
         this.on('animationcomplete', (anim) => {
-        this.on('animationcomplete', (anim) => {
 
             if (anim.key.endsWith('_die')) {
                 this.destroy();
@@ -125,7 +124,5 @@ class Enemy extends Phaser.GameObjects.Sprite {
             }
             
         });
-
     }
-
 }
