@@ -322,7 +322,8 @@ class Inventory extends Phaser.Scene {
 
         let itemsPerRow = 4;
         let itemsCount = 0;
-        if (items != undefined)itemsCount = Object.keys(items).length;
+        if (items != undefined)itemsCount = 0;
+        if(items != undefined) itemsCount = Object.keys(items).length;
         if (itemsCount > 4 * 6) itemsPerRow = 5;
         if (itemsCount > 5 * 8) itemsPerRow = 6;
         if (itemsCount > 6 * 9) itemsPerRow = 7;
@@ -400,7 +401,7 @@ class Inventory extends Phaser.Scene {
             resumeButton.on('pointerover', () => resumeButton.setTexture('inventory_escpull'));
             resumeButton.on('pointerout', () => resumeButton.setTexture('inventory_esc'));
             resumeButton.on('pointerdown', () => {
-                this.scene.resume('gamelevel');
+                this.scene.resume('gamelevel').launch('ui');
                 this.scene.stop('inventory');
             });
 
@@ -446,7 +447,7 @@ class Inventory extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
-            this.scene.resume('gamelevel');
+            this.scene.resume('gamelevel').launch('ui');
             this.scene.stop('inventory');
         }
 
@@ -545,7 +546,7 @@ class Settings extends Phaser.Scene {
             resumeButton.on('pointerover', () => resumeButton.setTexture('inventory_escpull'));
             resumeButton.on('pointerout', () => resumeButton.setTexture('inventory_esc'));
             resumeButton.on('pointerdown', () => {
-                this.scene.resume('gamelevel');
+                this.scene.resume('gamelevel').launch('ui');
                 this.scene.stop('settings');
             });
 
@@ -568,7 +569,7 @@ class Settings extends Phaser.Scene {
     update() {
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
-            this.scene.resume('gamelevel');
+            this.scene.resume('gamelevel').launch('ui');
             this.scene.stop('settings');
         }
 

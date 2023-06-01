@@ -60,6 +60,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_menupull', 'assets/ui/Menu_Button_Hover.png');
         this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
+        this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -145,12 +146,12 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'hpBar', frames: this.anims.generateFrameNumbers('Health',{frames: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39]}), frameRate: 8});
         
         //XP Bar Animations
-        this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
+        this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
         // create players
         players.push(new Player());
 
         let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.launch('gamelevel', id)//.launch('ui').remove();
+        this.scene.launch('gamelevel', id)//.launch('ui');
     }
 
 }
@@ -572,7 +573,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(0, 12);
+            this.spawnStuff(20, 12);
         }
 
         // spawn items
@@ -927,17 +928,39 @@ class UI extends Phaser.Scene {
         
         uiContainer = this.add.container(0, 0);
         uiContainer.setVisible(true);
-        let hpBar = this.add.sprite(250, 0);
-        let XPBAR = this.add.sprite(250, 40);
-        XPBAR.setScale(10);
-        hpBar.setScale(10);
-        XPBAR.play('XPBar', true);
-        hpBar.play('hpBar', true);
-        hpBar.stop();
-        uiContainer.add(hpBar);
-        uiContainer.add(XPBAR);
-    }    
+        this.icon = this.add.image(42, 170, 'inv_icon');
+        this.hpBar = this.add.sprite(250, 0);
+        this.XPBAR = this.add.sprite(250, 40);
+        this.XPBAR.setScale(10);
+        this.hpBar.setScale(10);
+        this.icon.setScale(8);
+        this.icon.setInteractive();
+        this.XPBAR.play('XPBar', true);
+        this.XPBAR.stop();
+        this.hpBar.play('hpBar', true);
+        this.hpBar.stop();
+        uiContainer.add(this.hpBar);
+        uiContainer.add(this.XPBAR);
+    }
+    update() {
+        //on pointerdown icon is clicked
+        this.icon.on('pointerdown', () => {
+                this.game.renderer.snapshot((image) => {
+                    this.scene.launch('inventory', { screenshot: image, player: this });
+                    this.scene.pause();
+                });
+        });
+        if(players[0].exp >27){
+            players[0].exp = 0;
+            players[0].level += 1;
 
+        }
+        var frameIndex = 39 - Math.round(players[0].health/ players[0].maxHealth * 38);
+        this.hpBar.setFrame(frameIndex);
+        this.XPBAR.setFrame(players[0].exp);
+        
+        
+    }    
 }
 window.addEventListener('resize', function () {
     gameWidth = window.innerWidth;
