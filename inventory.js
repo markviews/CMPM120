@@ -1,5 +1,63 @@
 // Inventory and Settings scenes
 
+function getItemData(itemID) {
+    var data;
+
+    switch(parseInt(itemID)) {
+        case 0: { data = { description: "Abner's Banana: \nDamage Invulnerability: +5 seconds", invulnTime: 0.05 }; break; }
+        case 1: { data = { description: "Mark's Coffee: \nDodge Charge +1", dodgeCharge: 0.01 }; break; }
+        case 2: { data = { description: "Nico's Brush:\n +1 Projectile", projectileCount: 0.01 }; break; }
+        case 3: { data = { description: "Oliver's Oil:\n +5% Damage", damageBoost: 0.05 }; break; }
+
+        case 4: { data = { description: "Turquoise crystal: \n-6% Dash cooldown", dashCooldown: 0.06 }; break; }
+        case 5: { data = { description: "Green crystal: \n-5% Dash cooldown", dashCooldown: 0.05 }; break; }
+        case 6: { data = { description: "Pink crystal: \n-4% Dash cooldown", dashCooldown: 0.04 }; break; }
+        case 7: { data = { description: "Purple crystal: -3% Dash cooldown", dashCooldown: 0.03 }; break; }
+        case 8: { data = { description: "Red crystal: -2% Dash cooldown", dashCooldown: 0.02 }; break; }
+        case 9: { data = { description: "Yellow crystal: -1% Dash cooldown", dashCooldown: 0.01 }; break; }
+
+        case 10: { data = { description: "Adamantite gem: \n+6% Projectile Speed", projectileSpeed: 0.06 }; break; }
+        case 11: { data = { description: "Platinum gem: \n+5% Projectile Speed", projectileSpeed: 0.05 }; break; }
+        case 12: { data = { description: "Gold gem: \n+4% Projectile Speed", projectileSpeed: 0.04 }; break; }
+        case 13: { data = { description: "Silver gem: +3% Projectile Speed", projectileSpeed: 0.03 }; break; }
+        case 14: { data = { description: "Brass gem: +2% Projectile Speed", projectileSpeed: 0.02 }; break; }
+        case 15: { data = { description: "Iron gem: +1% Projectile Speed", projectileSpeed: 0.01 }; break; }
+
+        case 16: { data = { description: "Adamantite anklet: \n+6% Movement Speed", speedBoost: 0.06 }; break; }
+        case 17: { data = { description: "Platinum anklet: \n+5% Movement Speed", speedBoost: 0.05  }; break; }
+        case 18: { data = { description: "Gold anklet: \n+4% Movement Speed", speedBoost: 0.04 }; break; }
+        case 19: { data = { description: "Silver anklet: \n+3% Movement Speed", speedBoost: 0.03 }; break; }
+        case 20: { data = { description: "Brass anklet: +2% Movement Speed", speedBoost: 0.02 }; break; }
+        case 21: { data = { description: "Iron anklet: +1% Movement Speed", speedBoost: 0.01 }; break; }
+
+        case 22: { data = { description: "Adamantite ring: \n+6% Attack Speed", attackSpeed: 0.06 }; break; }
+        case 23: { data = { description: "Platinum ring: \n+5% Attack Speed", attackSpeed: 0.05 }; break; }
+        case 24: { data = { description: "Gold ring:\n +4% Attack Speed", attackSpeed: 0.04 }; break; }
+        case 25: { data = { description: "Silver ring:\n +3% Attack Speed", attackSpeed: 0.03 }; break; }
+        case 26: { data = { description: "Brass ring: +2% Attack Speed", attackSpeed: 0.02 }; break; }
+        case 27: { data = { description: "Iron ring: +1% Attack Speed", attackSpeed: 0.01 }; break; }
+
+        case 28: { data = { description: "Adamantite bracelet: \n+6% Melee Damage", meleeDamage: 0.06 }; break; }
+        case 29: { data = { description: "Platinum bracelet: \n+5% Melee Damage", meleeDamage: 0.05 }; break; }
+        case 30: { data = { description: "Gold bracelet: \n+4% Melee Damage", meleeDamage: 0.04 }; break; }
+        case 31: { data = { description: "Silver bracelet: \n+3% Melee Damage", meleeDamage: 0.03 }; break; }
+        case 32: { data = { description: "Brass bracelet: +2% Melee Damage", meleeDamage: 0.02 }; break; }
+        case 33: { data = { description: "Iron bracelet: +1% Melee Damage", meleeDamage: 0.01 }; break; }
+
+        case 34: { data = { description: "Adamantite amulet: \n+20 Health", healthBoost: 0.020 }; break; }
+        case 35: { data = { description: "Platinum amulet: \n+15 Health", healthBoost: 0.015 }; break; }
+        case 36: { data = { description: "Gold amulet: +10 Health", healthBoost: 0.010 }; break; }
+        case 37: { data = { description: "Silver amulet: +5 Health", healthBoost: 0.05 }; break; }
+        case 38: { data = { description: "Brass amulet: +3 Health", healthBoost: 0.03 }; break; }
+        case 39: { data = { description: "Iron amulet: +1 Health", healthBoost: 0.01 }; break; }
+
+        // if we see this message in game, we forgot to add an item description
+        default: { data = { description: itemID }; break; }
+    }
+    
+    return data;
+}
+
 class Inventory extends Phaser.Scene {
     constructor() {
         super('inventory')
@@ -39,8 +97,8 @@ class Inventory extends Phaser.Scene {
 
         // set item description
         let itemID = itemSprite.frame.name;
-        let itemDescription = this.getItemDescription(itemID);
-        this.description.text = itemDescription;
+        let data = getItemData(itemID);
+        this.description.text = data.description;
     }
 
     disableHighlight() {
@@ -66,66 +124,6 @@ class Inventory extends Phaser.Scene {
 
     getItemType(itemID) {
         if (itemID >= 0 && itemID <= 3) return "unique";
-        if (itemID >= 4 && itemID <= 9) return "crystal";
-        if (itemID >= 10 && itemID <= 15) return "gem";
-        if (itemID >= 16 && itemID <= 21) return "anklet";
-        if (itemID >= 22 && itemID <= 27) return "ring";
-        if (itemID >= 28 && itemID <= 33) return "bracelet";
-        if (itemID >= 34 && itemID <= 39) return "amulet";
-    }
-
-    getItemDescription(itemID) {
-
-        switch(itemID) {
-            case 0: return "Abner's Banana: \nDamage Invulnerability: +5 seconds";
-            case 1: return "Mark's Coffee: \nDodge Charge +1";
-            case 2: return "Nico's Brush:\n +1 Projectile";
-            case 3: return "Oliver's Oil:\n +5% Damage";
-
-            case 4: return "Turquoise crystal: \n-6% Dash cooldown";
-            case 5: return "Green crystal: \n-5% Dash cooldown";
-            case 6: return "Pink crystal: \n-4% Dash cooldown";
-            case 7: return "Purple crystal: -3% Dash cooldown";
-            case 8: return "Red crystal: -2% Dash cooldown";
-            case 9: return "Yellow crystal: -1% Dash cooldown";
-
-            case 10: return "Adamantite gem: \n+6% Projectile Speed";
-            case 11: return "Platinum gem: \n+5% Projectile Speed";
-            case 12: return "Gold gem: \n+4% Projectile Speed";
-            case 13: return "Silver gem: +3% Projectile Speed";
-            case 14: return "Brass gem: +2% Projectile Speed";
-            case 15: return "Iron gem: +1% Projectile Speed";
-
-            case 16: return "Adamantite anklet: \n+6% Movement Speed";
-            case 17: return "Platinum anklet: \n+5% Movement Speed";
-            case 18: return "Gold anklet: \n+4% Movement Speed";
-            case 19: return "Silver anklet: \n+3% Movement Speed";
-            case 20: return "Brass anklet: +2% Movement Speed";
-            case 21: return "Iron anklet: +1% Movement Speed";
-
-            case 22: return "Adamantite ring: \n+6% Attack Speed";
-            case 23: return "Platinum ring: \n+5% Attack Speed";
-            case 24: return "Gold ring:\n +4% Attack Speed";
-            case 25: return "Silver ring:\n +3% Attack Speed";
-            case 26: return "Brass ring: +2% Attack Speed";
-            case 27: return "Iron ring: +1% Attack Speed";
-
-            case 28: return "Adamantite bracelet: \n+6% Melee Damage";
-            case 29: return "Platinum bracelet: \n+5% Melee Damage";
-            case 30: return "Gold bracelet: \n+4% Melee Damage";
-            case 31: return "Silver bracelet: \n+3% Melee Damage";
-            case 32: return "Brass bracelet: +2% Melee Damage";
-            case 33: return "Iron bracelet: +1% Melee Damage";
-
-            case 34: return "Adamantite amulet: \n+20 Health";
-            case 35: return "Platinum amulet: \n+15 Health";
-            case 36: return "Gold amulet: +10 Health";
-            case 37: return "Silver amulet: +5 Health";
-            case 38: return "Brass amulet: +3 Health";
-            case 39: return "Iron amulet: +1 Health";
-        }
-
-        if (itemID >= 0 && itemID <= 3) return "circle";
         if (itemID >= 4 && itemID <= 9) return "crystal";
         if (itemID >= 10 && itemID <= 15) return "gem";
         if (itemID >= 16 && itemID <= 21) return "anklet";
@@ -357,6 +355,8 @@ class Inventory extends Phaser.Scene {
             this.addEvents(itemSprite, itemCount);
             i++;
         }
+
+        players[0].updateBuffs();
     }
 
     create() {

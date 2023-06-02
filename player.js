@@ -187,6 +187,7 @@ class Player {
             break;
         }
         this.attackTick = 0;
+        this.updateBuffs();
     }
 
     update(time, delta) {
@@ -374,8 +375,8 @@ class Player {
         
         // if moving this frame
         if (!this.idle) {
-            this.sprite.body.setVelocityX(this.speed * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
-            this.sprite.body.setVelocityY(this.speed * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
+            this.sprite.body.setVelocityX((this.speed * this.buffs.speedBoost) * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
+            this.sprite.body.setVelocityY((this.speed * this.buffs.speedBoost) * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
             if(scene.joyStick){
                 // Function to update joystick position
                 var joystick = scene.joyStick;
@@ -383,7 +384,7 @@ class Player {
                 // Calculate the target position based on the cursor's current position
                 var targetX = scene.input.activePointer.worldX;
                 var targetY = scene.input.activePointer.worldY;
-    
+
                 // Set the easing factor to control the smoothness of the movement
                 var easingFactor = 0.07;
     
@@ -444,6 +445,34 @@ class Player {
         }
         //#endregion fire
 
+    }
+
+    updateBuffs() {
+
+        // buff multipliers
+        this.buffs = { 
+            invulnTime: 1,      // TODO implement
+            dodgeCharge: 1,     // TODO implement
+            projectileCount: 1, // TODO implement
+            damageBoost: 1,     // TODO implement
+            dashCooldown: 1,    // TODO implement
+            projectileSpeed: 1, // TODO implement
+            speedBoost: 1,      // TODO implement
+            attackSpeed: 1,     // TODO implement
+            meleeDamage: 1,     // TODO implement
+            healthBoost: 1  // implimented ☑
+        };
+
+        // for each item in a slot, add stats
+        for (var slotID in players[0].slots) {
+            var itemID = players[0].slots[slotID];
+            let data = getItemData(itemID);
+            Object.keys(players[0].buffs).forEach(buf => {
+                if (data[buf] != undefined)
+                    players[0].buffs[buf] += data[buf]
+            });
+        }
+        
     }
 
     //TOUCH CONTROL FUNCTIONS
