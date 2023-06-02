@@ -1,4 +1,4 @@
-const autoAttackTick = 300;
+const autoAttackTick = 200;
 
 var index = 0;
 var dodgeDistance = 150;
@@ -28,6 +28,8 @@ class Player {
         this.dashTimer = 1000;
         this.dodging = false;
         this.invincible = false;
+        this.meleeDamage = 1; // how much damage to do when melee attacking
+        this.projectileDamage = 1; // how much damage to do when projectile attacking
     }
 
     // called when player enters a new scene
@@ -71,6 +73,9 @@ class Player {
         scene.physics.add.collider(this.hithox, scene.enemies);
         scene.physics.add.collider(this.Meleehitbox, scene.enemies);
         scene.physics.add.collider(this.sprite, scene.layer_tiles);
+        scene.physics.add.collider(this.sprite, scene.wallLeft);
+        scene.physics.add.collider(this.sprite, scene.wallRight);
+        scene.physics.add.collider(this.sprite, scene.wallBottom);
 
         // set position
         if (scene.tp_door?.x && scene.tp_door?.y) {
@@ -184,6 +189,8 @@ class Player {
                     down: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN),
                     left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT),
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
+                    dodge: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
+                    pause: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC),
                 }
             break;
         }
@@ -214,7 +221,7 @@ class Player {
 
         // auto attacks
         this.attackTick += delta
-        if (this.attackTick > autoAttackTick && scene.enemies != null && scene.enemies.getChildren().length != 0) {
+        if (this.attackTick > (autoAttackTick * this.buffs.attackSpeed) && scene.enemies != null && scene.enemies.getChildren().length != 0) {
             this.attackTick = 0;
 
             // get nearest enemy
@@ -247,7 +254,7 @@ class Player {
                 scene.projectile_player.add(mySprite);
                 mySprite.body.setImmovable(true);
 
-                let projectileSpeed = 500;
+                let projectileSpeed = 500 * this.buffs.projectileSpeed;
                 mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
                 mySprite.angle = Phaser.Math.RadToDeg(enemy_angle);
 
@@ -263,10 +270,10 @@ class Player {
 
         // #region dodge
 
-        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && players[0].dodging == false){
+        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && this.dodging == false){
             var flashes = 3;
-            players[0].dodging = true;
-            players[0].invincible = true;
+            this.dodging = true;
+            this.invincible = true;
             this.dash_sound.play();
             scene.tweens.add({
                 targets: this.sprite,
@@ -276,11 +283,11 @@ class Player {
                 yoyo: true,
                 onComplete: () =>{
                     this.sprite.alpha = 1;
-                    setTimeout(function(){
-                        players[0].dodging = false;
-                        players[0].invincible = false;
+                    setTimeout(() => {
+                        this.dodging = false;
+                        this.invincible = false;
                         //clone.destroy();  
-                    },players[0].dashTimer);
+                    }, this.dashTimer * players[0].buffs.dashCooldown);
                 },
             });
             //console.log(this.angle);
@@ -453,16 +460,17 @@ class Player {
 
         // buff multipliers
         this.buffs = { 
-            invulnTime: 1,      // TODO implement
-            dodgeCharge: 1,     // TODO implement
-            projectileCount: 1, // TODO implement
-            damageBoost: 1,     // TODO implement
-            dashCooldown: 1,    // TODO implement
-            projectileSpeed: 1, // TODO implement
-            speedBoost: 1,      // TODO implement
-            attackSpeed: 1,     // TODO implement
-            meleeDamage: 1,     // TODO implement
-            healthBoost: 1  // implimented ☑
+            invulnTime: 1,          // ☑
+            dodgeCharge: 1,         // TODO implement
+            projectileCount: 1,     // TODO implement
+            damageBoost: 1,         // ☑
+            dashCooldown: 1,        // ☑
+            projectileSpeed: 1,     // ☑
+            speedBoost: 1,          // ☑
+            attackSpeed: 1,         // ☑
+            meleeDamage: 1,         // ☑
+            projectileDamage: 1,    // implimented but no items give this buff
+            healthBoost: 1          // ☑
         };
 
         // for each item in a slot, add stats

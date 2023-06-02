@@ -8,7 +8,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.body.setCollideWorldBounds(true);
+        //this.body.setCollideWorldBounds(true);
         this.body.setImmovable(true);
         this.body.onCollide = true;
         this.play(`${this.type}_idle`);
@@ -37,6 +37,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
             // player getting hit by enemy
             if (gameObject1.name == "player") {
+                if (player.stunned) return;
                 
                 player.stunned = true;
                 player.sprite.play('fall');
@@ -48,7 +49,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
                 setTimeout(() => {
                     player.stunned = false;
-                }, 400);
+                }, 400 * players[0].buffs.invulnTime);
 
                 return;
             }
@@ -56,23 +57,11 @@ class Enemy extends Phaser.GameObjects.Sprite {
             // enemy getting hit by player's sword
             if (gameObject1.name == "melee_hitbox") {
                 this.stunned = true;
-                this.health--;
+                this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
 
                 // knockback
                 var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
                 scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
-
-                if (this.health <= 0) {
-                    this.play(this.type + '_die');
-                    return;
-                }
-
-                setTimeout(() => {
-                    this.body.setVelocity(0, 0);
-                    this.play(this.type + '_idle');
-                    this.stunned = false;
-                }, 400);
-
 
                 if (this.health <= 0) {
                     this.play(this.type + '_die');
@@ -91,24 +80,12 @@ class Enemy extends Phaser.GameObjects.Sprite {
             // enemy getting hit by player's projectile
             if (gameObject1.name == "projectile") {
                 this.stunned = true;
-                this.health--;
+                this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
 
                 // knockback
                 var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
                 scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
-                //gameObject1.destroy();
-
-                if (this.health <= 0) {
-                    this.play(this.type + '_die');
-                    return;
-                }
-
-                setTimeout(() => {
-                    this.body.setVelocity(0, 0);
-                    this.play(this.type + '_idle');
-                    this.stunned = false;
-                }, 400);
-
+                gameObject1.destroy();
 
                 if (this.health <= 0) {
                     this.play(this.type + '_die');

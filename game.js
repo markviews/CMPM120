@@ -29,12 +29,13 @@ const RandProps_Floor = [
     24, 25, // NEAR walls
     30, 31, 32, 33, 34, 35, 36, 37, 38,
     40, 41, 48, 49,
-    50, 51, 52, 53, 54, 56, 57, 58, 59,
+    50, 51, 52, 53, 54, 56, 57, 59,
     65, 66, 67,
 ];
 const RandProps_nearWall = [ 24, 25 ];
 const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
 const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
+const RandTile_Floor = [ 71, 72, 73,  ]; //21, 22, 23, 24, 25
 
 // global variables
 var levels = {};
@@ -176,8 +177,11 @@ class SetupLevel extends Phaser.Scene {
         
         //XP Bar Animations
         this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
+        
         // create players
         players.push(new Player());
+        //players.push(new Player());
+
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         let id = Phaser.Utils.String.UUID().substring(0, 10);
@@ -247,6 +251,7 @@ class GameLevel extends Phaser.Scene {
         this.text_item.setVisible(false);
         this.text_JSON.setVisible(false);
         this.text_delItem.setVisible(false);
+        if (uiContainer) uiContainer.setVisible(false);
         
 
         switch(mode) {
@@ -258,7 +263,8 @@ class GameLevel extends Phaser.Scene {
             
                 this.helpText.setVisible(false);
                 this.propertiesText.setVisible(false);
-                this.cameras.main.zoomTo(camMinZoom);
+                this.cameras.main.zoomTo(camMinZoom, 0);
+                if (uiContainer) uiContainer.setVisible(true);
             break;
             case EditMode.Selecting:
                 this.helpText.setText('EditMode: Pick Block');
@@ -271,7 +277,7 @@ class GameLevel extends Phaser.Scene {
                 this.text_delItem.setVisible(true);
                 this.helpText.setVisible(true);
                 this.propertiesText.setVisible(true);
-                this.cameras.main.zoomTo(0.5);
+                this.cameras.main.zoomTo(0.5, 0);
             break;
             case EditMode.PlaceBlock:
                 this.helpText.setText('EditMode: Painting Tile');
@@ -318,8 +324,6 @@ class GameLevel extends Phaser.Scene {
     spawnStuff(slimeCount, itemCount) {
         let floorPropCount = 1000;
         let wallPropCount = 1000;
-        
-        this.boss.add(new Boss(this, 300, 300, 150)); 
 
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
@@ -433,11 +437,25 @@ class GameLevel extends Phaser.Scene {
 
         this.map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
         const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
+
+        // background layer
+        this.layer_background = this.map.createLayer("background", tileset);
+        this.layer_background.setScale(3);
+        this.layer_background.forEachTile(tile => {
+            var index = RandTile_Floor[Math.floor(Math.random() * RandTile_Floor.length)];
+            tile.index = index;
+        });
+
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
         this.map.setCollision([ 2, 63 ]);
         this.layer_tiles.setScale(3);
 
-   
+        this.layer_tiles.forEachTile(tile => {
+            if (RandTile_Floor.includes(tile.index)) {
+                tile.index = 80;
+            };
+        });
+        
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
@@ -605,7 +623,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(20, 1000);
+            this.spawnStuff(200, 10);
         }
 
         // spawn items
@@ -634,6 +652,21 @@ class GameLevel extends Phaser.Scene {
         this.cameras.main.setBounds(0,0,this.layer_tiles.width * 3, this.layer_tiles.height * 3);
         this.cameras.main.zoomTo(camMinZoom, 0);
         this.cameras.main.fadeIn(1000);
+
+        // wall colliders
+        const worldBounds = this.cameras.main.getBounds();
+        this.wallLeft = this.physics.add.staticSprite(0, worldBounds.height / 2);
+        this.wallLeft.setScale(1, worldBounds.height);
+        this.wallLeft.refreshBody();
+
+        this.wallRight = this.physics.add.staticSprite(worldBounds.width, worldBounds.height / 2);
+        this.wallRight.setScale(1, worldBounds.height);
+        this.wallRight.refreshBody();
+
+        this.wallBottom = this.physics.add.staticSprite(worldBounds.width / 2, worldBounds.height);
+        this.wallBottom.setScale(worldBounds.width, 1);
+        this.wallBottom.refreshBody();
+
 
          // task progress bar
         this.circularProgress = this.add.rexCircularProgress({
@@ -978,6 +1011,8 @@ class UI extends Phaser.Scene {
         this.Dash.setFrame(30);
         uiContainer.add(this.hpBar);
         uiContainer.add(this.XPBAR);
+        uiContainer.add(this.Dash);
+        uiContainer.add(this.icon);
     }
     update() {
         //on pointerdown icon is clicked
@@ -993,7 +1028,7 @@ class UI extends Phaser.Scene {
             players[0].level += 1;
 
         }
-        var frameIndex = 39 - Math.round(players[0].health/ players[0].maxHealth * 38);
+        var frameIndex = 39 - Math.round(players[0].health/ (players[0].maxHealth * players[0].buffs.healthBoost) * 38);
         this.hpBar.setFrame(frameIndex);
         this.XPBAR.setFrame(players[0].exp);
         if(players[0].dodging == true){
