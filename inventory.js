@@ -9,12 +9,12 @@ function getItemData(itemID) {
         case 2: { data = { description: "Nico's Brush:\n +1 Projectile", projectileCount: 0.01 }; break; }
         case 3: { data = { description: "Oliver's Oil:\n +5% Damage", damageBoost: 0.05 }; break; }
 
-        case 4: { data = { description: "Turquoise crystal: \n-6% Dash cooldown", dashCooldown: 0.06 }; break; }
-        case 5: { data = { description: "Green crystal: \n-5% Dash cooldown", dashCooldown: 0.05 }; break; }
-        case 6: { data = { description: "Pink crystal: \n-4% Dash cooldown", dashCooldown: 0.04 }; break; }
-        case 7: { data = { description: "Purple crystal: -3% Dash cooldown", dashCooldown: 0.03 }; break; }
-        case 8: { data = { description: "Red crystal: -2% Dash cooldown", dashCooldown: 0.02 }; break; }
-        case 9: { data = { description: "Yellow crystal: -1% Dash cooldown", dashCooldown: 0.01 }; break; }
+        case 4: { data = { description: "Turquoise crystal: \n-6% Dash cooldown", dashCooldown: -0.06 }; break; }
+        case 5: { data = { description: "Green crystal: \n-5% Dash cooldown", dashCooldown: -0.05 }; break; }
+        case 6: { data = { description: "Pink crystal: \n-4% Dash cooldown", dashCooldown: -0.04 }; break; }
+        case 7: { data = { description: "Purple crystal: -3% Dash cooldown", dashCooldown: -0.03 }; break; }
+        case 8: { data = { description: "Red crystal: -2% Dash cooldown", dashCooldown: -0.02 }; break; }
+        case 9: { data = { description: "Yellow crystal: -1% Dash cooldown", dashCooldown: -0.01 }; break; }
 
         case 10: { data = { description: "Adamantite gem: \n+6% Projectile Speed", projectileSpeed: 0.06 }; break; }
         case 11: { data = { description: "Platinum gem: \n+5% Projectile Speed", projectileSpeed: 0.05 }; break; }
