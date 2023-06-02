@@ -46,6 +46,19 @@ const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, Del
 class SetupLevel extends Phaser.Scene {
 
     preload() {
+        //load sounds from /assets/sounds
+        this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
+        this.load.audio('die_sound', 'assets/sounds/die.mp3');
+        this.load.audio('drone_die', 'assets/sounds/droneCrash.mp3');
+        this.load.audio('drone_move', 'assets/sounds/droneFlying.mp3');
+        this.load.audio('girl_ouch', 'assets/sounds/girlDMG.mp3');
+        this.load.audio('inventory_sound', 'assets/sounds/inventoryOpen.mp3');
+        this.load.audio('guy_ouch', 'assets/sounds/maleDMG.mp3');
+        this.load.audio('slime_move', 'assets/sounds/slime.mp3');
+        this.load.audio('teleport_sound', 'assets/sounds/teleport.mp3');
+        this.load.audio('BOSS_die', 'assets/sounds/yes.mp3');
+
+
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
@@ -79,6 +92,18 @@ class SetupLevel extends Phaser.Scene {
     }
 
     create() {
+        //Add all sounds
+        //this.dash_sound = this.sound.add('dash_sound');
+        this.die_sound = this.sound.add('die_sound');
+        this.drone_die = this.sound.add('drone_die');
+        this.drone_move = this.sound.add('drone_move');
+        this.girl_ouch = this.sound.add('girl_ouch');
+        this.inventory_sound = this.sound.add('inventory_sound');
+        this.guy_ouch = this.sound.add('guy_ouch');
+        this.slime_move = this.sound.add('slime_move');
+        this.teleport_sound = this.sound.add('teleport_sound');
+        this.BOSS_die = this.sound.add('BOSS_die');
+
         //Enemy Drone animations
         this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3,4,5,6 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'drone_die', frames: this.anims.generateFrameNumbers('drone', { frames: [ 9,10,11,12,13,14,15,16,17 ] }), frameRate: 8 });

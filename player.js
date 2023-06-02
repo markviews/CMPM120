@@ -33,6 +33,9 @@ class Player {
     // called when player enters a new scene
     newScene(scene) {
         this.scene = scene;
+        //#region player sounds
+        this.dash_sound = scene.sound.add('dash_sound');
+        //#endregion player sounds
 
         this.sprite = scene.add.sprite();
         this.sprite.setScale(2.5);
@@ -261,6 +264,7 @@ class Player {
             var flashes = 3;
             players[0].dodging = true;
             players[0].invincible = true;
+            this.dash_sound.play();
             scene.tweens.add({
                 targets: this.sprite,
                 alpha: 0,
