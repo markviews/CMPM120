@@ -360,6 +360,7 @@ class Inventory extends Phaser.Scene {
     }
 
     create() {
+        this.inventory_sound = this.sound.add('inventory_sound');
         this.allItems = [];
         this.allItemTexts = [];
         this.resumeKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
@@ -401,6 +402,7 @@ class Inventory extends Phaser.Scene {
             resumeButton.on('pointerover', () => resumeButton.setTexture('inventory_escpull'));
             resumeButton.on('pointerout', () => resumeButton.setTexture('inventory_esc'));
             resumeButton.on('pointerdown', () => {
+                this.inventory_sound.play();
                 this.scene.resume('gamelevel').launch('ui');
                 this.scene.stop('inventory');
             });
@@ -447,6 +449,7 @@ class Inventory extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
+            this.inventory_sound.play();
             this.scene.resume('gamelevel').launch('ui');
             this.scene.stop('inventory');
         }
