@@ -99,7 +99,7 @@ class SetupLevel extends Phaser.Scene {
         this.drone_die = this.sound.add('drone_die');
         this.drone_move = this.sound.add('drone_move');
         this.girl_ouch = this.sound.add('girl_ouch');
-        this.inventory_sound = this.sound.add('inventory_sound');
+       // this.inventory_sound = this.sound.add('inventory_sound');
         this.guy_ouch = this.sound.add('guy_ouch');
         this.slime_move = this.sound.add('slime_move');
         this.teleport_sound = this.sound.add('teleport_sound');
@@ -990,7 +990,7 @@ class UI extends Phaser.Scene {
         //     hpBar.anims.nextFrame();
         //     initalHP = players[0].hp;
         // }
-        
+        this.inventory_sound = this.sound.add('inventory_sound');
         uiContainer = this.add.container(0, 0);
         uiContainer.setVisible(true);
         this.icon = this.add.image(42, 170, 'inv_icon');
@@ -1018,6 +1018,7 @@ class UI extends Phaser.Scene {
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
                 this.game.renderer.snapshot((image) => {
+                    this.inventory_sound.play();
                     this.scene.launch('inventory', { screenshot: image, player: players[0] });
                     this.scene.pause();
                 });

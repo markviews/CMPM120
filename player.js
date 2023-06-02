@@ -36,6 +36,7 @@ class Player {
     newScene(scene) {
         this.scene = scene;
         //#region player sounds
+        this.inventory_sound = scene.sound.add('inventory_sound');
         this.dash_sound = scene.sound.add('dash_sound');
         //#endregion player sounds
 
@@ -207,6 +208,7 @@ class Player {
         if (Phaser.Input.Keyboard.JustDown(this.controls.pause)){
             
             scene.game.renderer.snapshot((image) => {
+                this.inventory_sound.play();
                 scene.scene.launch('inventory', { screenshot: image, player: this });
                 scene.scene.pause();
             });
