@@ -331,9 +331,9 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let enemyCount = 10;
-        let floorPropCount = 15;
-        let wallPropCount = 5;
+        let enemyCount = 0;
+        let floorPropCount = 0;
+        let wallPropCount = 0;
 
         // spawn enemies
         for (var i = 0; i < enemyCount; i++) {
@@ -1036,7 +1036,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
 };

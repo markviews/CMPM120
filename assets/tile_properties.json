@@ -7,8 +7,8 @@
          "properties": {"items": []},
          "opacity":1,
          "type":"tilelayer",
-         "height":15,
-         "width":24,
+         "height":10,
+         "width":16,
          "x":0,
          "y":0
       },
