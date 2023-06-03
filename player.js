@@ -249,7 +249,7 @@ class Player {
 
                 mySprite.name = "projectile";
                 // could add other attribues like damage here
-
+                
                 scene.physics.add.existing(mySprite);
                 scene.projectile_player.add(mySprite);
                 mySprite.body.setImmovable(true);

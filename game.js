@@ -19,23 +19,26 @@ const RandItems = [
     40,41
 ];
 const RandProps_Wall = [
+    7,
     20, 21, 22, 23, 26, 27, 28, 29,
     42, 43, 55, 45, 46, 47,
     60, 61, 62, 63, 64, 65, 66, 67,
     70, 71, 72, 73, 74, 75
 ];
 const RandProps_Floor = [
+    7,
     10, 11, 12, 13, 14, 15, 16,
-    24, 25, // NEAR walls
+    24, 25,
     30, 31, 32, 33, 34, 35, 36, 37, 38,
     40, 41, 48, 49,
     50, 51, 52, 53, 54, 56, 57, 59,
     65, 66, 67,
 ];
-const RandProps_nearWall = [ 24, 25 ];
+const RandProps_nearWall = [ 7, 24, 25 ];
 const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
 const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
-const RandTile_Floor = [ 71, 72, 73,  ]; //21, 22, 23, 24, 25
+const RandTile_Floor = [ 71, 72, 73 ]; //21, 22, 23, 24, 25
+const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 
 // global variables
 var levels = {};
@@ -64,7 +67,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
-        this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 48, frameHeight: 48 });
         this.load.image('fire', 'assets/red.png');
         this.load.image('inventory', 'assets/ui/Inventory Book.png');
         this.load.image('inventory_empty', 'assets/ui/Inventory Book Blank.png');
@@ -79,9 +82,10 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+        this.load.spritesheet('torch', 'assets/Torch Side_0000-sheet.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
-        this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
@@ -104,6 +108,10 @@ class SetupLevel extends Phaser.Scene {
         this.slime_move = this.sound.add('slime_move');
         this.teleport_sound = this.sound.add('teleport_sound');
         this.BOSS_die = this.sound.add('BOSS_die');
+
+        // torch
+        this.anims.create({key: 'torch_side', frames: this.anims.generateFrameNumbers('torch', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({key: 'torch_front', frames: this.anims.generateFrameNumbers('torch', { frames: [ 14,15,16,17,28,29,30,21,22,23,24,25,26,27 ] }), frameRate: 8, repeat: -1 });
 
         //Enemy Drone animations
         this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3,4,5,6 ] }), frameRate: 6, repeat: -1 });
@@ -237,8 +245,8 @@ class GameLevel extends Phaser.Scene {
         console.log(`[${tiles.toString()}]`)
 
         // print items
-        let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
-        console.log(JSON.stringify(properties))
+        //let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
+        //console.log(JSON.stringify(properties))
     }
 
 
@@ -295,10 +303,22 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    spawnEnemy(type, x, y) {
+    spawnEnemy(x, y) {
+        var types = ['slime', 'cyberjelly', 'hunger', 'drone'];
+        var type = types[Math.floor(Math.random() * types.length)];
+
         switch (type) {
             case 'slime':
+                this.enemies.add(new Slime(this, x, y));
+            break;
+            case 'cyberjelly':
+                this.enemies.add(new CyberJelly(this, x, y));
+            break;
+            case 'hunger':
                 this.enemies.add(new Hunger(this, x, y));
+            break;
+            case 'drone':
+                this.enemies.add(new Drone(this, x, y));
             break;
         }
     }
@@ -328,7 +348,7 @@ class GameLevel extends Phaser.Scene {
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
             var {x, y} = this.getRandSpawnPoint();
-            this.spawnEnemy('slime', x, y);
+            this.spawnEnemy(x, y);
         }
 
         // spawn items
@@ -352,7 +372,7 @@ class GameLevel extends Phaser.Scene {
             if (RandProps_Chest.includes(index)) {
                 var prop = this.physics.add.image(x, y, 'props',  index);
                 this.physics.add.existing(prop);
-                prop.setScale(2);
+                prop.setScale(4);
                 prop.setOrigin(0.5, 0.5);
                 prop.body.setSize(12, 12);
                 prop.body.setOffset(10,20);
@@ -381,6 +401,26 @@ class GameLevel extends Phaser.Scene {
                 var x = wall.x * 32 * 3;
                 var y = wall.y * 32 * 3;
 
+                if (index == 7) {
+                    prop.destroy();
+
+                    if (wall.wall == "down" || wall.wall == "up") continue;
+
+                    // spawn a torch
+                    var torch = this.add.sprite(x, y, 'torch');
+                    torch.setScale(3);
+                    torch.anims.play('torch_side');
+
+                    if (wall.wall == "left") {
+                        torch.flipX = true;
+                        torch.x -= 32;
+                    } else if (wall.wall == "right") {
+                        torch.x += 128;
+                    }
+
+                    continue;
+                }
+
                 if (wall.wall == "left") {
                     prop.rotation = Math.PI / 2;
                     x += 48;
@@ -406,6 +446,15 @@ class GameLevel extends Phaser.Scene {
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
+
+            if (index == 7) {
+                // spawn a torch
+                var torch = this.add.sprite(x * 32 * 3, (y * 32 * 3) + 96, 'torch');
+                torch.setScale(3);
+                torch.anims.play('torch_front');
+                continue;
+            }
+
             var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
             prop.setScale(5);
             prop.setOrigin(0, 0);
@@ -413,6 +462,8 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
+
+        
 
     }
 
@@ -427,6 +478,9 @@ class GameLevel extends Phaser.Scene {
     solidAt(x, y) {
         var tile = this.layer_tiles.getTileAt(x, y);
         if (tile && tile.properties && tile.properties.solid) {
+            return true;
+        }
+        if (tile && Tile_BorderWall.includes(tile.index)) {
             return true;
         }
         return false;
@@ -447,7 +501,7 @@ class GameLevel extends Phaser.Scene {
         });
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
-        this.map.setCollision([ 2, 63 ]);
+        this.map.setCollision([ 1, 2, 3, 5, 12, 13, 15, 17, 18, 27, 28, 51, 52, 53, 55, 60, 63, 65, 67, 68, 70, 77, 78 ]);
         this.layer_tiles.setScale(3);
 
         this.layer_tiles.forEachTile(tile => {
@@ -502,9 +556,10 @@ class GameLevel extends Phaser.Scene {
         this.nearWalls = [];
         this.layer_tiles.forEachTile(tile => {
             var properties = tile.properties;
-            var solid = properties && properties.solid;
+            var solid = this.solidAt(tile.x, tile.y);
             var x = tile.x;
             var y = tile.y;
+
             let left = this.solidAt(x - 1, y);
             let right = this.solidAt(x + 1, y);
             let down = this.solidAt(x, y + 1);
@@ -578,20 +633,30 @@ class GameLevel extends Phaser.Scene {
             else if (levels[this.id].from_wall == "up") find_door = "down";
             else if (levels[this.id].from_wall == "down") find_door = "up";
 
+            //console.log("Teleporting player to door", find_door)
+
             // find previous connection
             for (var door in levels[this.id].doors) {
                 var door = levels[this.id].doors[door];
 
                 if (door.dest_id == levels[this.id].from_id) {
-                    this.tp_door = {x: (door.x * 32) +16, y: door.y * 32-16 }
+                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
+
+                    // adjust north door TP location
+                    if (find_door == 'up') this.tp_door.y += 96;
                     break;
                 }
             }
 
             // make new connection
-            if (this.tp_door.x == undefined)
+            if (this.tp_door.x == undefined) {
+                //console.log("this.tp_door.x == undefined");
+
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
+
+                    //console.log("Searching for door to TP to: ",door);
+
                     if (door.wall == find_door) {
 
                         // if door already has a diffrent connection, skip it
@@ -600,10 +665,16 @@ class GameLevel extends Phaser.Scene {
                         }
 
                         door.dest_id = levels[this.id].from_id;
-                        this.tp_door = {x: door.x * 32 +16, y: door.y * 32-16 }
+                        this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
+
+                        // adjust north door TP location
+                        if (find_door == 'up') this.tp_door.y += 96;
+
+                        //console.log("Made new door connection", this.tp_door);
                         break;
                     }
                 }
+            }
 
         }
 
@@ -623,7 +694,7 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and load random items
-            this.spawnStuff(200, 10);
+            this.spawnStuff(0, 0);
         }
 
         // spawn items
@@ -808,7 +879,7 @@ class GameLevel extends Phaser.Scene {
 
                     this.items.getChildren().forEach(function(item) {
                         if (item.getBounds().contains(this.input.activePointer.worldX, this.input.activePointer.worldY)) {
-                            console.log("Item clicked:", item);
+                            //console.log("Item clicked:", item);
                             item.destroy();
 
                             // remove item from properties
@@ -886,7 +957,8 @@ class GameLevel extends Phaser.Scene {
 
                                     // find nearby door
                                     levels[this.id].doors.forEach(door => {
-                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
+                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/96, player.sprite.y/96, door.x, door.y);
+                                        //console.log("Door dist:", dist)
                                         if (dist < 4) {
 
                                             // if door doesn't have a destination set, generate one
