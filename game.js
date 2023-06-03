@@ -255,10 +255,6 @@ class GameLevel extends Phaser.Scene {
 
         this.layer_tilePicker.setAlpha(0);
         this.tilePicketBG.setVisible(false);
-        this.propertiesText.setText('');
-        this.text_item.setVisible(false);
-        this.text_JSON.setVisible(false);
-        this.text_delItem.setVisible(false);
         if (uiContainer) uiContainer.setVisible(false);
         
 
@@ -270,7 +266,6 @@ class GameLevel extends Phaser.Scene {
                 this.marker.y = -100;
             
                 this.helpText.setVisible(false);
-                this.propertiesText.setVisible(false);
                 this.cameras.main.zoomTo(camMinZoom, 0);
                 if (uiContainer) uiContainer.setVisible(true);
             break;
@@ -280,20 +275,14 @@ class GameLevel extends Phaser.Scene {
                 this.tilePicketBG.setVisible(true);
 
                 // show stuff
-                this.text_item.setVisible(true);
-                this.text_JSON.setVisible(true);
-                this.text_delItem.setVisible(true);
                 this.helpText.setVisible(true);
-                this.propertiesText.setVisible(true);
                 this.cameras.main.zoomTo(0.5, 0);
             break;
             case EditMode.PlaceBlock:
                 this.helpText.setText('EditMode: Painting Tile');
-                this.propertiesText.setText('Picked Tile: ' + this.tile_painting);
             break;
             case EditMode.PlaceItem:
                 this.helpText.setText('EditMode: Painting Item');
-                this.propertiesText.setText('Picked Item: ' + this.placeItem);
             break;
             case EditMode.DeleteItem:
                 this.helpText.setText('EditMode: Deleting Item');
@@ -341,23 +330,15 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    spawnStuff(slimeCount, itemCount) {
-        let floorPropCount = 10;
-        let wallPropCount = 10;
+    spawnStuff() {
+        let enemyCount = 10;
+        let floorPropCount = 15;
+        let wallPropCount = 5;
 
-        // spawn slimes
-        for (var i = 0; i < slimeCount; i++) {
+        // spawn enemies
+        for (var i = 0; i < enemyCount; i++) {
             var {x, y} = this.getRandSpawnPoint();
             this.spawnEnemy(x, y);
-        }
-
-        // spawn items
-        for (var i = 0; i < itemCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
-            
-            // pick random item from RandItems
-            var index = RandItems[Math.floor(Math.random() * RandItems.length)];
-            levels[this.id].items.push({x: x, y: y, index: index});
         }
 
         // spawn props
@@ -693,31 +674,9 @@ class GameLevel extends Phaser.Scene {
             if (!items) items = {};
             levels[this.id].items = items;
 
-            // spawn enemies and load random items
-            this.spawnStuff(0, 0);
+            // spawn enemies and props
+            this.spawnStuff();
         }
-
-        // spawn items
-        levels[this.id].items.forEach(item => {
-            var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
-            item.setOrigin(0.5, 0.5);
-            item.setScale(itemScale);
-            item.setImmovable(true);
-            item.body.onCollide = true;
-            this.items.add(item);
-            
-            // get slightly bigger and smaller forever
-            this.tweens.add({
-                targets: item,
-                scaleX: itemScale * 1.1,
-                scaleY: itemScale * 1.1,
-                duration: 1000,
-                ease: 'Linear',
-                yoyo: true,
-                repeat: -1
-            });
-
-        });
 
         this.cameras.main.roundPixels = true;
         this.cameras.main.setBounds(0,0,this.layer_tiles.width * 3, this.layer_tiles.height * 3);
@@ -767,7 +726,7 @@ class GameLevel extends Phaser.Scene {
         this.layer_tilePicker.setScale(3);
 
         // add a white box behind the tile picker
-        this.tilePicketBG = this.add.graphics().fillStyle(0xffffff, 1).setAlpha(0.5).fillRect(0, 0, this.layer_tilePicker.width * this.layer_tilePicker.scaleX, this.layer_tilePicker.height * this.layer_tilePicker.scaleY)
+        this.tilePicketBG = this.add.graphics().fillStyle(0xffffff, 1).setAlpha(0.5).fillRect(0, 0, this.layer_tilePicker.width * this.layer_tilePicker.scaleX * 1.1, this.layer_tilePicker.height * this.layer_tilePicker.scaleY * 1.1)
         
         this.children.bringToTop(this.layer_tilePicker);
 
@@ -778,26 +737,8 @@ class GameLevel extends Phaser.Scene {
         this.marker.y = -100;
         this.physics.add.existing(this.marker);
         this.marker.body.setSize(32 * 3, 32 * 3);
-        // Select Item helper text
-        this.text_item = this.add.text(0, 321, 'Select Item', { font: '10px Arial', fill: '#000000' });
-        this.text_item.setStroke('#ffffff', 2);
-        this.text_item.setWordWrapWidth(50, true);
-        this.text_item.setAlign('center');
-
-        // Select Item helper text
-        this.text_JSON = this.add.text(32, 321, 'Print JSON', { font: '10px Arial', fill: '#000000' });
-        this.text_JSON.setStroke('#ffffff', 2);
-        this.text_JSON.setWordWrapWidth(50, true);
-        this.text_JSON.setAlign('center');
-
-        // Delete item helper text
-        this.text_delItem = this.add.text(64, 321, 'Delete Item', { font: '10px Arial', fill: '#000000' });
-        this.text_delItem.setStroke('#ffffff', 2);
-        this.text_delItem.setWordWrapWidth(50, true);
-        this.text_delItem.setAlign('center');
 
         this.helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
-        this.propertiesText = this.add.text(16, 840, 'Picked Tile: 1', { fontSize: '18px', fill: '#ffffff' });
 
         this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
         this.setEditMode(EditMode.NotEditing);
@@ -817,36 +758,6 @@ class GameLevel extends Phaser.Scene {
                     if (tile) {
                         this.tile_painting = tile.index;
                         this.setEditMode(EditMode.PlaceBlock);
-                    } else {
-
-                        // clicked button to choose item to place
-                        if (x == 0 && y == 10) {
-                            let input = prompt("Enter item ID to place", "1");
-
-                            if (isNaN(input)) {
-                                alert(input + ' is not a valid item ID')
-                            } else {
-                                this.placeItem = parseInt(input);
-                                this.setEditMode(EditMode.PlaceItem);
-                            }
-                            
-                            break;
-                        }
-
-                        // clicked button to print map
-                        if (x == 1 && y == 10) {
-                            this.printMap();
-                            break;
-                        }
-
-                        // clicked button to delete item
-                        if (x == 2 && y == 10) {
-                            this.setEditMode(EditMode.DeleteItem);
-                            break;
-                        }
-
-                        //console.log(x, y)
-
                     }
                 break;
                 case EditMode.PlaceBlock:

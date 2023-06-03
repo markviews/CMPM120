@@ -134,6 +134,28 @@ class Player {
             if (gameObject2?.texture?.key == "props") {
                 gameObject2.setFrame(gameObject2.frame.name - 10);
                 scene.chests.remove(gameObject2);
+
+                // spawn random item
+                var index = RandItems[Math.floor(Math.random() * RandItems.length)];
+                var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  index);
+                item.setOrigin(0.5, 0.5);
+                item.setScale(itemScale);
+                item.setImmovable(true);
+                item.body.onCollide = true;
+                scene.items.add(item);
+                
+                // cool tween
+                scene.tweens.add({
+                    targets: item,
+                    scaleX: itemScale * 1.1,
+                    scaleY: itemScale * 1.1,
+                    duration: 1000,
+                    ease: 'Linear',
+                    yoyo: true,
+                    repeat: -1
+                });
+
+
             }
             
         });

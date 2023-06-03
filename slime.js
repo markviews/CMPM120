@@ -126,15 +126,6 @@ class CyberJelly extends Enemy {
 
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-            // set angle
-            this.angle = (angle * 180 / Math.PI) - 180;
-
-            // flip if to left of player
-            if (this.angle > 90 || this.angle < -90) {
-                this.flipY = true;
-            } else {
-                this.flipY = false;
-            }
 
             this.scene.tweens.add({
                 targets: this,
