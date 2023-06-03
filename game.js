@@ -342,8 +342,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff(slimeCount, itemCount) {
-        let floorPropCount = 1000;
-        let wallPropCount = 1000;
+        let floorPropCount = 10;
+        let wallPropCount = 10;
 
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
