@@ -342,8 +342,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff(slimeCount, itemCount) {
-        let floorPropCount = 10;
-        let wallPropCount = 10;
+        let floorPropCount = 1000;
+        let wallPropCount = 1000;
 
         // spawn slimes
         for (var i = 0; i < slimeCount; i++) {
@@ -678,8 +678,8 @@ class GameLevel extends Phaser.Scene {
 
         }
 
-        
-        this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true })
+        this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
+        this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
         this.projectile_player = this.add.group(); // projectiles launched by players
         this.physics.add.collider(this.projectile_player, this.enemies);
 
