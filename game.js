@@ -10,8 +10,8 @@ var bossIsHere = true;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
+var level = 1;
 // list of random levels to choose from
-const RandLevels = ["level1"];
 const RandItems = [
     0, 1, 2, 3, 4, 5, 6, 7,
     8, 9,10,11,12,13,14,15,
@@ -221,7 +221,7 @@ class GameLevel extends Phaser.Scene {
 
     init (id) {
         if (levels[id] == undefined) levels[id] = {};
-        if (levels[id].level == undefined) levels[id].level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
+        if (levels[id].level == undefined) levels[id].level = "level" + level++;
         if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
 
@@ -516,6 +516,14 @@ class GameLevel extends Phaser.Scene {
             var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
             if (tile_bg.index == 4)
                 tile.setCollision(true);
+
+            // fix north doors
+            if (tile.index == 14 || tile.index == 92 || tile.index == 93) {
+                // set tile below as door
+                var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
+                tile_below.properties.door = true;
+            }
+
         });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
@@ -610,7 +618,7 @@ class GameLevel extends Phaser.Scene {
                 if (!nearDoor) {
                     // found a new door
                     
-                    // fine nearby wall
+                    // find nearby wall
                     var distLeft = tile.x;
                     var distRight = (inst.map.layers[0].widthInPixels / inst.map.layers[0].tileWidth) - tile.x;
                     var distUp = tile.y;

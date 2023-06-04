@@ -540,7 +540,7 @@ class Player {
     updateBuffs() {
 
         // buff multipliers
-        this.buffs = { 
+        this.buffs = {
             invulnTime: 1,          // ☑
             dodgeCharge: 1,         // TODO implement
             projectileCount: 1,     // TODO implement
