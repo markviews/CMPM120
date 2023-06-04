@@ -8,6 +8,7 @@ const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 var bossIsHere = true;         // is the boss in the level?
 let uiContainer;
+let numPlayers = 1;
 
 // list of random levels to choose from
 const RandLevels = ["level1"];
@@ -20,30 +21,33 @@ const RandItems = [
     40,41
 ];
 const RandProps_Wall = [
+    7,
     20, 21, 22, 23, 26, 27, 28, 29,
     42, 43, 55, 45, 46, 47,
     60, 61, 62, 63, 64, 65, 66, 67,
     70, 71, 72, 73, 74, 75
 ];
 const RandProps_Floor = [
+    7,
     10, 11, 12, 13, 14, 15, 16,
-    24, 25, // NEAR walls
+    24, 25,
     30, 31, 32, 33, 34, 35, 36, 37, 38,
     40, 41, 48, 49,
     50, 51, 52, 53, 54, 56, 57, 59,
     65, 66, 67,
 ];
-const RandProps_nearWall = [ 24, 25 ];
+const RandProps_nearWall = [ 7, 24, 25 ];
 const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
 const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
-const RandTile_Floor = [ 71, 72, 73,  ]; //21, 22, 23, 24, 25
+const RandTile_Floor = [ 81,82,83 ]; //21, 22, 23, 24, 25
+const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 
 // global variables
 var levels = {};
 var players = [];
 var playMusic = true;
 
-const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4 }
+const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
 class SetupLevel extends Phaser.Scene {
 
@@ -65,7 +69,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('guy', 'assets/sprites/characters/Guy.png', {frameWidth: 64, frameHeight: 64});
-        this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('drone', 'assets/sprites/characters/Enemy Drone.png', { frameWidth: 48, frameHeight: 48 });
         this.load.image('fire', 'assets/red.png');
         this.load.image('inventory', 'assets/ui/Inventory Book.png');
         this.load.image('inventory_empty', 'assets/ui/Inventory Book Blank.png');
@@ -80,9 +84,11 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
         this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+        this.load.spritesheet('torch', 'assets/Torch Side_0000-sheet.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
-        this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('title', 'assets/ui/TitleScreen0000-sheet.png', { frameWidth: 128, frameHeight: 64 });
+        this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
@@ -112,6 +118,13 @@ class SetupLevel extends Phaser.Scene {
         this.slime_move = this.sound.add('slime_move');
         this.teleport_sound = this.sound.add('teleport_sound');
         this.BOSS_die = this.sound.add('BOSS_die');
+
+        // title animation
+        this.anims.create({key: 'title', frames: this.anims.generateFrameNumbers('title', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 ] }), frameRate: 8, repeat: -1 });
+
+        // torch
+        this.anims.create({key: 'torch_side', frames: this.anims.generateFrameNumbers('torch', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({key: 'torch_front', frames: this.anims.generateFrameNumbers('torch', { frames: [ 14,15,16,17,28,29,30,21,22,23,24,25,26,27 ] }), frameRate: 8, repeat: -1 });
 
         //Enemy Drone animations
         this.anims.create({key: 'drone_idle', frames: this.anims.generateFrameNumbers('drone', { frames: [ 0,1,2,3,4,5,6 ] }), frameRate: 6, repeat: -1 });
@@ -191,12 +204,12 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'BossHP', frames: this.anims.generateFrameNumbers('BossHP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58]}), frameRate: 8});
         // create players
         players.push(new Player());
-        //players.push(new Player());
 
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
-        let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.launch('gamelevel', id).launch('ui');
+        this.scene.launch('menu');
+        //let id = Phaser.Utils.String.UUID().substring(0, 10);
+        //this.scene.launch('gamelevel', id).launch('ui');
     }
 
 }
@@ -211,6 +224,11 @@ class GameLevel extends Phaser.Scene {
         if (levels[id].level == undefined) levels[id].level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
         if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
+
+        // create players if not all spawned in
+        for (var i = players.length; i < numPlayers; i++) {
+            players.push(new Player());
+        }
     }
 
     getNearestPlayer(x, y, viewDistance) {
@@ -245,23 +263,28 @@ class GameLevel extends Phaser.Scene {
                 tiles.push(tile.index)
             });
         });
-        console.log(`[${tiles.toString()}]`)
+        console.log(`Foreground: [${tiles.toString()}]`)
+
+        var tiles_bg = []
+        this.map.layers[this.layer_background.layerIndex].data.forEach(row => {
+            row.forEach(tile => {
+                var index = tile.index;
+                if (index == -1) index = 0;
+                tiles_bg.push(index)
+            });
+        });
+        console.log(`Background: [${tiles_bg.toString()}]`)
 
         // print items
-        let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
-        console.log(JSON.stringify(properties))
+        //let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
+        //console.log(JSON.stringify(properties))
     }
-
 
     setEditMode(mode) {
         this.editMode = mode;
 
         this.layer_tilePicker.setAlpha(0);
         this.tilePicketBG.setVisible(false);
-        this.propertiesText.setText('');
-        this.text_item.setVisible(false);
-        this.text_JSON.setVisible(false);
-        this.text_delItem.setVisible(false);
         if (uiContainer) uiContainer.setVisible(false);
         
 
@@ -273,7 +296,6 @@ class GameLevel extends Phaser.Scene {
                 this.marker.y = -100;
             
                 this.helpText.setVisible(false);
-                this.propertiesText.setVisible(false);
                 this.cameras.main.zoomTo(camMinZoom, 0);
                 if (uiContainer) uiContainer.setVisible(true);
             break;
@@ -283,20 +305,14 @@ class GameLevel extends Phaser.Scene {
                 this.tilePicketBG.setVisible(true);
 
                 // show stuff
-                this.text_item.setVisible(true);
-                this.text_JSON.setVisible(true);
-                this.text_delItem.setVisible(true);
                 this.helpText.setVisible(true);
-                this.propertiesText.setVisible(true);
                 this.cameras.main.zoomTo(0.5, 0);
             break;
             case EditMode.PlaceBlock:
                 this.helpText.setText('EditMode: Painting Tile');
-                this.propertiesText.setText('Picked Tile: ' + this.tile_painting);
             break;
             case EditMode.PlaceItem:
                 this.helpText.setText('EditMode: Painting Item');
-                this.propertiesText.setText('Picked Item: ' + this.placeItem);
             break;
             case EditMode.DeleteItem:
                 this.helpText.setText('EditMode: Deleting Item');
@@ -306,10 +322,22 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    spawnEnemy(type, x, y) {
+    spawnEnemy(x, y) {
+        var types = ['slime', 'cyberjelly', 'hunger', 'drone'];
+        var type = types[Math.floor(Math.random() * types.length)];
+
         switch (type) {
             case 'slime':
+                this.enemies.add(new Slime(this, x, y));
+            break;
+            case 'cyberjelly':
+                this.enemies.add(new CyberJelly(this, x, y));
+            break;
+            case 'hunger':
                 this.enemies.add(new Hunger(this, x, y));
+            break;
+            case 'drone':
+                this.enemies.add(new Drone(this, x, y));
             break;
         }
     }
@@ -332,23 +360,15 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    spawnStuff(slimeCount, itemCount) {
-        let floorPropCount = 5;
-        let wallPropCount = 5;
+    spawnStuff() {
+        let enemyCount = 0;
+        let floorPropCount = 0;
+        let wallPropCount = 0;
 
-        // spawn slimes
-        for (var i = 0; i < slimeCount; i++) {
+        // spawn enemies
+        for (var i = 0; i < enemyCount; i++) {
             var {x, y} = this.getRandSpawnPoint();
-            this.spawnEnemy('slime', x, y);
-        }
-
-        // spawn items
-        for (var i = 0; i < itemCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
-            
-            // pick random item from RandItems
-            var index = RandItems[Math.floor(Math.random() * RandItems.length)];
-            levels[this.id].items.push({x: x, y: y, index: index});
+            this.spawnEnemy(x, y);
         }
 
         // spawn props
@@ -363,7 +383,7 @@ class GameLevel extends Phaser.Scene {
             if (RandProps_Chest.includes(index)) {
                 var prop = this.physics.add.image(x, y, 'props',  index);
                 this.physics.add.existing(prop);
-                prop.setScale(2);
+                prop.setScale(4);
                 prop.setOrigin(0.5, 0.5);
                 prop.body.setSize(12, 12);
                 prop.body.setOffset(10,20);
@@ -392,6 +412,26 @@ class GameLevel extends Phaser.Scene {
                 var x = wall.x * 32 * 3;
                 var y = wall.y * 32 * 3;
 
+                if (index == 7) {
+                    prop.destroy();
+
+                    if (wall.wall == "down" || wall.wall == "up") continue;
+
+                    // spawn a torch
+                    var torch = this.add.sprite(x, y, 'torch');
+                    torch.setScale(3);
+                    torch.anims.play('torch_side');
+
+                    if (wall.wall == "left") {
+                        torch.flipX = true;
+                        torch.x -= 32;
+                    } else if (wall.wall == "right") {
+                        torch.x += 128;
+                    }
+
+                    continue;
+                }
+
                 if (wall.wall == "left") {
                     prop.rotation = Math.PI / 2;
                     x += 48;
@@ -417,6 +457,15 @@ class GameLevel extends Phaser.Scene {
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
+
+            if (index == 7) {
+                // spawn a torch
+                var torch = this.add.sprite(x * 32 * 3, (y * 32 * 3) + 96, 'torch');
+                torch.setScale(3);
+                torch.anims.play('torch_front');
+                continue;
+            }
+
             var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
             prop.setScale(5);
             prop.setOrigin(0, 0);
@@ -424,6 +473,8 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
+
+        
 
     }
 
@@ -440,6 +491,9 @@ class GameLevel extends Phaser.Scene {
         if (tile && tile.properties && tile.properties.solid) {
             return true;
         }
+        if (tile && Tile_BorderWall.includes(tile.index)) {
+            return true;
+        }
         return false;
     }
 
@@ -450,21 +504,18 @@ class GameLevel extends Phaser.Scene {
         const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
 
         // background layer
-        this.layer_background = this.map.createLayer("background", tileset);
+        this.layer_background = this.map.createLayer(`${levels[this.id].level}_bg`, tileset);
         this.layer_background.setScale(3);
-        this.layer_background.forEachTile(tile => {
-            var index = RandTile_Floor[Math.floor(Math.random() * RandTile_Floor.length)];
-            tile.index = index;
-        });
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
-        this.map.setCollision([ 2, 63 ]);
+        this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
+        // enable collisions on walls
         this.layer_tiles.forEachTile(tile => {
-            if (RandTile_Floor.includes(tile.index)) {
-                tile.index = 80;
-            };
+            var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
+            if (tile_bg.index == 4)
+                tile.setCollision(true);
         });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
@@ -513,9 +564,10 @@ class GameLevel extends Phaser.Scene {
         this.nearWalls = [];
         this.layer_tiles.forEachTile(tile => {
             var properties = tile.properties;
-            var solid = properties && properties.solid;
+            var solid = this.solidAt(tile.x, tile.y);
             var x = tile.x;
             var y = tile.y;
+
             let left = this.solidAt(x - 1, y);
             let right = this.solidAt(x + 1, y);
             let down = this.solidAt(x, y + 1);
@@ -589,20 +641,30 @@ class GameLevel extends Phaser.Scene {
             else if (levels[this.id].from_wall == "up") find_door = "down";
             else if (levels[this.id].from_wall == "down") find_door = "up";
 
+            //console.log("Teleporting player to door", find_door)
+
             // find previous connection
             for (var door in levels[this.id].doors) {
                 var door = levels[this.id].doors[door];
 
                 if (door.dest_id == levels[this.id].from_id) {
-                    this.tp_door = {x: (door.x * 32) +16, y: door.y * 32-16 }
+                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
+
+                    // adjust north door TP location
+                    if (find_door == 'up') this.tp_door.y += 96;
                     break;
                 }
             }
 
             // make new connection
-            if (this.tp_door.x == undefined)
+            if (this.tp_door.x == undefined) {
+                //console.log("this.tp_door.x == undefined");
+
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
+
+                    //console.log("Searching for door to TP to: ",door);
+
                     if (door.wall == find_door) {
 
                         // if door already has a diffrent connection, skip it
@@ -611,10 +673,16 @@ class GameLevel extends Phaser.Scene {
                         }
 
                         door.dest_id = levels[this.id].from_id;
-                        this.tp_door = {x: door.x * 32 +16, y: door.y * 32-16 }
+                        this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
+
+                        // adjust north door TP location
+                        if (find_door == 'up') this.tp_door.y += 96;
+
+                        //console.log("Made new door connection", this.tp_door);
                         break;
                     }
                 }
+            }
 
         }
 
@@ -640,31 +708,9 @@ class GameLevel extends Phaser.Scene {
             if (!items) items = {};
             levels[this.id].items = items;
 
-            // spawn enemies and load random items
-            this.spawnStuff(0, 0);
+            // spawn enemies and props
+            this.spawnStuff();
         }
-
-        // spawn items
-        levels[this.id].items.forEach(item => {
-            var item = this.physics.add.image(item.x, item.y, 'items',  item.index);
-            item.setOrigin(0.5, 0.5);
-            item.setScale(itemScale);
-            item.setImmovable(true);
-            item.body.onCollide = true;
-            this.items.add(item);
-            
-            // get slightly bigger and smaller forever
-            this.tweens.add({
-                targets: item,
-                scaleX: itemScale * 1.1,
-                scaleY: itemScale * 1.1,
-                duration: 1000,
-                ease: 'Linear',
-                yoyo: true,
-                repeat: -1
-            });
-
-        });
 
         this.cameras.main.roundPixels = true;
         this.cameras.main.setBounds(0,0,this.layer_tiles.width * 3, this.layer_tiles.height * 3);
@@ -714,7 +760,7 @@ class GameLevel extends Phaser.Scene {
         this.layer_tilePicker.setScale(3);
 
         // add a white box behind the tile picker
-        this.tilePicketBG = this.add.graphics().fillStyle(0xffffff, 1).setAlpha(0.5).fillRect(0, 0, this.layer_tilePicker.width * this.layer_tilePicker.scaleX, this.layer_tilePicker.height * this.layer_tilePicker.scaleY)
+        this.tilePicketBG = this.add.graphics().fillStyle(0xffffff, 1).setAlpha(0.5).fillRect(0, 0, this.layer_tilePicker.width * this.layer_tilePicker.scaleX * 1.1, this.layer_tilePicker.height * this.layer_tilePicker.scaleY * 1.1)
         
         this.children.bringToTop(this.layer_tilePicker);
 
@@ -725,28 +771,12 @@ class GameLevel extends Phaser.Scene {
         this.marker.y = -100;
         this.physics.add.existing(this.marker);
         this.marker.body.setSize(32 * 3, 32 * 3);
-        // Select Item helper text
-        this.text_item = this.add.text(0, 321, 'Select Item', { font: '10px Arial', fill: '#000000' });
-        this.text_item.setStroke('#ffffff', 2);
-        this.text_item.setWordWrapWidth(50, true);
-        this.text_item.setAlign('center');
 
-        // Select Item helper text
-        this.text_JSON = this.add.text(32, 321, 'Print JSON', { font: '10px Arial', fill: '#000000' });
-        this.text_JSON.setStroke('#ffffff', 2);
-        this.text_JSON.setWordWrapWidth(50, true);
-        this.text_JSON.setAlign('center');
-
-        // Delete item helper text
-        this.text_delItem = this.add.text(64, 321, 'Delete Item', { font: '10px Arial', fill: '#000000' });
-        this.text_delItem.setStroke('#ffffff', 2);
-        this.text_delItem.setWordWrapWidth(50, true);
-        this.text_delItem.setAlign('center');
-
-        this.helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
-        this.propertiesText = this.add.text(16, 840, 'Picked Tile: 1', { fontSize: '18px', fill: '#ffffff' });
+        this.helpText = this.add.text(16, 900, 'EditMode: Not editing', { font: '50px Arial', fill: '#ffffff' });
+        this.helpText.setAlpha(0.3);
 
         this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        this.button_editBG = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.setEditMode(EditMode.NotEditing);
         
         //mouse click event
@@ -764,36 +794,6 @@ class GameLevel extends Phaser.Scene {
                     if (tile) {
                         this.tile_painting = tile.index;
                         this.setEditMode(EditMode.PlaceBlock);
-                    } else {
-
-                        // clicked button to choose item to place
-                        if (x == 0 && y == 10) {
-                            let input = prompt("Enter item ID to place", "1");
-
-                            if (isNaN(input)) {
-                                alert(input + ' is not a valid item ID')
-                            } else {
-                                this.placeItem = parseInt(input);
-                                this.setEditMode(EditMode.PlaceItem);
-                            }
-                            
-                            break;
-                        }
-
-                        // clicked button to print map
-                        if (x == 1 && y == 10) {
-                            this.printMap();
-                            break;
-                        }
-
-                        // clicked button to delete item
-                        if (x == 2 && y == 10) {
-                            this.setEditMode(EditMode.DeleteItem);
-                            break;
-                        }
-
-                        //console.log(x, y)
-
                     }
                 break;
                 case EditMode.PlaceBlock:
@@ -805,6 +805,19 @@ class GameLevel extends Phaser.Scene {
                     // set default properties
                     var properties = this.map.tilesets[0].tileProperties[tile.index];
                     tile.properties = properties;
+                break;
+                case EditMode.PlaceBlockBG:
+                    // set tile on this.layer_background
+
+                    this.layer_background.forEachTile(tile => {
+                        
+                        if (tile.x == x && tile.y == y) {
+                            tile.index = this.tile_painting;
+                            return;
+                        }
+                        
+                    });
+
                 break;
                 case EditMode.PlaceItem:
                     if (itemsGrid) {
@@ -826,7 +839,7 @@ class GameLevel extends Phaser.Scene {
 
                     this.items.getChildren().forEach(function(item) {
                         if (item.getBounds().contains(this.input.activePointer.worldX, this.input.activePointer.worldY)) {
-                            console.log("Item clicked:", item);
+                            //console.log("Item clicked:", item);
                             item.destroy();
 
                             // remove item from properties
@@ -902,7 +915,8 @@ class GameLevel extends Phaser.Scene {
 
                                     // find nearby door
                                     levels[this.id].doors.forEach(door => {
-                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/32, player.sprite.y/32, door.x, door.y);
+                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/96, player.sprite.y/96, door.x, door.y);
+                                        //console.log("Door dist:", dist)
                                         if (dist < 4) {
 
                                             // if door doesn't have a destination set, generate one
@@ -979,6 +993,21 @@ class GameLevel extends Phaser.Scene {
                 this.setEditMode(EditMode.NotEditing);
             }
             
+        }
+
+        if (Phaser.Input.Keyboard.JustDown(this.button_editBG)) {
+            
+            // if edit mode
+            if (this.editMode == EditMode.PlaceBlock) {
+                this.editMode = EditMode.PlaceBlockBG;
+                this.helpText.setText("EditMode: PlaceBlockBG (Background)");
+            }
+
+            else if (this.editMode == EditMode.PlaceBlockBG) {
+                this.editMode = EditMode.PlaceBlock;
+                this.helpText.setText("EditMode: PlaceBlock");
+            }
+
         }
 
         //block selector
@@ -1067,6 +1096,169 @@ class UI extends Phaser.Scene {
 
     }    
 }
+
+class Menu extends Phaser.Scene {
+    constructor() {
+        super('menu');
+    }
+
+    goToPage(page) {
+        this.page_home.setVisible(false);
+        this.page_start.setVisible(false);
+        this.page_settings.setVisible(false);
+        this.page_credits.setVisible(false);
+
+        switch(page) {
+            case "home":
+                this.page_home.setVisible(true);
+            break;
+            case "start":
+                this.page_start.setVisible(true);
+            break;
+            case "settings":
+                this.page_settings.setVisible(true);
+            break;
+            case "credits":
+                this.page_credits.setVisible(true);
+            break;
+        }
+
+    }
+
+    placeText(group, x, y, fontSize, msg, clickCallback, loadCallback) {
+        let scale = Math.min(window.innerWidth, window.innerHeight) * 0.004;
+        x *= scale;
+        y *= scale;
+        fontSize *= scale;
+        let shadowOffset = 4;
+
+        // shadow
+        let shadow = this.add.text(window.innerWidth / 2 + shadowOffset + x, window.innerHeight / 2 + shadowOffset + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#ffffff' });
+        shadow.setOrigin(0.5, 0.5);
+        shadow.alpha = 0.4;
+
+        // text
+        let text = this.add.text(window.innerWidth / 2 + x, window.innerHeight / 2 + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#000000' });
+        text.setOrigin(0.5, 0.5);
+        text.setInteractive();
+
+        if (clickCallback != null) {
+            text.on('pointerover', () => {
+                //text.setColor('#884a33');
+                text.setScale(1.1);
+                shadow.setScale(1.1);
+            });
+            text.on('pointerout', () => {
+                //text.setColor('#000000');
+                text.setScale(1);
+                shadow.setScale(1);
+            });
+
+            text.on('pointerdown', () => {
+                clickCallback(text, shadow);
+            });
+        }
+        
+        group.add(text);
+        group.add(shadow);
+    }
+
+    create() {
+        window.menuInst = this;
+
+        let scale = Math.min(window.innerWidth, window.innerHeight) * 0.004;
+
+        // background
+        this.title = this.add.sprite(0, 0, 'title');
+        this.title.setOrigin(0, 0);
+        this.title.anims.play('title');
+        this.title.displayWidth = window.innerWidth;
+        this.title.displayHeight = window.innerHeight;
+        this.title.x = (window.innerWidth - this.title.displayWidth) / 2;
+        this.title.y = (window.innerHeight - this.title.displayHeight) / 2;
+
+        // settings / credits book
+        var book = this.add.sprite(window.innerWidth / 2, window.innerHeight / 2, 'inventory_empty');
+        book.setOrigin(0.5, 0.5);
+        book.setScale(scale);
+
+        // groups
+        this.page_home = this.add.group();
+        this.page_start = this.add.group();
+        this.page_settings = this.add.group();
+        this.page_credits = this.add.group();
+
+        // home page
+        this.placeText(this.page_home, 0, -40, 35, 'Start', () => this.goToPage("start"));
+        this.placeText(this.page_home, 0, 0, 35, 'Settings', () => this.goToPage("settings"));
+        this.placeText(this.page_home, 0, 40, 35, 'Credits', () => this.goToPage("credits"));
+
+        // credits page
+        this.placeText(this.page_credits, 0, -70, 19, 'Credits', null);
+        this.page_credits.add(book);
+        this.placeText(this.page_credits, 0, 10, 19, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', null);
+        this.placeText(this.page_credits, 110, 75, 20, 'back', () => this.goToPage("home"));
+
+        // start page
+        this.placeText(this.page_start, 0, -40, 35, '1 Player', () => {
+            numPlayers = 1;
+            let id = Phaser.Utils.String.UUID().substring(0, 10);
+            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.remove('menu');
+        });
+        this.placeText(this.page_start, 0, 0, 35, '2 players', () => {
+            numPlayers = 2;
+            let id = Phaser.Utils.String.UUID().substring(0, 10);
+            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.remove('menu');
+        });
+        this.placeText(this.page_start, 0, 40, 35, 'back', () => this.goToPage("home"));
+
+        // settings page
+        this.page_settings.add(book);
+        this.placeText(this.page_settings, 0, -70, 19, 'Settings', null);
+        this.placeText(this.page_settings, 0, -20, 19, 'Fullscreen: off', (text, shadow) => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+                text.setText("Fullscreen: off");
+                shadow.setText("Fullscreen: off");
+            } else {
+                this.scale.startFullscreen();
+                text.setText("Fullscreen: on");
+                shadow.setText("Fullscreen: on");
+            }
+        });
+
+        this.placeText(this.page_settings, 0, 0, 19, 'Music: on', (text, shadow) => {
+            if (playMusic) {
+                playMusic = false;
+                text.setText("Music: on");
+                shadow.setText("Music: on");
+            } else {
+                playMusic = true;
+                text.setText("Music: off");
+                shadow.setText("Music: off");
+            }
+        });
+
+        this.placeText(this.page_settings, 0, 20, 19, 'Other sounds: on', (text, shadow) => {
+            if (this.sound.mute) {
+                this.sound.mute = false;
+                text.setText("Other sounds: on");
+                shadow.setText("Other sounds: on");
+            } else {
+                this.sound.mute = true;
+                text.setText("Other sounds: off");
+                shadow.setText("Other sounds: off");
+            }
+        });
+        this.placeText(this.page_settings, 110, 75, 20, 'back', () => this.goToPage("home"));
+
+        this.goToPage("home");
+    }
+
+}
+
 window.addEventListener('resize', function () {
     gameWidth = window.innerWidth;
     gameHeight = window.innerHeight;
@@ -1080,11 +1272,11 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel, Inventory, Settings, UI],
+    scene: [SetupLevel, GameLevel, Inventory, Settings, UI, Menu],
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false,
+            debug: true
         }
     },
 };

@@ -346,7 +346,7 @@ class Inventory extends Phaser.Scene {
             // add text with item count
             if (itemCount > 1) {
                 let text = this.add.text(itemSprite.x + (itemSprite.width * itemScale) / 2, itemSprite.y + (itemSprite.height * itemScale) / 2, itemCount, 
-                { fontFamily: 'Arial', fontSize: 20, color: '#000000', fontWeight: 'bold' });
+                { fontFamily: 'minecraft_font', fontSize: 20, color: '#000000', fontWeight: 'bold' });
                 text.setOrigin(0.5);
                 text.setDepth(1.1);
                 this.allItemTexts.push(text);
@@ -386,12 +386,12 @@ class Inventory extends Phaser.Scene {
             let health = players[0].health;
             let exp = players[0].exp;
             let level = players[0].level;
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 80, health, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 72, exp, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
-            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 63, level, { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 83, health, { fontFamily: 'minecraft_font', fontSize: this.invScale * 10, color: '#000000', fontWeight: 'bold' });
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 74, exp, { fontFamily: 'minecraft_font', fontSize: this.invScale * 10, color: '#000000', fontWeight: 'bold' });
+            this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 66, level, { fontFamily: 'minecraft_font', fontSize: this.invScale * 10, color: '#000000', fontWeight: 'bold' });
 
             // description text
-            this.description = this.add.text(this.inv.x - this.invScale * 112, this.inv.y - this.invScale * -20, "", { fontFamily: 'Arial', fontSize: this.invScale * 6, color: '#000000', fontWeight: 'bold' });
+            this.description = this.add.text(this.inv.x - this.invScale * 112, this.inv.y - this.invScale * -20, "", { fontFamily: 'minecraft_font', fontSize: this.invScale * 10, color: '#000000', fontWeight: 'bold' });
 
             // escape button
             let resumeButton = this.add.image(0, 0, 'inventory_esc');
@@ -494,7 +494,7 @@ class Settings extends Phaser.Scene {
             this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
             
             // text
-            let musicText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 45, "Music: off", { fontFamily: 'Arial', fontSize: this.invScale * 14, color: '#000000' });
+            let musicText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 45, "Music: off", { fontFamily: 'minecraft_font', fontSize: this.invScale * 14, color: '#000000' });
             if (playMusic) musicText.text = "Music: on";
             musicText.setInteractive();
             musicText.on('pointerover', () => musicText.setColor('#626770'));
@@ -509,7 +509,7 @@ class Settings extends Phaser.Scene {
                 }
             });
 
-            let soundText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 25, "Other sounds: off", { fontFamily: 'Arial', fontSize: this.invScale * 14, color: '#000000' });
+            let soundText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 25, "Other sounds: off", { fontFamily: 'minecraft_font', fontSize: this.invScale * 14, color: '#000000' });
             if (!this.sound.mute) soundText.text = "Other sounds: on";
             soundText.setInteractive();
             soundText.on('pointerover', () => soundText.setColor('#626770'));
@@ -524,7 +524,7 @@ class Settings extends Phaser.Scene {
                 }
             });
 
-            let fullScreenText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 5, "Fullscreen: off", { fontFamily: 'Arial', fontSize: this.invScale * 14, color: '#000000' });
+            let fullScreenText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 5, "Fullscreen: off", { fontFamily: 'minecraft_font', fontSize: this.invScale * 14, color: '#000000' });
             if (this.scale.isFullscreen) fullScreenText.text = "Fullscreen: off";
             fullScreenText.setInteractive();
             fullScreenText.on('pointerover', () => fullScreenText.setColor('#626770'));
