@@ -49,7 +49,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
                 setTimeout(() => {
                     player.stunned = false;
-                }, 400 * players[0].buffs.invulnTime);
+                }, 1000 * players[0].buffs.invulnTime);
 
                 return;
             }
@@ -72,7 +72,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                     this.body.setVelocity(0, 0);
                     this.play(this.type + '_idle');
                     this.stunned = false;
-                }, 400);
+                }, 1000);
 
                 return;
             }
