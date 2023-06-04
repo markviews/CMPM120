@@ -7,6 +7,7 @@ const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 let uiContainer;
+let numPlayers = 1;
 
 // list of random levels to choose from
 const RandLevels = ["level1"];
@@ -190,15 +191,14 @@ class SetupLevel extends Phaser.Scene {
         //XP Bar Animations
         this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
         
-        // create players
+        // create player 1
         players.push(new Player());
-        //players.push(new Player());
 
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
-        let id = Phaser.Utils.String.UUID().substring(0, 10);
-        this.scene.launch('gamelevel', id).launch('ui');
-        //this.scene.launch('menu');
+        this.scene.launch('menu');
+        //let id = Phaser.Utils.String.UUID().substring(0, 10);
+        //this.scene.launch('gamelevel', id).launch('ui');
     }
 
 }
@@ -213,6 +213,11 @@ class GameLevel extends Phaser.Scene {
         if (levels[id].level == undefined) levels[id].level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
         if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
+
+        // create players if not all spawned in
+        for (var i = players.length; i < numPlayers; i++) {
+            players.push(new Player());
+        }
     }
 
     getNearestPlayer(x, y, viewDistance) {
@@ -1059,21 +1064,47 @@ class Menu extends Phaser.Scene {
         super('menu');
     }
 
-    placeText(x, y, msg, callback, hoverEvent = true, fontSize = 100) {
+    goToPage(page) {
+        this.page_home.setVisible(false);
+        this.page_start.setVisible(false);
+        this.page_settings.setVisible(false);
+        this.page_credits.setVisible(false);
+
+        switch(page) {
+            case "home":
+                this.page_home.setVisible(true);
+            break;
+            case "start":
+                this.page_start.setVisible(true);
+            break;
+            case "settings":
+                this.page_settings.setVisible(true);
+            break;
+            case "credits":
+                this.page_credits.setVisible(true);
+            break;
+        }
+
+    }
+
+    placeText(group, x, y, fontSize, msg, clickCallback, loadCallback) {
+        let scale = Math.min(window.innerWidth, window.innerHeight) * 0.004;
+        x *= scale;
+        y *= scale;
+        fontSize *= scale;
         let shadowOffset = 4;
 
         // shadow
         let shadow = this.add.text(window.innerWidth / 2 + shadowOffset + x, window.innerHeight / 2 + shadowOffset + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#ffffff' });
         shadow.setOrigin(0.5, 0.5);
         shadow.alpha = 0.4;
-        
 
         // text
         let text = this.add.text(window.innerWidth / 2 + x, window.innerHeight / 2 + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#000000' });
         text.setOrigin(0.5, 0.5);
         text.setInteractive();
 
-        if (hoverEvent) {
+        if (clickCallback != null) {
             text.on('pointerover', () => {
                 //text.setColor('#884a33');
                 text.setScale(1.1);
@@ -1084,50 +1115,107 @@ class Menu extends Phaser.Scene {
                 text.setScale(1);
                 shadow.setScale(1);
             });
+
+            text.on('pointerdown', () => {
+                clickCallback(text, shadow);
+            });
         }
         
-        text.on('pointerdown', () => callback());
+        group.add(text);
+        group.add(shadow);
     }
 
     create() {
+        window.menuInst = this;
+
+        let scale = Math.min(window.innerWidth, window.innerHeight) * 0.004;
 
         // background
         this.title = this.add.sprite(0, 0, 'title');
         this.title.setOrigin(0, 0);
-        this.title.setScale(10);
         this.title.anims.play('title');
         this.title.displayWidth = window.innerWidth;
         this.title.displayHeight = window.innerHeight;
         this.title.x = (window.innerWidth - this.title.displayWidth) / 2;
         this.title.y = (window.innerHeight - this.title.displayHeight) / 2;
 
-        // buttons
-        /*
-        this.placeText(0, -100, 'Start', () => {  
-            console.log("start");
-         });
+        // settings / credits book
+        var book = this.add.sprite(window.innerWidth / 2, window.innerHeight / 2, 'inventory_empty');
+        book.setOrigin(0.5, 0.5);
+        book.setScale(scale);
 
-         this.placeText(0, 0, 'Settings', () => {  
-            console.log("settings");
-         });
+        // groups
+        this.page_home = this.add.group();
+        this.page_start = this.add.group();
+        this.page_settings = this.add.group();
+        this.page_credits = this.add.group();
 
-         this.placeText(0, 100, 'Credits', () => {  
-            console.log("credits");
-         });
-         */
+        // home page
+        this.placeText(this.page_home, 0, -40, 35, 'Start', () => this.goToPage("start"));
+        this.placeText(this.page_home, 0, 0, 35, 'Settings', () => this.goToPage("settings"));
+        this.placeText(this.page_home, 0, 40, 35, 'Credits', () => this.goToPage("credits"));
 
-         // add empty book behind credits
-        this.book = this.add.sprite(0, 0, 'inventory_empty');
-        this.book.setOrigin(0.5, 0.5);
-        this.book.setScale(5);
-        this.book.x = window.innerWidth / 2;
-        this.book.y = window.innerHeight / 2;
+        // credits page
+        this.page_credits.add(book);
+        this.placeText(this.page_credits, 0, 0, 19, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', null);
+        this.placeText(this.page_credits, 110, 75, 20, 'back', () => this.goToPage("home"));
 
-         this.placeText(0, 0, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', () => {  
-            console.log("credits");
-         }, false, 90);
-         
+        // start page
+        this.placeText(this.page_start, 0, -40, 35, '1 Player', () => {
+            numPlayers = 1;
+            let id = Phaser.Utils.String.UUID().substring(0, 10);
+            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.remove('menu');
+        });
+        this.placeText(this.page_start, 0, 0, 35, '2 players', () => {
+            numPlayers = 2;
+            let id = Phaser.Utils.String.UUID().substring(0, 10);
+            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.remove('menu');
+        });
+        this.placeText(this.page_start, 0, 40, 35, 'back', () => this.goToPage("home"));
 
+        // settings page
+        this.page_settings.add(book);
+        this.placeText(this.page_settings, 0, -70, 19, 'Settings', null);
+        this.placeText(this.page_settings, 0, -20, 19, 'Fullscreen: off', (text, shadow) => {
+            if (this.scale.isFullscreen) {
+                this.scale.stopFullscreen();
+                text.setText("Fullscreen: off");
+                shadow.setText("Fullscreen: off");
+            } else {
+                this.scale.startFullscreen();
+                text.setText("Fullscreen: on");
+                shadow.setText("Fullscreen: on");
+            }
+        });
+
+        this.placeText(this.page_settings, 0, 0, 19, 'Music: on', (text, shadow) => {
+            if (playMusic) {
+                playMusic = false;
+                text.setText("Music: on");
+                shadow.setText("Music: on");
+            } else {
+                playMusic = true;
+                text.setText("Music: off");
+                shadow.setText("Music: off");
+            }
+        });
+
+        this.placeText(this.page_settings, 0, 20, 19, 'Other sounds: on', (text, shadow) => {
+            if (this.sound.mute) {
+                this.sound.mute = false;
+                text.setText("Other sounds: on");
+                shadow.setText("Other sounds: on");
+            } else {
+                this.sound.mute = true;
+                text.setText("Other sounds: off");
+                shadow.setText("Other sounds: off");
+            }
+        });
+        this.placeText(this.page_settings, 110, 75, 20, 'back', () => this.goToPage("home"));
+
+        this.goToPage("home");
     }
 
 }
