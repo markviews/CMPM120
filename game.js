@@ -497,8 +497,15 @@ class GameLevel extends Phaser.Scene {
         this.layer_background.setScale(3);
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
-        this.map.setCollision([ 1, 2, 3, 5, 12, 13, 15, 17, 18, 27, 28, 51, 52, 53, 55, 60, 63, 65, 67, 68, 70, 77, 78 ]);
+        this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
+
+        // enable collisions on walls
+        this.layer_tiles.forEachTile(tile => {
+            var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
+            if (tile_bg.index == 4)
+                tile.setCollision(true);
+        });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
@@ -1156,8 +1163,9 @@ class Menu extends Phaser.Scene {
         this.placeText(this.page_home, 0, 40, 35, 'Credits', () => this.goToPage("credits"));
 
         // credits page
+        this.placeText(this.page_credits, 0, -70, 19, 'Credits', null);
         this.page_credits.add(book);
-        this.placeText(this.page_credits, 0, 0, 19, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', null);
+        this.placeText(this.page_credits, 0, 10, 19, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', null);
         this.placeText(this.page_credits, 110, 75, 20, 'back', () => this.goToPage("home"));
 
         // start page
