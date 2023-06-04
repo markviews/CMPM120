@@ -37,7 +37,7 @@ const RandProps_Floor = [
 const RandProps_nearWall = [ 7, 24, 25 ];
 const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
 const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
-const RandTile_Floor = [ 81,82,83 ]; //21, 22, 23, 24, 25
+const RandTile_Floor = [ 81, 82, 83 ]; //21, 22, 23, 24, 25
 const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 
 // global variables
@@ -485,11 +485,11 @@ class GameLevel extends Phaser.Scene {
         this.map.setCollision([ 1, 2, 3, 5, 12, 13, 15, 17, 18, 27, 28, 51, 52, 53, 55, 60, 63, 65, 67, 68, 70, 77, 78 ]);
         this.layer_tiles.setScale(3);
 
-        this.layer_tiles.forEachTile(tile => {
-            if (RandTile_Floor.includes(tile.index)) {
-                tile.index = 80;
-            };
-        });
+        // this.layer_tiles.forEachTile(tile => {
+        //     if (RandTile_Floor.includes(tile.index)) {
+        //         tile.index = 80;
+        //     };
+        // });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
