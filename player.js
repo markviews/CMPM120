@@ -76,6 +76,9 @@ class Player {
         scene.physics.add.collider(this.sprite, scene.wallLeft);
         scene.physics.add.collider(this.sprite, scene.wallRight);
         scene.physics.add.collider(this.sprite, scene.wallBottom);
+        scene.physics.add.collider(this.sprite, scene.projectile_enemy);
+        scene.physics.add.collider(this.hithox, scene.boss);
+        scene.physics.add.collider(this.Meleehitbox, scene.boss);
 
         // set position
         if (scene.tp_door?.x && scene.tp_door?.y) {
@@ -156,6 +159,15 @@ class Player {
                 });
 
 
+            }
+
+            // enemy projectile hit player
+            if (gameObject2?.texture?.key == "Mag2" || gameObject2?.texture?.key == "Mag1") {
+                gameObject2.destroy();
+                if (this.invincible) return;
+                this.health -= 1;
+                this.invincible = true;
+                return;
             }
             
         });
@@ -287,9 +299,68 @@ class Player {
             }
 
         }
+        
 
+        if (this.attackTick > (autoAttackTick * this.buffs.attackSpeed) && scene.boss != null && scene.boss.getChildren().length != 0) {
+            this.attackTick = 0;
+
+            // get nearest enemy
+            let nearestEnemy = scene.boss.getChildren().reduce((prev, curr) => {
+                let prevDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, prev.x, prev.y);
+                let currDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, curr.x, curr.y);
+                return (prevDist < currDist) ? prev : curr;
+            });
+
+            let enemy_angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y+100);
+            let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
+
+            // melee attack
+            if (enemy_dist < 100) {
+                this.attacking = true;
+                var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
+                this.sprite.play(anim);
+            }
+            
+            // projectile attack
+            else if (enemy_dist < 500) {
+                let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y);
+                mySprite.play('moveFire');
+                mySprite.setScale(3);
+
+                mySprite.name = "projectile";
+                // could add other attribues like damage here
+
+                scene.physics.add.existing(mySprite);
+                scene.projectile_player.add(mySprite);
+                mySprite.body.setImmovable(true);
+
+                let projectileSpeed = 500 * this.buffs.projectileSpeed;
+                mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
+                mySprite.angle = Phaser.Math.RadToDeg(enemy_angle);
+
+                // destroy projectile after 1 second
+                scene.time.delayedCall(5000, function() {
+                    mySprite.destroy();
+                });
+            }
+
+        }
+        
         // #endregion attacks
-
+        if(this.invincible == true && !(this.funny && this.funny.isPlaying())){
+            var flashes = 3;
+           this.funny =  scene.tweens.add({
+                targets: this.sprite,
+                alpha: 0,
+                duration: 100 * this.buffs.invulnTime,
+                repeat: flashes * 2 -1,
+                yoyo: true,
+                onComplete: () =>{
+                    this.sprite.alpha = 1;
+                    this.invincible = false;
+                },
+            });
+        }
         // #region dodge
 
         if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && this.dodging == false){
@@ -297,21 +368,9 @@ class Player {
             this.dodging = true;
             this.invincible = true;
             this.dash_sound.play();
-            scene.tweens.add({
-                targets: this.sprite,
-                alpha: 0,
-                duration: 50,
-                repeat: flashes * 2 -1,
-                yoyo: true,
-                onComplete: () =>{
-                    this.sprite.alpha = 1;
-                    setTimeout(() => {
-                        this.dodging = false;
-                        this.invincible = false;
-                        //clone.destroy();  
-                    }, this.dashTimer * players[0].buffs.dashCooldown);
-                },
-            });
+            setTimeout(() => {
+                this.dodging = false; 
+            }, this.dashTimer * players[0].buffs.dashCooldown);
             //console.log(this.angle);
             if(this.sprite.dir == "left"){
                 xdir = this.sprite.x - Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
@@ -340,7 +399,7 @@ class Player {
                     this.sprite.inputEnabled = true;
                 },
             });
-            for(let i = 0; i <= 8; i ++){
+            for(let i = 0; i <= 5; i ++){
                 let clone = scene.add.sprite();
                 clone.setScale(2.5);
                 clone.id = this.sprite.id;

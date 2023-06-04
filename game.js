@@ -6,6 +6,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
+var bossIsHere = true;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
@@ -94,8 +95,15 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('XP', 'assets/ui/XPBar.png', {frameWidth: 48, frameHeight: 48});
+        this.load.spritesheet('Mag1', 'assets/Mag1.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('Mag2', 'assets/Mag2.png', {frameWidth: 20, frameHeight: 48});
+        this.load.spritesheet('Mag_Sword', 'assets/sprites/characters/Boss_Sword.png', {frameWidth: 64, frameHeight: 64});
+        this.load.spritesheet('Mag_Magic', 'assets/sprites/characters/Boss_Magic.png', {frameWidth: 64, frameHeight: 64});
+        this.load.spritesheet('Mag1_trail', 'assets/Mag1_trail.png', {frameWidth: 3, frameHeight: 3});
+        this.load.spritesheet('Mag2_trail', 'assets/Ma2_trail.png', {frameWidth: 3, frameHeight: 3});
         //load Dash spritesheet
         this.load.spritesheet('dash', 'assets/ui/Dash.png', { frameWidth: 32, frameHeight: 32 });
+        this.load.spritesheet('BossHP', 'assets/ui/BossHP.png', {frameWidth: 64, frameHeight: 64});
     }
 
     create() {
@@ -141,15 +149,17 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'slimeBlue_idle', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 28,29,30,31,32,33,34,35,36,37,38,39,40,41 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'slimeBlue_jump', frames: this.anims.generateFrameNumbers('slimeBlue', { frames: [ 42,43,44,45,46,47,48,49,50,51,52,52,53,54,55 ] }), frameRate: 6});
         //Enemy Magister animatons
-        this.anims.create({key: 'magister_castMagic', frames: this.anims.generateFrameNumbers('magister', { frames: [ 0,1,2,3,4,5,6,7,8,11,12,13,14,15 ] }), frameRate: 6});
-        this.anims.create({key: 'magister_castSword', frames: this.anims.generateFrameNumbers('magister', { frames: [ 17,18,19,20,21,22,23,24,25,26,27,28,29,30,31 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_castMagic', frames: this.anims.generateFrameNumbers('Mag_Magic', { frames: [ 1,2,3,4,5,6,7,8,11,12,13,14,15,16 ] }), frameRate: 16});
+        this.anims.create({key: 'magister_MagicLoop', frames: this.anims.generateFrameNumbers('magister', { frames: [ 11,12,13] }), frameRate: 8, repeat: -1});
+        this.anims.create({key: 'magister_castSword', frames: this.anims.generateFrameNumbers('Mag_Sword', { frames: [ 1,2,3,4,5,6,7,8,11,12,13,14,15,16 ] }), frameRate: 16});
         this.anims.create({key: 'magister_die', frames: this.anims.generateFrameNumbers('magister', { frames: [ 34,35,36,37,38,39,40,41,42,43,44 ] }), frameRate: 8});
         this.anims.create({key: 'magister_idle', frames: this.anims.generateFrameNumbers('magister', { frames: [ 51,52,53 ] }), frameRate: 3, repeat: -1 });
-        this.anims.create({key: 'magister_teleport', frames: this.anims.generateFrameNumbers('magister', { frames: [ 68,69,70,71,72,73,74,75,76,77,78,79,80,81 ] }), frameRate: 6});
-        this.anims.create({key: 'magister_magic', frames: this.anims.generateFrameNumbers('magister', { frames: [ 85,86,87,88,89 ] }), frameRate: 6});
-        this.anims.create({key: 'magister_sword', frames: this.anims.generateFrameNumbers('magister', { frames: [ 102 ] }), frameRate: 1, repeat: -1});
-        this.anims.create({key: 'magister_magicTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 119,120] }), frameRate: 6});
-        this.anims.create({key: 'magister_swordTrail', frames: this.anims.generateFrameNumbers('magister', { frames: [ 136,137,138,139,140 ] }), frameRate: 6});
+        this.anims.create({key: 'magister_teleport', frames: this.anims.generateFrameNumbers('magister', { frames: [ 68,69,70,71,72,73,74,75,76,77,78,79,80,81 ] }), frameRate: 16});
+        this.anims.create({key: 'magister_TR', frames: this.anims.generateFrameNumbers('magister', { frames: [ 81,80,79,78,77,76,75,74,73,72,71,70,69,68 ] }), frameRate: 16});
+        this.anims.create({key: 'magister_magic', frames: this.anims.generateFrameNumbers('Mag1', { frames: [ 0,1,2,3,4 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({key: 'magister_sword', frames: this.anims.generateFrameNumbers('Mag2', { frames: [ 0 ] }), frameRate: 1, repeat: -1});
+        this.anims.create({key: 'Mag1_trail', frames: this.anims.generateFrameNumbers('Mag1_trail', { frames: [ 0,1] }), frameRate: 8, repeat: -1});
+        this.anims.create({key: 'Mag2_trail', frames: this.anims.generateFrameNumbers('Mag2_trail', { frames: [ 0,1,2,3,4 ] }), frameRate: 8, repeat: -1});
         
         
         //Last 3 line above im not sure about in terms of after the frames
@@ -190,8 +200,9 @@ class SetupLevel extends Phaser.Scene {
         
         //XP Bar Animations
         this.anims.create({key: 'XPBar', frames: this.anims.generateFrameNumbers('XP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27]}), frameRate: 8});
-        
-        // create player 1
+        //Boss Hp
+        this.anims.create({key: 'BossHP', frames: this.anims.generateFrameNumbers('BossHP',{frames: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58]}), frameRate: 8});
+        // create players
         players.push(new Player());
 
         //Dash animations
@@ -519,37 +530,37 @@ class GameLevel extends Phaser.Scene {
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
 
-        let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
-        cir1.setAlpha(0.4);
-        let cir2 = this.add.circle(0, 0, 20, 0x541675);
-        cir2.setAlpha(0.3);
+        // let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
+        // cir1.setAlpha(0.4);
+        // let cir2 = this.add.circle(0, 0, 20, 0x541675);
+        // cir2.setAlpha(0.3);
         
-        this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-            x: 0,
-            y: 0,
-            radius: 100,
-            base: cir1,
-            thumb: cir2,
-            dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
-            forceMin: 16,
-            enable: true,
-            fixed: false,
-        });
+        // this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
+        //     x: 0,
+        //     y: 0,
+        //     radius: 100,
+        //     base: cir1,
+        //     thumb: cir2,
+        //     dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+        //     forceMin: 16,
+        //     enable: true,
+        //     fixed: false,
+        // });
        
-        var visible = this.joyStick.visible;
-        this.input.on('pointerdown', () => {
-            this.joyStick.setVisible(visible);
-            this.joyStick.setPosition(this.input.activePointer.worldX, this.input.activePointer.worldY);
-            //this.joyStick.fixed = true;
-            //this.joyStick.setScrollFactor(0.8);
+        // var visible = this.joyStick.visible;
+        // this.input.on('pointerdown', () => {
+        //     this.joyStick.setVisible(visible);
+        //     this.joyStick.setPosition(this.input.activePointer.worldX, this.input.activePointer.worldY);
+        //     //this.joyStick.fixed = true;
+        //     //this.joyStick.setScrollFactor(0.8);
 
-        });
-        this.input.on('pointerup', () => {
-            this.joyStick.setVisible(false);
-            this.joyStick.fixed = false;
-            //this.joyStick.setScrollFactor(0);
+        // });
+        // this.input.on('pointerup', () => {
+        //     this.joyStick.setVisible(false);
+        //     this.joyStick.fixed = false;
+        //     //this.joyStick.setScrollFactor(0);
 
-        });
+        // });
 
         //END OF JOYSTICK --------------------------------------------------------------------------------------
 
@@ -686,7 +697,14 @@ class GameLevel extends Phaser.Scene {
         this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
         this.projectile_player = this.add.group(); // projectiles launched by players
+        this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
+
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+        
+        this.projectile_enemy = this.add.group(); // projectiles launched by players
+        //this.physics.add.collider(this.projectile_enemy, this.sprite);
 
         // make group for items
         this.items = this.add.group();
@@ -848,14 +866,12 @@ class GameLevel extends Phaser.Scene {
             }
 
         });
+        this.boss.add(new Boss(this, centerX, centerY, 500));
         // #endregion map editor
 
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
-        //UI STUFF------------------------------------------------------------------------------------
-       
-        //UI END---------------------------------------------------------------------------------------
     }
 
     update(time, delta) {
@@ -1027,6 +1043,16 @@ class UI extends Phaser.Scene {
         //     hpBar.anims.nextFrame();
         //     initalHP = players[0].hp;
         // }
+        window.UIscene = this;
+        if(bossIsHere){
+            var cenX = this.cameras.main.centerX;
+            var cenY = this.cameras.main.centerY;
+            this.bossHPBar = this.add.sprite(cenX, cenY + 550);
+            this.bossHPBar.setScale(10);
+            this.bossHPBar.play('BossHP', true);
+            this.bossHPBar.stop();
+        }
+        
         this.inventory_sound = this.sound.add('inventory_sound');
         uiContainer = this.add.container(0, 0);
         uiContainer.setVisible(true);
@@ -1065,12 +1091,17 @@ class UI extends Phaser.Scene {
             players[0].level += 1;
 
         }
+        
+        //Player health bar
         var frameIndex = 39 - Math.round(players[0].health/ (players[0].maxHealth * players[0].buffs.healthBoost) * 38);
+        if(frameIndex > 39) frameIndex = 39;
         this.hpBar.setFrame(frameIndex);
         this.XPBAR.setFrame(players[0].exp);
         if(players[0].dodging == true){
             this.Dash.play('dash', true);  
         }
+
+
     }    
 }
 
