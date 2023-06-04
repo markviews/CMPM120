@@ -37,7 +37,7 @@ const RandProps_Floor = [
 const RandProps_nearWall = [ 7, 24, 25 ];
 const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
 const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
-const RandTile_Floor = [ 71, 72, 73 ]; //21, 22, 23, 24, 25
+const RandTile_Floor = [ 81,82,83 ]; //21, 22, 23, 24, 25
 const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 
 // global variables
@@ -45,7 +45,7 @@ var levels = {};
 var players = [];
 var playMusic = true;
 
-const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4 }
+const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
 class SetupLevel extends Phaser.Scene {
 
@@ -85,6 +85,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('torch', 'assets/Torch Side_0000-sheet.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
+        this.load.spritesheet('title', 'assets/ui/TitleScreen0000-sheet.png', { frameWidth: 128, frameHeight: 64 });
         this.load.spritesheet('cyberjelly', 'assets/sprites/characters/Enemy CyberJelly.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('hunger', 'assets/sprites/characters/Enemy Hunger.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
@@ -108,6 +109,9 @@ class SetupLevel extends Phaser.Scene {
         this.slime_move = this.sound.add('slime_move');
         this.teleport_sound = this.sound.add('teleport_sound');
         this.BOSS_die = this.sound.add('BOSS_die');
+
+        // title animation
+        this.anims.create({key: 'title', frames: this.anims.generateFrameNumbers('title', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 ] }), frameRate: 8, repeat: -1 });
 
         // torch
         this.anims.create({key: 'torch_side', frames: this.anims.generateFrameNumbers('torch', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13 ] }), frameRate: 8, repeat: -1 });
@@ -194,6 +198,7 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         let id = Phaser.Utils.String.UUID().substring(0, 10);
         this.scene.launch('gamelevel', id).launch('ui');
+        //this.scene.launch('menu');
     }
 
 }
@@ -242,13 +247,22 @@ class GameLevel extends Phaser.Scene {
                 tiles.push(tile.index)
             });
         });
-        console.log(`[${tiles.toString()}]`)
+        console.log(`Foreground: [${tiles.toString()}]`)
+
+        var tiles_bg = []
+        this.map.layers[this.layer_background.layerIndex].data.forEach(row => {
+            row.forEach(tile => {
+                var index = tile.index;
+                if (index == -1) index = 0;
+                tiles_bg.push(index)
+            });
+        });
+        console.log(`Background: [${tiles_bg.toString()}]`)
 
         // print items
         //let properties = this.map.layers[this.layer_tiles.layerIndex].properties;
         //console.log(JSON.stringify(properties))
     }
-
 
     setEditMode(mode) {
         this.editMode = mode;
@@ -474,22 +488,12 @@ class GameLevel extends Phaser.Scene {
         const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
 
         // background layer
-        this.layer_background = this.map.createLayer("background", tileset);
+        this.layer_background = this.map.createLayer(`${levels[this.id].level}_bg`, tileset);
         this.layer_background.setScale(3);
-        this.layer_background.forEachTile(tile => {
-            var index = RandTile_Floor[Math.floor(Math.random() * RandTile_Floor.length)];
-            tile.index = index;
-        });
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
         this.map.setCollision([ 1, 2, 3, 5, 12, 13, 15, 17, 18, 27, 28, 51, 52, 53, 55, 60, 63, 65, 67, 68, 70, 77, 78 ]);
         this.layer_tiles.setScale(3);
-
-        this.layer_tiles.forEachTile(tile => {
-            if (RandTile_Floor.includes(tile.index)) {
-                tile.index = 80;
-            };
-        });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
@@ -738,9 +742,11 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.existing(this.marker);
         this.marker.body.setSize(32 * 3, 32 * 3);
 
-        this.helpText = this.add.text(16, 800, 'EditMode: Not editing', { font: '20px Arial', fill: '#ffffff' });
+        this.helpText = this.add.text(16, 900, 'EditMode: Not editing', { font: '50px Arial', fill: '#ffffff' });
+        this.helpText.setAlpha(0.3);
 
         this.button_edit = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+        this.button_editBG = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
         this.setEditMode(EditMode.NotEditing);
         
         //mouse click event
@@ -769,6 +775,19 @@ class GameLevel extends Phaser.Scene {
                     // set default properties
                     var properties = this.map.tilesets[0].tileProperties[tile.index];
                     tile.properties = properties;
+                break;
+                case EditMode.PlaceBlockBG:
+                    // set tile on this.layer_background
+
+                    this.layer_background.forEachTile(tile => {
+                        
+                        if (tile.x == x && tile.y == y) {
+                            tile.index = this.tile_painting;
+                            return;
+                        }
+                        
+                    });
+
                 break;
                 case EditMode.PlaceItem:
                     if (itemsGrid) {
@@ -948,6 +967,21 @@ class GameLevel extends Phaser.Scene {
             
         }
 
+        if (Phaser.Input.Keyboard.JustDown(this.button_editBG)) {
+            
+            // if edit mode
+            if (this.editMode == EditMode.PlaceBlock) {
+                this.editMode = EditMode.PlaceBlockBG;
+                this.helpText.setText("EditMode: PlaceBlockBG (Background)");
+            }
+
+            else if (this.editMode == EditMode.PlaceBlockBG) {
+                this.editMode = EditMode.PlaceBlock;
+                this.helpText.setText("EditMode: PlaceBlock");
+            }
+
+        }
+
         //block selector
         if (this.editMode != EditMode.NotEditing) {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
@@ -1019,6 +1053,85 @@ class UI extends Phaser.Scene {
         }
     }    
 }
+
+class Menu extends Phaser.Scene {
+    constructor() {
+        super('menu');
+    }
+
+    placeText(x, y, msg, callback, hoverEvent = true, fontSize = 100) {
+        let shadowOffset = 4;
+
+        // shadow
+        let shadow = this.add.text(window.innerWidth / 2 + shadowOffset + x, window.innerHeight / 2 + shadowOffset + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#ffffff' });
+        shadow.setOrigin(0.5, 0.5);
+        shadow.alpha = 0.4;
+        
+
+        // text
+        let text = this.add.text(window.innerWidth / 2 + x, window.innerHeight / 2 + y, msg, { fontFamily: 'minecraft_font', fontSize: fontSize, fill: '#000000' });
+        text.setOrigin(0.5, 0.5);
+        text.setInteractive();
+
+        if (hoverEvent) {
+            text.on('pointerover', () => {
+                //text.setColor('#884a33');
+                text.setScale(1.1);
+                shadow.setScale(1.1);
+            });
+            text.on('pointerout', () => {
+                //text.setColor('#000000');
+                text.setScale(1);
+                shadow.setScale(1);
+            });
+        }
+        
+        text.on('pointerdown', () => callback());
+    }
+
+    create() {
+
+        // background
+        this.title = this.add.sprite(0, 0, 'title');
+        this.title.setOrigin(0, 0);
+        this.title.setScale(10);
+        this.title.anims.play('title');
+        this.title.displayWidth = window.innerWidth;
+        this.title.displayHeight = window.innerHeight;
+        this.title.x = (window.innerWidth - this.title.displayWidth) / 2;
+        this.title.y = (window.innerHeight - this.title.displayHeight) / 2;
+
+        // buttons
+        /*
+        this.placeText(0, -100, 'Start', () => {  
+            console.log("start");
+         });
+
+         this.placeText(0, 0, 'Settings', () => {  
+            console.log("settings");
+         });
+
+         this.placeText(0, 100, 'Credits', () => {  
+            console.log("credits");
+         });
+         */
+
+         // add empty book behind credits
+        this.book = this.add.sprite(0, 0, 'inventory_empty');
+        this.book.setOrigin(0.5, 0.5);
+        this.book.setScale(5);
+        this.book.x = window.innerWidth / 2;
+        this.book.y = window.innerHeight / 2;
+
+         this.placeText(0, 0, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', () => {  
+            console.log("credits");
+         }, false, 90);
+         
+
+    }
+
+}
+
 window.addEventListener('resize', function () {
     gameWidth = window.innerWidth;
     gameHeight = window.innerHeight;
@@ -1032,7 +1145,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel, Inventory, Settings, UI],
+    scene: [SetupLevel, GameLevel, Inventory, Settings, UI, Menu],
     physics: {
         default: 'arcade',
         arcade: {
