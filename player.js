@@ -162,7 +162,7 @@ class Player {
                     item.setOrigin(0.5, 0.5);
                     item.setScale(itemScale);
                     item.setImmovable(true);
-                    item.setDepth(2);
+                    //item.setDepth(2);
                     item.body.onCollide = true;
                     scene.items.add(item);
                     
@@ -184,7 +184,7 @@ class Player {
                 item.setOrigin(0.5, 0.5);
                 item.setScale(itemScale);
                 item.setImmovable(true);
-                item.setDepth(2);
+                //item.setDepth(2);
                 item.body.onCollide = true;
                 scene.items.add(item);
                 

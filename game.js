@@ -227,7 +227,8 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
-        this.scene.launch('open');
+        //this.scene.launch('open');
+        this.scene.launch('gamelevel').launch('ui');
     }
 
 }
@@ -363,20 +364,19 @@ class GameLevel extends Phaser.Scene {
 
     // returns a random location that is not solid
     getRandSpawnPoint() {
-
         while (true) {
             var x = Phaser.Math.Between(1, this.layer_background.layer.width - 1);
             var y = Phaser.Math.Between(1, this.layer_background.layer.height - 1);
-            var tile_bg = this.layer_background.getTileAt(x, y);
-            if (tile_bg.index == 105 || tile_bg.index == 106 || tile_bg.index == 107  || tile_bg.index == 27  || tile_bg.index == 28  || tile_bg.index == 29 || tile_bg.index == 30  || tile_bg.index == 31  || tile_bg.index == 32) {
-                return {x: (tile_bg.x * 32 * 3) + 32, y: (tile_bg.y * 32 * 3) + 16};
-            }
+            var solid = this.solidAt(x, y);
+            if (!solid) return {x: x * 32*3 + 32, y: y*32*3 + 32};
         }
     }
 
     spawnStuff() {
-        let floorPropCount = 40;
-        let wallPropCount = 10;
+        let floorPropCount = 1000;
+        //let wallPropCount = 1000;
+
+        console.log('Spawning stuff...')
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
@@ -390,13 +390,13 @@ class GameLevel extends Phaser.Scene {
                 var prop = this.physics.add.image(x, y, 'props',  index);
                 this.physics.add.existing(prop);
                 prop.setScale(2);
+                prop.setDepth(2);
                 prop.setOrigin(0.5, 0.5);
                 prop.body.setSize(12, 12);
                 prop.body.setOffset(10,20);
                 prop.body.setImmovable(true);
                 prop.body.onCollide = true;
                 this.chests.add(prop);
-
                 continue;
             }
 
@@ -404,10 +404,9 @@ class GameLevel extends Phaser.Scene {
             var prop = this.add.image(x, y, 'props', index);
             prop.setScale(2);
             prop.setOrigin(0.5, 0.5);
-            if (!RandProps_DontRotate.includes(index))
-                prop.rotation = Math.random() * Math.PI * 2;
+            if (!RandProps_DontRotate.includes(index)) prop.rotation = Math.random() * Math.PI * 2;
 
-            
+            /*
             // if near wall prop
             if (RandProps_nearWall.includes(index)) {
                 prop.setOrigin(0.5, 0);
@@ -455,11 +454,11 @@ class GameLevel extends Phaser.Scene {
 
                 prop.setPosition(x, y);
             }
-
+            */
         }
 
+        /*
         // spawn wall decor
-        
         for (var i = 0; i < wallPropCount; i++) {
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
@@ -480,6 +479,7 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
+        */
 
     }
 
@@ -916,7 +916,13 @@ class GameLevel extends Phaser.Scene {
         // #endregion map editor
 
         if (level == 13) {
-            this.boss.add(new Boss(this, centerX, centerY, Boss_MaxHp));
+            //console.log("920: boss is about to be made");
+            this.scene.stop('ui');
+            var {x, y} = this.getRandSpawnPoint();
+            this.boss.add(new Boss(this, x, y, Boss_MaxHp));
+            this.scene.stop('ui');
+            this.scene.launch('ui');
+            //console.log("924: boss is made ui relaunched");
         }
 
         // clear previous door data
@@ -1167,6 +1173,7 @@ class UI extends Phaser.Scene {
         this.Dash.play('dash', true);
         this.Dash.stop();
         this.Dash.setFrame(30);
+        this.numbosses = 0;
         uiContainer.add(this.hpBar);
         uiContainer.add(this.XPBAR);
         uiContainer.add(this.Dash);
@@ -1174,8 +1181,8 @@ class UI extends Phaser.Scene {
     }
     update() {
 
-        if (inst.boss.getChildren(0)[0]!=null && bossIsHere == false) {
-            bossIsHere = true;
+        if (inst.boss.getChildren(0)[0]!=null && this.numbosses == 0) {
+            console.log(" 1183 boss is here");
             if(inst.boss.getChildren(0)[0]!=null){
                 var cenX = this.cameras.main.centerX;
                 var cenY = window.innerHeight * 0.85;
@@ -1183,6 +1190,7 @@ class UI extends Phaser.Scene {
                 this.bossHPBar.setScale(10);
                 this.bossHPBar.play('BossHP', true);
                 this.bossHPBar.stop();
+                this.numbosses++;
             }
         }
 
@@ -1528,6 +1536,7 @@ window.addEventListener('resize', function () {
     gameHeight = window.innerHeight;
     //inst.game.resize(gameWidth, gameHeight);
 });
+
 var config = {
     type: Phaser.AUTO,
     width: window.innerWidth,
