@@ -12,7 +12,6 @@ var startDragPos;
 class Player {
 
     constructor() {
-        this.skin = "guy";
         this.dir = "right";
         this.idle = false;
         this.onFire = false;
@@ -57,7 +56,7 @@ class Player {
 
         this.sprite = scene.add.sprite();
         this.sprite.setScale(2.5);
-        this.sprite.play(this.skin + '_walk_right');
+        this.sprite.play('walk_right');
         this.sprite.id = this.playerID;
         this.sprite.name = "player"
         
@@ -114,7 +113,7 @@ class Player {
             this.dir = directions[Math.floor(Math.random() * directions.length)]
         }
         
-        this.sprite.play(this.skin + `_idle_${this.dir}`);
+        this.sprite.play(`idle_${this.dir}`);
         
         // pick up item event
         scene.physics.world.on('collide', (gameObject1, gameObject2) => {
@@ -153,29 +152,6 @@ class Player {
                 gameObject2.setFrame(gameObject2.frame.name - 10);
                 scene.chests.remove(gameObject2);
 
-                // 25% chance to drop health potion
-                if (Math.random() > 0.75) {
-                     // spawn random item
-                    var index = RandItems[Math.floor(Math.random() * RandItems.length)];
-                    var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  40);
-                    item.setOrigin(0.5, 0.5);
-                    item.setScale(itemScale);
-                    item.setImmovable(true);
-                    item.body.onCollide = true;
-                    scene.items.add(item);
-                    
-                    // cool tween
-                    scene.tweens.add({
-                        targets: item,
-                        scaleX: itemScale * 1.1,
-                        scaleY: itemScale * 1.1,
-                        duration: 1000,
-                        ease: 'Linear',
-                        yoyo: true,
-                        repeat: -1
-                    });
-                }
-
                 // spawn random item
                 var index = RandItems[Math.floor(Math.random() * RandItems.length)];
                 var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  index);
@@ -212,14 +188,14 @@ class Player {
 
         // melee attack end event
         this.sprite.on('animationcomplete', (anim) => {
-            if (anim.key.startsWith(this.skin + "_attack_")) {
+            if (anim.key.startsWith("attack_")) {
                 this.attacking = false;
             }
         });
 
         // melee attack hitbox
         this.sprite.on('animationupdate', (anim) => {
-            if (anim.key.startsWith(this.skin + "_attack_right")) {
+            if (anim.key.startsWith("attack_right")) {
                 if (this.dir == "right") {
                     this.Meleehitbox.x = this.sprite.x + 10;
                     this.Meleehitbox.y = this.sprite.y - 10;
@@ -231,12 +207,12 @@ class Player {
                     this.Meleehitbox.body.setSize(70, 70);
                 }
             }
-            if (anim.key.startsWith(this.skin + "_attack_up")) {
+            if (anim.key.startsWith("attack_up")) {
                 this.Meleehitbox.x = this.sprite.x;
                 this.Meleehitbox.y = this.sprite.y - 30;
                 this.Meleehitbox.body.setSize(60, 40);
             }
-            if (anim.key.startsWith(this.skin + "_attack_down")) {
+            if (anim.key.startsWith("attack_down")) {
                 this.Meleehitbox.x = this.sprite.x;
                 this.Meleehitbox.y = this.sprite.y;
                 this.Meleehitbox.body.setSize(80, 80);
@@ -274,28 +250,6 @@ class Player {
         let scene = this.scene;
 
         this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);
-
-        // auto use health potion
-        if (this.health < this.maxHealth * 0.75) {
-            
-
-            // if player has potion in item slot
-            if (this.slots[8] == 40) {
-
-                // drink potion from inventory
-                let potionsInv = this.items[40];
-                if (potionsInv && potionsInv > 0) {
-                    this.items[40]--;
-                    this.health += this.maxHealth * 0.25;
-                    if (this.items[40] == 0) delete this.items[40];
-                } else {
-                    delete this.slots[8];
-                    this.health += this.maxHealth * 0.25;
-                }
-                
-            }
-
-        }
 
         // #region inventory
 
@@ -342,7 +296,7 @@ class Player {
             if (enemy_dist < 100) {
                 this.attacking = true;
                 var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
-                this.sprite.play(this.skin + "_" + anim);
+                this.sprite.play(anim);
             }
             
             // projectile attack
@@ -355,9 +309,8 @@ class Player {
                 // could add other attribues like damage here
                 
                 scene.physics.add.existing(mySprite);
-                mySprite.body.setImmovable(true);
-                mySprite.body.onCollide = true;
                 scene.projectile_player.add(mySprite);
+                mySprite.body.setImmovable(true);
 
                 let projectileSpeed = 500 * this.buffs.projectileSpeed;
                 mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
@@ -389,7 +342,7 @@ class Player {
             if (enemy_dist < 100) {
                 this.attacking = true;
                 var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
-                this.sprite.play(this.skin + "_" + anim);
+                this.sprite.play(anim);
             }
             
             // projectile attack
@@ -576,7 +529,7 @@ class Player {
         if (this.dir == "right") this.sprite.flipX = false;
 
         if (!this.attacking) {
-            var anim = this.skin + "_" + `${this.idle ? "idle" : "walk"}_${this.dir == "left" ? "right" : this.dir}`;
+            var anim = `${this.idle ? "idle" : "walk"}_${this.dir == "left" ? "right" : this.dir}`;
             if (this.sprite.anims.currentAnim.key != anim) this.sprite.play(anim);
 
             this.Meleehitbox.x = -100;
