@@ -873,9 +873,10 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
-        if (level == 12) {
-            //bossIsHere = true;
-            //this.boss.add(new Boss(this, centerX, centerY, 500));
+        if (level == 13) {
+            bossIsHere = true;
+            this.boss.add(new Boss(this, centerX, centerY, 500));
+            bossIsHere = true;
             track = 'Boss_Theme';
         } else {
             track = 'Dungeon_Theme';
