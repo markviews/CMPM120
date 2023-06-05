@@ -56,6 +56,9 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('madeWith', 'assets/madeWith.png');
         this.load.image('addSoftware', 'assets/addSoftware.png');
         this.load.image('groupLogo', 'assets/groupLogo.png');
+        this.load.image('lore1', 'assets/IntroLore_1.png');
+        this.load.image('lore2', 'assets/IntroLore_2.png');
+        this.load.image('lore3', 'assets/IntroLore_3.png');
 
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
@@ -1134,7 +1137,7 @@ class Open extends Phaser.Scene {
         this.tweens.add({
             targets: this.made,
             alpha: 1,
-            duration: 1000,
+            duration: 500,
             onComplete: () => {
                 // Create a tween to fade out the image after fading in
                 this.tweens.add({
@@ -1171,6 +1174,72 @@ class Open extends Phaser.Scene {
                                                     delay: 2000,
                                                     onComplete: () => {
                                                         this.scene.start('menu');
+                                                    },
+                                                })
+                                            },
+                                        })
+
+                                    },
+                                })
+                            },
+                        })
+                    }
+                })
+            }
+        })
+    }
+}
+
+class Lore extends Phaser.Scene {
+    constructor() {
+        super('lore');
+    }
+    create() {
+        this.lore1 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore1');
+        this.lore1.setAlpha(0).setScale();
+        this.lore2 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore2');
+        this.lore2.setAlpha(0).setScale();
+        this.lore3 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore3');
+        this.lore3.setAlpha(0).setScale();
+
+        this.tweens.add({
+            targets: this.lore1,
+            alpha: 1,
+            duration: 500,
+            onclick: () => {
+                // Create a tween to fade out the image after fading in
+                this.tweens.add({
+                    targets: this.lore1,
+                    alpha: 0,
+                    duration: 500,
+                    onComplete: () => {
+                        // Create a tween to fade out the image after fading in
+                        this.tweens.add({
+                            targets: this.lore2,
+                            alpha: 1,
+                            duration: 500,
+                            onclick: () => {
+                                // Create a tween to fade out the image after fading in
+                                this.tweens.add({
+                                    targets: this.lore2,
+                                    alpha: 0,
+                                    duration: 500,
+                                    onComplete: () => {
+                                        // Create a tween to fade out the image after fading in
+                                        this.tweens.add({
+                                            targets: this.lore3,
+                                            alpha: 1,
+                                            duration: 500,
+                                            
+                                            onclick: () => {
+                                                // Create a tween to fade out the image after fading in
+                                                this.tweens.add({
+                                                    targets: this.lore3,
+                                                    alpha: 0,
+                                                    duration: 500,
+                                                    onComplete: () => {
+                                                        this.scene.launch('gamelevel').launch('ui');
+                                                        this.scene.remove('lore');
                                                     },
                                                 })
                                             },
@@ -1296,13 +1365,13 @@ class Menu extends Phaser.Scene {
         this.placeText(this.page_start, 0, -40, 35, '1 Player', () => {
             numPlayers = 1;
             let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.start('lore');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 0, 35, '2 players', () => {
             numPlayers = 2;
             let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.start('lore');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 40, 35, 'back', () => this.goToPage("home"));
@@ -1365,7 +1434,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu],
+    scene: [ SetupLevel, Open, Lore, GameLevel, Inventory, Settings, UI, Menu],
     physics: {
         default: 'arcade',
         arcade: {
