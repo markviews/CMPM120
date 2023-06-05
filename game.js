@@ -6,7 +6,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
-var bossIsHere = true;         // is the boss in the level?
+var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
@@ -875,7 +875,7 @@ class GameLevel extends Phaser.Scene {
             }
 
         });
-        this.boss.add(new Boss(this, centerX, centerY, 500));
+        //this.boss.add(new Boss(this, centerX, centerY, 500));
         // #endregion map editor
 
         // clear previous door data
