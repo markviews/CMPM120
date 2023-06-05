@@ -1204,6 +1204,7 @@ class Lore extends Phaser.Scene {
                         alpha: 0,
                         duration: 500,
                         onComplete: () => {
+                            this.lore1.setVisible(false);
                             // Create a tween to fade out the image after fading in
                             this.tweens.add({
                                 targets: this.lore2,
@@ -1216,6 +1217,7 @@ class Lore extends Phaser.Scene {
                                             alpha: 0,
                                             duration: 500,
                                             onComplete: () => {
+                                                this.lore2.setVisible(false);
                                                 // Create a tween to fade out the image after fading in
                                                 this.tweens.add({
                                                     targets: this.lore3,
