@@ -53,6 +53,10 @@ class SetupLevel extends Phaser.Scene {
 
     preload() {
         //load sounds from /assets/sounds
+        this.load.image('madeWith', 'assets/madeWith.png');
+        this.load.image('addSoftware', 'assets/addSoftware.png');
+        this.load.image('groupLogo', 'assets/groupLogo.png');
+
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
         this.load.audio('drone_die', 'assets/sounds/droneCrash.mp3');
@@ -207,7 +211,7 @@ class SetupLevel extends Phaser.Scene {
 
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
-        this.scene.launch('menu');
+        this.scene.launch('open');
         //let id = Phaser.Utils.String.UUID().substring(0, 10);
         //this.scene.launch('gamelevel', id).launch('ui');
     }
@@ -490,7 +494,7 @@ class GameLevel extends Phaser.Scene {
         var tile = this.layer_tiles.getTileAt(x, y);
         if (tile && tile.properties && tile.properties.solid) {
             return true;
-        }
+        dddd}
         if (tile && Tile_BorderWall.includes(tile.index)) {
             return true;
         }
@@ -1046,8 +1050,8 @@ class UI extends Phaser.Scene {
         window.UIscene = this;
         if(bossIsHere){
             var cenX = this.cameras.main.centerX;
-            var cenY = this.cameras.main.centerY;
-            this.bossHPBar = this.add.sprite(cenX, cenY + 550);
+            var cenY = window.innerHeight * 0.85;
+            this.bossHPBar = this.add.sprite(cenX, cenY);;
             this.bossHPBar.setScale(10);
             this.bossHPBar.play('BossHP', true);
             this.bossHPBar.stop();
@@ -1103,6 +1107,74 @@ class UI extends Phaser.Scene {
 
 
     }    
+}
+
+class Open extends Phaser.Scene {
+    constructor() {
+        super('open');
+    }
+    create() {
+        this.made = this.add.image(innerWidth * .5 , innerHeight * .5, 'madeWith');
+        this.made.setAlpha(0);
+        this.softW = this.add.image(innerWidth * .5 , innerHeight * .5, 'addSoftware');
+        this.softW.setAlpha(0).setScale(.85);
+        this.logo = this.add.image(innerWidth * .5 , innerHeight * .5, 'groupLogo');
+        this.logo.setAlpha(0).setScale(.75);
+
+        this.tweens.add({
+            targets: this.made,
+            alpha: 1,
+            duration: 1000,
+            onComplete: () => {
+                // Create a tween to fade out the image after fading in
+                this.tweens.add({
+                    targets: this.made,
+                    alpha: 0,
+                    delay: 2000,
+                    duration: 500,
+                    onComplete: () => {
+                        // Create a tween to fade out the image after fading in
+                        this.tweens.add({
+                            targets: this.softW,
+                            alpha: 1,
+                            duration: 500,
+                            onComplete: () => {
+                                // Create a tween to fade out the image after fading in
+                                this.tweens.add({
+                                    targets: this.softW,
+                                    alpha: 0,
+                                    delay: 2000,
+                                    duration: 500,
+                                    onComplete: () => {
+                                        // Create a tween to fade out the image after fading in
+                                        this.tweens.add({
+                                            targets: this.logo,
+                                            alpha: 1,
+                                            duration: 500,
+                                            
+                                            onComplete: () => {
+                                                // Create a tween to fade out the image after fading in
+                                                this.tweens.add({
+                                                    targets: this.logo,
+                                                    alpha: 0,
+                                                    duration: 500,
+                                                    delay: 2000,
+                                                    onComplete: () => {
+                                                        this.scene.start('menu');
+                                                    },
+                                                })
+                                            },
+                                        })
+
+                                    },
+                                })
+                            },
+                        })
+                    }
+                })
+            }
+        })
+    }
 }
 
 class Menu extends Phaser.Scene {
@@ -1280,7 +1352,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [SetupLevel, GameLevel, Inventory, Settings, UI, Menu],
+    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu],
     physics: {
         default: 'arcade',
         arcade: {
