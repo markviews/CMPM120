@@ -6,7 +6,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
-var bossIsHere = true;         // is the boss in the level?
+var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
@@ -222,9 +222,8 @@ class SetupLevel extends Phaser.Scene {
 
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
+        
         this.scene.launch('menu');
-        //let id = Phaser.Utils.String.UUID().substring(0, 10);
-        //this.scene.launch('gamelevel', id).launch('ui');
     }
 
 }
@@ -864,8 +863,12 @@ class GameLevel extends Phaser.Scene {
             }
 
         });
-        this.boss.add(new Boss(this, centerX, centerY, 500));
         // #endregion map editor
+
+        if (level == 12) {
+            bossIsHere = true;
+            this.boss.add(new Boss(this, centerX, centerY, 500));
+        }
 
         // clear previous door data
         delete levels[this.id].from_id;
