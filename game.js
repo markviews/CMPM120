@@ -10,7 +10,7 @@ var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
-var level = 1;
+var level = 11;
 // list of random levels to choose from
 const RandItems = [
     0, 1, 2, 3, 4, 5, 6, 7,
@@ -865,9 +865,10 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
-        if (level == 12) {
+        if (level == 13) {
             bossIsHere = true;
             this.boss.add(new Boss(this, centerX, centerY, 500));
+            bossIsHere = true;
         }
 
         // clear previous door data
@@ -1359,7 +1360,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
 };

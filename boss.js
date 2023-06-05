@@ -296,7 +296,10 @@ class Boss extends Phaser.GameObjects.Sprite {
             var frameIndex = 59 - Math.round(this.health/ this.maxHealth * 58);
             //console.log(frameIndex);
             if(frameIndex > 58) frameIndex = 58;
-            window.UIscene.bossHPBar.setFrame(frameIndex);
+            if(window.UIscene.bossHPBar != null){
+                window.UIscene.bossHPBar.setFrame(frameIndex);
+            }
+            
         }
     }
 
