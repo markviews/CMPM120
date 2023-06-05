@@ -27,6 +27,7 @@ class Boss extends Phaser.GameObjects.Sprite {
         this.distance = 200;
         this.stunned = false;
         this.state = 'normal'; //different states: normal, enhanced, enraged.
+        //Mag_cast, Mag_1, Mag_2,Boss_tel,BOSS_die, Boss_Death, Boss_Explosion, Mag2_cast
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
@@ -38,6 +39,22 @@ class Boss extends Phaser.GameObjects.Sprite {
         this.stunned = false;
         this.setScale(2.5);
         this.body.setSize(40, 50);
+        //SOUND EFFECTS
+        this.Mag_1 = scene.sound.add('Mag_1');
+        this.Mag_1.setVolume(0.1);
+        this.Mag_2 = scene.sound.add('Mag_2');
+        this.Mag_2.setVolume(0.1);
+        this.Mag1_cast = scene.sound.add('Mag_cast');
+        this.Mag1_cast.setVolume(0.1);
+        this.Boss_tele = scene.sound.add('Boss_tel');
+        this.Boss_tele.setVolume(0.1);
+        this.Boss_die = scene.sound.add('Boss_Death');
+        this.Boss_die.setVolume(0.1);
+        this.Boss_Explosion = scene.sound.add('Boss_Explosion');
+        this.Boss_Explosion.setVolume(0.1);
+        this.Mag2_cast = scene.sound.add('Mag2_cast');
+        this.Mag2_cast.setVolume(0.1);
+        //END SOUND EFFECTS
         
         this.on('animationcomplete', (anim) => {
             //console.log(anim.key);
@@ -91,6 +108,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                     frequency: 1000, // How often the particles should be emitted
                 });
                 deathEmitter.setPosition(this.x+75, this.y+100);
+                this.Boss_Explosion.play();
                 deathEmitter.explode(1000);
                 this.destroy();
             }
@@ -108,6 +126,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                 if (this.health <= 0) {
                     if(animKey!='magister_die'){
                         this.play('magister_die');
+                        this.Boss_die.play();
                     }
                     return;
                 }
@@ -123,6 +142,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                 if (this.health <= 0) {
                     if(animKey!='magister_die'){
                         this.play('magister_die');
+                        this.Boss_die.play();
                     }
                     return;
                 }
@@ -211,14 +231,17 @@ class Boss extends Phaser.GameObjects.Sprite {
             if(this.tele_seconds >=20){
                 this.tele_seconds = 0;
                 this.play('magister_teleport');
+                this.Boss_tele.play();
             }
             else if(this.seconds == 10 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castMagic'){
                 this.stop();
                 this.play('magister_castMagic');
+                this.Mag1_cast.play();
             }
             else if(this.seconds == 3 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castSword'){
                 this.stop();
                 this.play('magister_castSword');
+                this.Mag2_cast.play();
             }   
         }
         //#endregion Normal
@@ -228,15 +251,20 @@ class Boss extends Phaser.GameObjects.Sprite {
             if(this.seconds == 3 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castSword' && animKey!= 'magister_castMagic'){
                 this.stop();
                 this.play('magister_castSword');
+                this.Mag2_cast.play();
+
             }
             else if(this.seconds >= 5 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castSword' && animKey!= 'magister_castMagic'){
                 this.stop();
                 this.seconds = 0;
                 this.play('magister_castMagic');
+                this.Mag1_cast.play();
+
             }
             else if(this.tele_seconds >=12){
                 this.tele_seconds = 0;
                 this.play('magister_teleport');
+                this.Boss_tele.play();
             }
         }
         //#endregion Enhanced
@@ -246,22 +274,27 @@ class Boss extends Phaser.GameObjects.Sprite {
             if(this.seconds == 3 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castSword' && animKey!= 'magister_castMagic' && animKey!= 'magister_die'){
                 this.stop();
                 this.play('magister_castSword');
+                this.Mag2_cast.play();
+
             }
             else if(this.seconds >= 5 && animKey!= 'magister_teleport' && animKey!= 'magister_TR' && animKey!= 'magister_MagicLoop' && animKey!= 'magister_castSword' && animKey!= 'magister_castMagic' && animKey!= 'magister_die'){
                 this.stop();
                 this.seconds = 0;
                 this.play('magister_castMagic');
+                this.Mag1_cast.play();
+
             }
             else if(this.tele_seconds >=12 && animKey!= 'magister_die'){
                 this.tele_seconds = 0;
                 this.play('magister_teleport');
+                this.Boss_tele.play();
             }
         }
         //#endregion Enraged
         //#endregion States
         if(window.UIscene != null){
             var frameIndex = 59 - Math.round(this.health/ this.maxHealth * 58);
-            console.log(frameIndex);
+            //console.log(frameIndex);
             if(frameIndex > 58) frameIndex = 58;
             window.UIscene.bossHPBar.setFrame(frameIndex);
         }
@@ -280,6 +313,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                 let magic = scene.add.sprite(x, y, 'magister_magic');
                 scene.physics.add.existing(magic);
                 magic.play('magister_magic');
+                this.Mag_1.play();
                 magic.setScale(2.5);
                 magic.body.setSize(15, 15);
                 magic.body.setOffset(0,0);
@@ -345,6 +379,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                 let sword = this.scene.add.sprite(x, player_y, 'magister_sword');
                 this.scene.physics.add.existing(sword);
                 sword.play('magister_sword');
+                this.Mag_2.play();
                 sword.setScale(4);
                 sword.body.setSize(20, 48);
                 sword.body.setOffset(0,0);
