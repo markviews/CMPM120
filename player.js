@@ -309,8 +309,9 @@ class Player {
                 // could add other attribues like damage here
                 
                 scene.physics.add.existing(mySprite);
-                scene.projectile_player.add(mySprite);
                 mySprite.body.setImmovable(true);
+                mySprite.body.onCollide = true;
+                scene.projectile_player.add(mySprite);
 
                 let projectileSpeed = 500 * this.buffs.projectileSpeed;
                 mySprite.body.setVelocity(Math.cos(enemy_angle) * projectileSpeed, Math.sin(enemy_angle) * projectileSpeed);
