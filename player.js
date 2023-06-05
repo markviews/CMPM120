@@ -397,22 +397,27 @@ class Player {
                 this.dodging = false; 
             }, this.dashTimer * players[0].buffs.dashCooldown);
             //console.log(this.angle);
-            if(this.sprite.dir == "left"){
-                xdir = this.sprite.x - Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            
+            let dist = dodgeDistance;
+            while(dist > 0){
+                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dist;
+                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dist;
+                var isSolid = scene.solidAt(xdir, ydir);
+                if(!isSolid){
+                    break;
+                }
+                else{
+                    dist-= 20;
+                }
             }
-            else if (this.sprite.dir == "right"){
-                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+            if(dist == 0 || scene.solidAt(xdir, ydir)){
+                xdir = this.sprite.x;
+                ydir = this.sprite.y;
             }
-            else if (this.sprite.dir == "down"){
-                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-                ydir = this.sprite.y - Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-            }
-            else{
-                xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-                ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
-            }
+
+
             this.sprite.inputEnabled = false;
             scene.tweens.add({
                 targets: this.sprite,
@@ -420,9 +425,6 @@ class Player {
                 y: ydir,
                 duration: dodgeDuration, // Half the duration for the first part of the dodge
                 repeat: 0, // Repeat the tween once to complete the dodge motion
-                onComplete: () => {
-                    this.sprite.inputEnabled = true;
-                },
             });
             for(let i = 0; i <= 5; i ++){
                 let clone = scene.add.sprite();
