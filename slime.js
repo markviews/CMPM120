@@ -71,17 +71,7 @@ class Hunger extends Enemy {
 
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-            // set angle
-            this.angle = (angle * 180 / Math.PI) - 180;
-
-            // flip if to left of player
-            if (this.angle > 90 || this.angle < -90) {
-                this.flipY = true;
-            } else {
-                this.flipY = false;
-            }
             this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
-
         }
 
     }
@@ -135,21 +125,11 @@ class Drone extends Enemy {
 
         // jump towards nearest player
         var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-        // set angle
-        this.angle = (angle * 180 / Math.PI) - 180;
-
         var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
         if (distance > 500) {
             // set velicoty
             this.body.velocity.x = Math.cos(angle) * 30;
             this.body.velocity.y = Math.sin(angle) * 30;
-        }
-
-        // flip if to left of player
-        if (this.angle > 90 || this.angle < -90) {
-            this.flipY = true;
-        } else {
-            this.flipY = false;
         }
 
         this.attackTick += delta
