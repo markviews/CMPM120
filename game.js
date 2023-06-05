@@ -985,7 +985,8 @@ class GameLevel extends Phaser.Scene {
                                             levels[door.dest_id].from_wall = door.wall;
                                             levels[door.dest_id].from_id = this.id;
 
-                                            this.goToLevel(door.dest_id);
+                                            if (level != 13)
+                                                this.goToLevel(door.dest_id);
                                             foundDoor = true;
                                         }
                                     });
