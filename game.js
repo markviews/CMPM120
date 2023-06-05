@@ -1072,7 +1072,6 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
-<<<<<<< HEAD
 
 class MusicScene extends Phaser.Scene {
     constructor() {
@@ -1126,8 +1125,6 @@ class MusicScene extends Phaser.Scene {
 
 }
 
-=======
->>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
 class UI extends Phaser.Scene {
     
     constructor(){
