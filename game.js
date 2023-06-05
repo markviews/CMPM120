@@ -1183,61 +1183,63 @@ class Lore extends Phaser.Scene {
         super('lore');
     }
     create() {
-        this.lore1 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore1');
+        this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
         this.lore1.setAlpha(0).setScale();
-        this.lore2 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore2');
+        this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
         this.lore2.setAlpha(0).setScale();
-        this.lore3 = this.add.image(innerWidth * .5 , innerHeight * .5, 'lore3');
+        this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
         this.lore3.setAlpha(0).setScale();
 
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
             duration: 500,
-            onclick: () => {
-                // Create a tween to fade out the image after fading in
-                this.tweens.add({
-                    targets: this.lore1,
-                    alpha: 0,
-                    duration: 500,
-                    onComplete: () => {
-                        // Create a tween to fade out the image after fading in
-                        this.tweens.add({
-                            targets: this.lore2,
-                            alpha: 1,
-                            duration: 500,
-                            onclick: () => {
-                                // Create a tween to fade out the image after fading in
-                                this.tweens.add({
-                                    targets: this.lore2,
-                                    alpha: 0,
-                                    duration: 500,
-                                    onComplete: () => {
-                                        // Create a tween to fade out the image after fading in
+            onComplete: () => {
+                this.input.on('pointerdown', () => {
+                    // Create a tween to fade out the image after fading in
+                    this.tweens.add({
+                        targets: this.lore1,
+                        alpha: 0,
+                        duration: 500,
+                        onComplete: () => {
+                            // Create a tween to fade out the image after fading in
+                            this.tweens.add({
+                                targets: this.lore2,
+                                alpha: 1,
+                                duration: 500,
+                                onComplete: () => {
+                                    this.input.on('pointerdown', () => {
                                         this.tweens.add({
-                                            targets: this.lore3,
-                                            alpha: 1,
+                                            targets: this.lore2,
+                                            alpha: 0,
                                             duration: 500,
-                                            
-                                            onclick: () => {
+                                            onComplete: () => {
                                                 // Create a tween to fade out the image after fading in
                                                 this.tweens.add({
                                                     targets: this.lore3,
-                                                    alpha: 0,
+                                                    alpha: 1,
                                                     duration: 500,
                                                     onComplete: () => {
-                                                        this.scene.launch('gamelevel').launch('ui');
-                                                        this.scene.remove('lore');
+                                                        this.input.on('pointerdown', () => {
+                                                            this.tweens.add({
+                                                                targets: this.lore3,
+                                                                alpha: 0,
+                                                                duration: 500,
+                                                                onComplete: () => {
+                                                                    this.scene.launch('gamelevel').launch('ui');
+                                                                    this.scene.remove('lore');
+                                                                },
+                                                            })
+                                                        })
                                                     },
                                                 })
                                             },
                                         })
-
-                                    },
-                                })
-                            },
-                        })
-                    }
+                                    })
+                                },
+                            })
+                        }
+                    })
                 })
             }
         })
