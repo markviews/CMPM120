@@ -360,40 +360,19 @@ class GameLevel extends Phaser.Scene {
     getRandSpawnPoint() {
 
         while (true) {
-<<<<<<< HEAD
             var x = Phaser.Math.Between(1, this.layer_background.layer.width - 1);
             var y = Phaser.Math.Between(1, this.layer_background.layer.height - 1);
             var tile_bg = this.layer_background.getTileAt(x, y);
             if (tile_bg.index == 105 || tile_bg.index == 106 || tile_bg.index == 107  || tile_bg.index == 27  || tile_bg.index == 28  || tile_bg.index == 29 || tile_bg.index == 30  || tile_bg.index == 31  || tile_bg.index == 32) {
                 return {x: (tile_bg.x * 32 * 3) + 32, y: (tile_bg.y * 32 * 3) + 16};
             }
-=======
-            var x = Phaser.Math.Between(1, this.layer_tiles.width * 3);
-            var y = Phaser.Math.Between(1, this.layer_tiles.height * 3);
-
-            if (this.solidAt(x, y)) continue;
-
-            return {x: x, y: y};
->>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
         }
     }
 
     spawnStuff() {
-<<<<<<< HEAD
         let enemyCount = 10;
         let floorPropCount = 100;
         let wallPropCount = 10;
-=======
-        let enemyCount = 0;
-        let floorPropCount = 20;
-        let wallPropCount = 100;
-
-        // spawn enemies
-        for (var i = 0; i < enemyCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
-            this.spawnEnemy(x, y);
-        }
->>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {

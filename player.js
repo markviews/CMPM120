@@ -153,7 +153,6 @@ class Player {
                 gameObject2.setFrame(gameObject2.frame.name - 10);
                 scene.chests.remove(gameObject2);
 
-<<<<<<< HEAD
                 // 25% chance to drop health potion
                 if (Math.random() > 0.75) {
                      // spawn random item
@@ -178,8 +177,6 @@ class Player {
                     });
                 }
 
-=======
->>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
                 // spawn random item
                 var index = RandItems[Math.floor(Math.random() * RandItems.length)];
                 var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  index);
