@@ -13,7 +13,7 @@ let numPlayers = 1;
 var level = 11;
 // list of random levels to choose from
 const RandItems = [
-    0, 1, 2, 3, 4, 5, 6, 7,
+    4, 5, 6, 7,
     8, 9,10,11,12,13,14,15,
     16,17,18,19,20,21,22,23,
     24,25,26,27,28,29,30,31,
@@ -369,41 +369,23 @@ class GameLevel extends Phaser.Scene {
     // returns a random location that is not solid
     getRandSpawnPoint() {
         while (true) {
-            var x = Phaser.Math.Between(1, this.layer_tiles.width * 3);
-            var y = Phaser.Math.Between(1, this.layer_tiles.height * 3);
-            if (this.solidAt(x, y)) continue;
-            y -= 32;
-            return {x: x, y: y};
-        }
-    }
-
-    getRandSpawnTile() {
-        
-        // get a random tile that's not solid
-        while (true) {
             var x = Phaser.Math.Between(1, this.layer_background.layer.width - 1);
             var y = Phaser.Math.Between(1, this.layer_background.layer.height - 1);
-            
             var tile_bg = this.layer_background.getTileAt(x, y);
-            //console.log(x, y, tile_bg)
-            if (tile_bg.index == 4) continue;
-            return {x: tile_bg.x, y: tile_bg.y};
+            if (tile_bg.index == 105 || tile_bg.index == 106 || tile_bg.index == 107  || tile_bg.index == 27  || tile_bg.index == 28  || tile_bg.index == 29 || tile_bg.index == 30  || tile_bg.index == 31  || tile_bg.index == 32) {
+                return {x: (tile_bg.x * 32 * 3) + 32, y: (tile_bg.y * 32 * 3) + 16};
+            }
         }
-
     }
 
     spawnStuff() {
-        let enemyCount = 0;
-        let floorPropCount = 1000;
+        let enemyCount = 10;
+        let floorPropCount = 100;
         let wallPropCount = 10;
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
-            var {x, y} = this.getRandSpawnTile();
-            x*= (32*3);
-            y*= (32*3);
-            x += 32;
-            y += 16;
+            var {x, y} = this.getRandSpawnPoint();
             
             // pick random item from RandItems
             var index = RandProps_Floor[Math.floor(Math.random() * RandProps_Floor.length)];
@@ -412,7 +394,7 @@ class GameLevel extends Phaser.Scene {
             if (RandProps_Chest.includes(index)) {
                 var prop = this.physics.add.image(x, y, 'props',  index);
                 this.physics.add.existing(prop);
-                prop.setScale(4);
+                prop.setScale(2);
                 prop.setOrigin(0.5, 0.5);
                 prop.body.setSize(12, 12);
                 prop.body.setOffset(10,20);
@@ -520,15 +502,27 @@ class GameLevel extends Phaser.Scene {
         this.scene.start('gamelevel', id);
     }
 
-    solidAt(x, y) {
-        var tile = this.layer_tiles.getTileAtWorldXY(x, y, true);
-        if (tile && (tile.collideUp || tile.collideDown || tile.collideLeft || tile.collideRight)) {
-            return true;
+    solidAt(x, y, world = false) {
+        var tile, tile_bg;
+
+        if (world) {
+            tile_bg = this.layer_background.getTileAtWorldXY(x, y);
+            tile = this.layer_tiles.getTileAtWorldXY(x, y);
+        } else {
+            tile_bg = this.layer_background.getTileAt(x, y);
+            tile = this.layer_tiles.getTileAt(x, y);
         }
-        if (tile && Tile_BorderWall.includes(tile.index)) {
-            return true;
-        }
-        return false;
+
+        if (tile != undefined)
+            if (tile.index == 105 || tile.index == 106 || tile.index == 107  || tile.index == 27  || tile.index == 28  || tile.index == 29 || tile.index == 30  || tile.index == 31  || tile.index == 32) {
+                return false;
+            }
+        
+        if (tile_bg != undefined)
+            if (tile_bg.index == 105 || tile_bg.index == 106 || tile_bg.index == 107  || tile_bg.index == 27  || tile_bg.index == 28  || tile_bg.index == 29 || tile_bg.index == 30  || tile_bg.index == 31  || tile_bg.index == 32) {
+                return false;
+            }
+        return true;
     }
 
     handleCollisionProjectileWall(projectile, tile) {
@@ -553,9 +547,11 @@ class GameLevel extends Phaser.Scene {
 
         // enable collisions on walls
         this.layer_tiles.forEachTile(tile => {
-            var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
-            if (tile_bg.index == 4)
+
+            if (this.solidAt(tile.x, tile.y)) {
                 tile.setCollision(true);
+            }
+                
 
             // fix north doors
             if (tile.index == 14 || tile.index == 92 || tile.index == 93) {
@@ -650,9 +646,25 @@ class GameLevel extends Phaser.Scene {
                 if (tile.index == 53 || tile.index == 66) wall = "right";
                 else if (tile.index == 54 || tile.index == 67) wall = "left";
                 else if (tile.index == 42 || tile.index == 55) wall = "down";
-                else wall = "up";
+                else if (tile.index == 14 || tile.index == 92 || tile.index == 93) wall = "up";
+                else {
+                    let solid = this.solidAt(tile.x, tile.y);
+                    if (solid) return;
+                    wall = "up";
+                }
                 
                 let door = {x: tile.x, y: tile.y, wall: wall};
+
+                var dupe = false;
+                for (var d in levels[this.id].doors) {
+                    var d = levels[this.id].doors[d];
+                    if (d.x == door.x && d.y == door.y) {
+                        dupe = true;
+                        return;
+                    }
+                }
+
+                if (!dupe)
                 levels[this.id].doors.push(door);
                 //console.log("Setup door ", door);
             }
@@ -692,10 +704,14 @@ class GameLevel extends Phaser.Scene {
 
         // if no door connection, make one
         if (this.tp_door.x == undefined) {
+
             var door = levels[this.id].doors[0];
             door.dest_id = levels[this.id].from_id;
             this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
             if (door.wall == 'up') this.tp_door.y += 120;
+
+            // delete door from levels[this.id].doors
+            //delete levels[this.id].doors[0];
         }
 
         this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
@@ -723,7 +739,6 @@ class GameLevel extends Phaser.Scene {
             levels[this.id].items = items;
 
             // spawn enemies and props
-            this.spawnStuff();
         }
 
         this.cameras.main.roundPixels = true;
@@ -757,6 +772,18 @@ class GameLevel extends Phaser.Scene {
         });
         this.circularProgress.setOrigin(0.5, 0.5);
         this.circularProgress.visible = false;
+
+        // wait for scene to be done loading
+        let loadStuff = false;
+        this.events.once('preupdate', () => {
+            if (loadStuff) return;
+            loadStuff = true;
+
+            this.spawnStuff();
+
+            // move players to front
+            players.forEach(player => this.children.bringToTop(player.sprite));
+        });
 
         // create players in new scene
         for (var player of players) {
@@ -1046,15 +1073,15 @@ class GameLevel extends Phaser.Scene {
 }
 
 class MusicScene extends Phaser.Scene {
-    constructor(){
+    constructor() {
         super('musicScene');
     }
 
     switchTrack() {
         this.playing = track;
-        this.Dungeon_Theme.stop();
-        this.Boss_Theme.stop();
-        this.Title_Screen.stop();
+        this.Dungeon_Theme.pause();
+        this.Boss_Theme.pause();
+        this.Title_Screen.pause();
 
         if (!playMusic) return;
 
@@ -1074,11 +1101,21 @@ class MusicScene extends Phaser.Scene {
     create() {
         this.sound.pauseOnBlur = false;
         this.Title_Screen = this.sound.add('Title_Screen', {volume: 0.2});
+        this.Title_Screen.loop = true;
         this.Dungeon_Theme = this.sound.add('Dungeon_Theme', {volume: 0.2});
+        this.Dungeon_Theme.loop = true;
         this.Boss_Theme = this.sound.add('Boss_Theme', {volume: 0.2});
+        this.Boss_Theme.loop = true;
+        this.playMusic = true;
     }
  
     update() {
+
+        if (this.playMusic != playMusic) {
+            this.playMusic = playMusic;
+            this.switchTrack();
+        }
+
         if (this.playing != track) {
             this.switchTrack();
         }
@@ -1439,12 +1476,12 @@ class Menu extends Phaser.Scene {
         this.placeText(this.page_settings, 0, 0, 19, 'Music: on', (text, shadow) => {
             if (playMusic) {
                 playMusic = false;
-                text.setText("Music: on");
-                shadow.setText("Music: on");
-            } else {
-                playMusic = true;
                 text.setText("Music: off");
                 shadow.setText("Music: off");
+            } else {
+                playMusic = true;
+                text.setText("Music: on");
+                shadow.setText("Music: on");
             }
         });
 

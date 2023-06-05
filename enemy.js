@@ -6,6 +6,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.type = type;
         this.health = health;
         this.damage = damage;
+        this.setDepth(2);
 
         scene.add.existing(this);
         scene.physics.add.existing(this);

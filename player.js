@@ -60,6 +60,7 @@ class Player {
         this.sprite.play(this.skin + '_walk_right');
         this.sprite.id = this.playerID;
         this.sprite.name = "player"
+        this.sprite.setDepth(2);
         
         // physics
         scene.physics.add.existing(this.sprite);
@@ -161,6 +162,7 @@ class Player {
                     item.setOrigin(0.5, 0.5);
                     item.setScale(itemScale);
                     item.setImmovable(true);
+                    item.setDepth(2);
                     item.body.onCollide = true;
                     scene.items.add(item);
                     
@@ -182,6 +184,7 @@ class Player {
                 item.setOrigin(0.5, 0.5);
                 item.setScale(itemScale);
                 item.setImmovable(true);
+                item.setDepth(2);
                 item.body.onCollide = true;
                 scene.items.add(item);
                 
@@ -450,7 +453,8 @@ class Player {
             while(dist > 0){
                 xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dist;
                 ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dist;
-                var isSolid = scene.solidAt(xdir, ydir);
+                
+                var isSolid = scene.solidAt(xdir, ydir, true);
                 if(!isSolid){
                     break;
                 }
@@ -458,9 +462,10 @@ class Player {
                     dist-= 20;
                 }
             }
-            if(dist == 0 || scene.solidAt(xdir, ydir)){
+            if(dist == 0 || scene.solidAt(xdir, ydir, true)){
                 xdir = this.sprite.x;
                 ydir = this.sprite.y;
+                scene.add.circle(xdir, ydir, 10, 0xffff00, 0.5);
             }
 
 
