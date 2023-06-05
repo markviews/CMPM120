@@ -55,7 +55,51 @@ class Boss extends Phaser.GameObjects.Sprite {
         this.Mag2_cast = scene.sound.add('Mag2_cast');
         this.Mag2_cast.setVolume(0.1);
         //END SOUND EFFECTS
-        
+    
+        scene.physics.world.on('collide', (gameObject1, gameObject2) => {
+            if(this == null)return;
+            if(this.anims == null)return;
+            let animKey = this.anims.currentAnim.key;
+            if (gameObject2 != this) return;
+            var player = players[gameObject1.id];
+            
+            if (gameObject1.name == "melee_hitbox") {
+                this.stunned = true;
+                this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
+
+                if (this.health <= 0) {
+                    if(animKey!='magister_die'){
+                        this.play('magister_die');
+                        this.Boss_die.play();
+                    }
+                    return;
+                }
+                setTimeout(() => {
+                    this.stunned = false;
+                }, 1000);
+                return;
+            }
+            if (gameObject1.name == "projectile") {
+                this.stunned = true;
+                this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
+
+                if (this.health <= 0) {
+                    if(animKey!='magister_die'){
+                        this.play('magister_die');
+                        this.Boss_die.play();
+                    }
+                    return;
+                }
+
+                setTimeout(() => {
+                    this.stunned = false;
+                }, 400);
+
+                return;
+            }    
+            
+        });
+
         this.on('animationcomplete', (anim) => {
             //console.log(anim.key);
             if(anim.key == 'magister_teleport'){
@@ -110,51 +154,12 @@ class Boss extends Phaser.GameObjects.Sprite {
                 deathEmitter.setPosition(this.x+75, this.y+100);
                 this.Boss_Explosion.play();
                 deathEmitter.explode(1000);
+                scene.bossIsHere = false;
                 this.destroy();
             }
         });
 
-        scene.physics.world.on('collide', (gameObject1, gameObject2) => {
-            let animKey = this.anims.currentAnim.key;
-            if (gameObject2 != this) return;
-            var player = players[gameObject1.id];
-            
-            if (gameObject1.name == "melee_hitbox") {
-                this.stunned = true;
-                this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
-
-                if (this.health <= 0) {
-                    if(animKey!='magister_die'){
-                        this.play('magister_die');
-                        this.Boss_die.play();
-                    }
-                    return;
-                }
-                setTimeout(() => {
-                    this.stunned = false;
-                }, 1000);
-                return;
-            }
-            if (gameObject1.name == "projectile") {
-                this.stunned = true;
-                this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
-
-                if (this.health <= 0) {
-                    if(animKey!='magister_die'){
-                        this.play('magister_die');
-                        this.Boss_die.play();
-                    }
-                    return;
-                }
-
-                setTimeout(() => {
-                    this.stunned = false;
-                }, 400);
-
-                return;
-            }    
-            
-        });
+        
     }
 
     update(time, delta) {
@@ -292,12 +297,6 @@ class Boss extends Phaser.GameObjects.Sprite {
         }
         //#endregion Enraged
         //#endregion States
-        if(window.UIscene != null){
-            var frameIndex = 59 - Math.round(this.health/ this.maxHealth * 58);
-            //console.log(frameIndex);
-            if(frameIndex > 58) frameIndex = 58;
-            window.UIscene.bossHPBar.setFrame(frameIndex);
-        }
     }
 
     getAngle(){

@@ -9,8 +9,8 @@ const itemsGrid = true;         // items snap to grid when placed
 var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
-
-var level = 11;
+const Boss_MaxHp = 1;
+var level = 12;
 // list of random levels to choose from
 const RandItems = [
     4, 5, 6, 7,
@@ -18,7 +18,7 @@ const RandItems = [
     16,17,18,19,20,21,22,23,
     24,25,26,27,28,29,30,31,
     32,33,34,35,36,37,38,39,
-    40,41,42
+    40,41
 ];
 const RandProps_Wall = [
     7,
@@ -46,7 +46,6 @@ const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 var levels = {};
 var players = [];
 var playMusic = true;
-var track = 'Title_Screen';
 
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
@@ -57,13 +56,6 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('madeWith', 'assets/madeWith.png');
         this.load.image('addSoftware', 'assets/addSoftware.png');
         this.load.image('groupLogo', 'assets/groupLogo.png');
-        this.load.image('lore1', 'assets/IntroLore_1.png');
-        this.load.image('lore2', 'assets/IntroLore_2.png');
-        this.load.image('lore3', 'assets/IntroLore_3.png');
-
-        this.load.audio('Title_Screen', 'assets/sounds/music/Title_Screen.mp3');
-        this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
-        this.load.audio('Boss_Theme', 'assets/sounds/music/Boss_Theme.mp3');
 
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
@@ -103,7 +95,6 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
         this.load.image('TitleText', 'assets/splash/TitleText.png');
-        this.load.image('potion', 'assets/sprites/Potion.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -189,28 +180,28 @@ class SetupLevel extends Phaser.Scene {
         //Last 3 line above im not sure about in terms of after the frames
 
         // player animations Girl
-        this.anims.create({ key: 'girl_fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
-        this.anims.create({ key: 'girl_idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'girl_idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'girl_idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'girl_walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'girl_walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
-        this.anims.create({ key: 'girl_walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'girl_attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
-        this.anims.create({ key: 'girl_attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
-        this.anims.create({ key: 'girl_attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
+        // this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
+        // this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
+        // this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
+        // this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
+        // this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
+        // this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
         
         //player animations Guy
-        this.anims.create({ key: 'guy_fall', frames: this.anims.generateFrameNumbers('guy', { frames: [ 107,108,109,110] }), frameRate: 8});
-        this.anims.create({ key: 'guy_idle_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'guy_idle_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'guy_idle_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'guy_walk_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 36,37,38,39,40 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'guy_walk_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 60,61,62,63,64 ] }), frameRate: 8, repeat: -1});
-        this.anims.create({ key: 'guy_walk_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 48,49,50,51,52] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'guy_attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
-        this.anims.create({ key: 'guy_attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
-        this.anims.create({ key: 'guy_attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
+        this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('guy', { frames: [ 107,108,109,110] }), frameRate: 8});
+        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 36,37,38,39,40 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 60,61,62,63,64 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 48,49,50,51,52] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
+        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
+        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
 
         //Fireball Animations
         this.anims.create({key: 'moveFire', frames: this.anims.generateFrameNumbers('FireBall', { frames: [ 0,1,2,3,4,5,6] }), frameRate: 8, repeat: -1 });
@@ -232,7 +223,7 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
-        this.scene.launch('menu').launch('musicScene');
+        this.scene.launch('menu');
     }
 
 }
@@ -251,7 +242,6 @@ class GameLevel extends Phaser.Scene {
         // create players if not all spawned in
         for (var i = players.length; i < numPlayers; i++) {
             players.push(new Player());
-            players[i].skin = "girl";
         }
     }
 
@@ -368,20 +358,42 @@ class GameLevel extends Phaser.Scene {
 
     // returns a random location that is not solid
     getRandSpawnPoint() {
+
         while (true) {
+<<<<<<< HEAD
             var x = Phaser.Math.Between(1, this.layer_background.layer.width - 1);
             var y = Phaser.Math.Between(1, this.layer_background.layer.height - 1);
             var tile_bg = this.layer_background.getTileAt(x, y);
             if (tile_bg.index == 105 || tile_bg.index == 106 || tile_bg.index == 107  || tile_bg.index == 27  || tile_bg.index == 28  || tile_bg.index == 29 || tile_bg.index == 30  || tile_bg.index == 31  || tile_bg.index == 32) {
                 return {x: (tile_bg.x * 32 * 3) + 32, y: (tile_bg.y * 32 * 3) + 16};
             }
+=======
+            var x = Phaser.Math.Between(1, this.layer_tiles.width * 3);
+            var y = Phaser.Math.Between(1, this.layer_tiles.height * 3);
+
+            if (this.solidAt(x, y)) continue;
+
+            return {x: x, y: y};
+>>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
         }
     }
 
     spawnStuff() {
+<<<<<<< HEAD
         let enemyCount = 10;
         let floorPropCount = 100;
         let wallPropCount = 10;
+=======
+        let enemyCount = 0;
+        let floorPropCount = 20;
+        let wallPropCount = 100;
+
+        // spawn enemies
+        for (var i = 0; i < enemyCount; i++) {
+            var {x, y} = this.getRandSpawnPoint();
+            this.spawnEnemy(x, y);
+        }
+>>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
@@ -466,7 +478,7 @@ class GameLevel extends Phaser.Scene {
         // spawn wall decor
         
         for (var i = 0; i < wallPropCount; i++) {
-            if (this.decorWalls == undefined || this.decorWalls.length == 0) break;
+            if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
 
@@ -486,11 +498,7 @@ class GameLevel extends Phaser.Scene {
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
 
-        // spawn enemies
-        for (var i = 0; i < enemyCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
-            this.spawnEnemy(x, y);
-        }
+        
 
     }
 
@@ -524,10 +532,6 @@ class GameLevel extends Phaser.Scene {
             }
         return true;
     }
-
-    handleCollisionProjectileWall(projectile, tile) {
-        projectile.destroy();
-    }
     
     create() {
         window.inst = this;
@@ -537,11 +541,9 @@ class GameLevel extends Phaser.Scene {
 
         // background layer
         this.layer_background = this.map.createLayer(`${levels[this.id].level}_bg`, tileset);
-        this.layer_background.setDepth(-1);
         this.layer_background.setScale(3);
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
-        this.layer_tiles.setDepth(1);
         this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
@@ -680,21 +682,44 @@ class GameLevel extends Phaser.Scene {
             else if (levels[this.id].from_wall == "up") find_door = "down";
             else if (levels[this.id].from_wall == "down") find_door = "up";
 
+            //console.log("Teleporting player to door", find_door)
+
+            // find previous connection
+            for (var door in levels[this.id].doors) {
+                var door = levels[this.id].doors[door];
+
+                if (door.dest_id == levels[this.id].from_id) {
+                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
+
+                    // adjust north door TP location
+                    if (find_door == 'up') this.tp_door.y += 96;
+                    break;
+                }
+            }
+
             // make new connection
             if (this.tp_door.x == undefined) {
+                //console.log("this.tp_door.x == undefined");
 
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
 
+                    //console.log("Searching for door to TP to: ",door);
+
                     if (door.wall == find_door) {
+
+                        // if door already has a diffrent connection, skip it
+                        if (door.dest_id != undefined && door.dest_id != levels[this.id].from_id) {
+                            continue;
+                        }
+
                         door.dest_id = levels[this.id].from_id;
                         this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
 
                         // adjust north door TP location
                         if (find_door == 'up') this.tp_door.y += 96;
 
-                        // delete door from levels[this.id].doors
-                        levels[this.id].doors = levels[this.id].doors.filter(d => d.x != door.x || d.y != door.y);
+                        //console.log("Made new door connection", this.tp_door);
                         break;
                     }
                 }
@@ -720,7 +745,6 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
         this.physics.add.collider(this.enemies, this.layer_tiles);
-        this.physics.add.collider(this.projectile_player, this.layer_tiles, this.handleCollisionProjectileWall, null, this);
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -900,12 +924,10 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
-        if (level == 12) {
-            //bossIsHere = true;
-            //this.boss.add(new Boss(this, centerX, centerY, 500));
-            track = 'Boss_Theme';
-        } else {
-            track = 'Dungeon_Theme';
+        if (level == 13) {
+            bossIsHere = true;
+            this.boss.add(new Boss(this, centerX, centerY, Boss_MaxHp));
+            bossIsHere = true;
         }
 
         // clear previous door data
@@ -1071,6 +1093,7 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
+<<<<<<< HEAD
 
 class MusicScene extends Phaser.Scene {
     constructor() {
@@ -1124,6 +1147,8 @@ class MusicScene extends Phaser.Scene {
 
 }
 
+=======
+>>>>>>> d1cedd6c8e9d92cbbdc5416fb0314691aeced5a5
 class UI extends Phaser.Scene {
     
     constructor(){
@@ -1194,6 +1219,12 @@ class UI extends Phaser.Scene {
             this.Dash.play('dash', true);  
         }
 
+        if(bossIsHere && inst.boss.getChildren(0)[0]!=null){
+            var frameIndex_boss = 59 - Math.round(inst.boss.getChildren(0)[0].health/ Boss_MaxHp* 58);
+            if(frameIndex_boss > 58) frameIndex_boss = 58;
+            this.bossHPBar.setFrame(frameIndex_boss);
+        }
+
 
     }    
 }
@@ -1213,7 +1244,7 @@ class Open extends Phaser.Scene {
         this.tweens.add({
             targets: this.made,
             alpha: 1,
-            duration: 500,
+            duration: 1000,
             onComplete: () => {
                 // Create a tween to fade out the image after fading in
                 this.tweens.add({
@@ -1260,76 +1291,6 @@ class Open extends Phaser.Scene {
                             },
                         })
                     }
-                })
-            }
-        })
-    }
-}
-
-class Lore extends Phaser.Scene {
-    constructor() {
-        super('lore');
-    }
-    create() {
-        this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
-        this.lore1.setAlpha(0).setScale();
-        this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
-        this.lore2.setAlpha(0).setScale();
-        this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
-        this.lore3.setAlpha(0).setScale();
-
-        this.tweens.add({
-            targets: this.lore1,
-            alpha: 1,
-            duration: 500,
-            onComplete: () => {
-                this.input.on('pointerdown', () => {
-                    // Create a tween to fade out the image after fading in
-                    this.tweens.add({
-                        targets: this.lore1,
-                        alpha: 0,
-                        duration: 500,
-                        onComplete: () => {
-                            this.lore1.setVisible(false);
-                            // Create a tween to fade out the image after fading in
-                            this.tweens.add({
-                                targets: this.lore2,
-                                alpha: 1,
-                                duration: 500,
-                                onComplete: () => {
-                                    this.input.on('pointerdown', () => {
-                                        this.tweens.add({
-                                            targets: this.lore2,
-                                            alpha: 0,
-                                            duration: 500,
-                                            onComplete: () => {
-                                                this.lore2.setVisible(false);
-                                                // Create a tween to fade out the image after fading in
-                                                this.tweens.add({
-                                                    targets: this.lore3,
-                                                    alpha: 1,
-                                                    duration: 500,
-                                                    onComplete: () => {
-                                                        this.input.on('pointerdown', () => {
-                                                            this.tweens.add({
-                                                                targets: this.lore3,
-                                                                alpha: 0,
-                                                                duration: 500,
-                                                                onComplete: () => {
-                                                                    this.scene.launch('gamelevel').launch('ui');
-                                                                    this.scene.remove('lore');
-                                                                },
-                                                            })
-                                                        })
-                                                    },
-                                                })
-                                            },
-                                        })
-                                    })
-                                },
-                            })
-                        }
-                    })
                 })
             }
         })
@@ -1447,13 +1408,13 @@ class Menu extends Phaser.Scene {
         this.placeText(this.page_start, 0, -40, 35, '1 Player', () => {
             numPlayers = 1;
             let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.start('lore');
+            this.scene.launch('gamelevel', id).launch('ui');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 0, 35, '2 players', () => {
             numPlayers = 2;
             let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.start('lore');
+            this.scene.launch('gamelevel', id).launch('ui');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 40, 35, 'back', () => this.goToPage("home"));
@@ -1516,11 +1477,11 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, Lore, GameLevel, Inventory, Settings, UI, Menu, MusicScene],
+    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu],
     physics: {
         default: 'arcade',
         arcade: {
-            debug: false
+            debug: true
         }
     },
 };
