@@ -246,7 +246,6 @@ class Player {
             }
         });
 
-
         switch(this.playerID) {
             case 0:
                 this.controls = { 
@@ -443,7 +442,6 @@ class Player {
                 xdir = this.sprite.x;
                 ydir = this.sprite.y;
             }
-
 
             this.sprite.inputEnabled = false;
             scene.tweens.add({

@@ -85,7 +85,7 @@ class Hunger extends Enemy {
 class CyberJelly extends Enemy {
 
     constructor(scene, x, y) {
-        super(scene, "cyberjelly", x, y, 15, 3);
+        super(scene, "cyberjelly", x, y, 10, 3);
         this.scene = scene;
         this.attackTick = 0;
         this.autoAttackTick = Phaser.Math.Between(1500, 2000);

@@ -10,7 +10,7 @@ var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 500;
-var level = 1;
+var level = 11;
 // list of random levels to choose from
 const RandItems = [
     4, 5, 6, 7,
@@ -150,8 +150,8 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'drone_die', frames: this.anims.generateFrameNumbers('drone', { frames: [ 9,10,11,12,13,14,15,16,17 ] }), frameRate: 8 });
         this.anims.create({key: 'drone_shot', frames: this.anims.generateFrameNumbers('drone', { frames: [ 18,19,20,21,22 ] }), frameRate: 6, repeat: -1 });
         //Enemy Cyberjelly animatons
-        this.anims.create({key: 'cyberjelly_idle', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 ] }), frameRate: 6, repeat: -1 });
-        this.anims.create({key: 'cyberjelly_die', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 50,51,52,53,54,55,56,57,58,59,60,61,62,63 ] }), frameRate: 8 });
+        this.anims.create({key: 'cyberjelly_idle', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 ] }), frameRate: 12, repeat: -1 });
+        this.anims.create({key: 'cyberjelly_die', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 50,51,52,53,54,55,56,57,58,59,60,61,62,63 ] }), frameRate: 12 });
         //Enemy Hunger animatons
         this.anims.create({key: 'hunger_attack', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 0,1,2,3,4,5,6,7 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'hunger_die', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 9,10,11 ] }), frameRate: 6 });
