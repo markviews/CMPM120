@@ -32,6 +32,20 @@ class Player {
         this.projectileDamage = 1; // how much damage to do when projectile attacking
     }
 
+    hasLineOfSight(enemy) {
+        var ray = new Phaser.Geom.Line(enemy.x, enemy.y, this.sprite.x, this.sprite.y);
+        var tileHits = this.scene.layer_tiles.getTilesWithinShape(ray);
+      
+        for (var i = 0; i < tileHits.length; i++) {
+          var tile = tileHits[i];
+          if (tile.collides) {
+            return false; // There's a tile with collision in the way
+          }
+        }
+        
+        return true; // No tiles with collision found, line of sight is clear
+    }
+
     // called when player enters a new scene
     newScene(scene) {
         this.scene = scene;
@@ -262,8 +276,18 @@ class Player {
             let nearestEnemy = scene.enemies.getChildren().reduce((prev, curr) => {
                 let prevDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, prev.x, prev.y);
                 let currDist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, curr.x, curr.y);
-                return (prevDist < currDist) ? prev : curr;
-            });
+              
+                // Check line of sight for current enemy
+                let lineOfSight = this.hasLineOfSight(curr);
+              
+                if (prevDist < currDist && lineOfSight) {
+                  return prev; // Previous enemy is closer and has line of sight
+                } else if (currDist < prevDist && lineOfSight) {
+                  return curr; // Current enemy is closer and has line of sight
+                } else {
+                  return prev; // Keep the previous enemy if neither has line of sight
+                }
+              });
 
             let enemy_angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
             let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
@@ -311,7 +335,7 @@ class Player {
                 return (prevDist < currDist) ? prev : curr;
             });
 
-            let enemy_angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y+100);
+            let enemy_angle = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, nearestEnemy.x+100, nearestEnemy.y+100);
             let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
 
             // melee attack
@@ -540,7 +564,7 @@ class Player {
     updateBuffs() {
 
         // buff multipliers
-        this.buffs = { 
+        this.buffs = {
             invulnTime: 1,          // ☑
             dodgeCharge: 1,         // TODO implement
             projectileCount: 1,     // TODO implement

@@ -10,8 +10,8 @@ var bossIsHere = true;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
+var level = 1;
 // list of random levels to choose from
-const RandLevels = ["level1"];
 const RandItems = [
     0, 1, 2, 3, 4, 5, 6, 7,
     8, 9,10,11,12,13,14,15,
@@ -232,7 +232,7 @@ class GameLevel extends Phaser.Scene {
 
     init (id) {
         if (levels[id] == undefined) levels[id] = {};
-        if (levels[id].level == undefined) levels[id].level = RandLevels[Math.floor(Math.random() * RandLevels.length)];
+        if (levels[id].level == undefined) levels[id].level = "level" + level++;
         if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
 
@@ -357,14 +357,10 @@ class GameLevel extends Phaser.Scene {
     getRandSpawnPoint() {
 
         while (true) {
-            var x = Phaser.Math.Between(100, this.layer_tiles.width * 3 - 100);
-            var y = Phaser.Math.Between(100, this.layer_tiles.height * 3 - 100);
+            var x = Phaser.Math.Between(1, this.layer_tiles.width * 3);
+            var y = Phaser.Math.Between(1, this.layer_tiles.height * 3);
 
-            // try again if picked solid block  
-            var properties = this.getTileProperties(x, y);
-            if (properties && properties.solid) {
-                continue;
-            }
+            if (this.solidAt(x, y)) continue;
 
             return {x: x, y: y};
         }
@@ -372,9 +368,9 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let enemyCount = 0;
-        let floorPropCount = 0;
-        let wallPropCount = 0;
+        let enemyCount = 20;
+        let floorPropCount = 20;
+        let wallPropCount = 20;
 
         // spawn enemies
         for (var i = 0; i < enemyCount; i++) {
@@ -388,7 +384,6 @@ class GameLevel extends Phaser.Scene {
             
             // pick random item from RandItems
             var index = RandProps_Floor[Math.floor(Math.random() * RandProps_Floor.length)];
-            
 
             // if chest, add physics
             if (RandProps_Chest.includes(index)) {
@@ -412,11 +407,12 @@ class GameLevel extends Phaser.Scene {
             if (!RandProps_DontRotate.includes(index))
                 prop.rotation = Math.random() * Math.PI * 2;
 
+            
             // if near wall prop
             if (RandProps_nearWall.includes(index)) {
                 prop.setOrigin(0.5, 0);
 
-                if (this.nearWalls == undefined || this.nearWalls.length == 0) return;
+                if (this.nearWalls == undefined || this.nearWalls.length == 0) continue;
 
                 // get random location near wall
                 var wall = this.nearWalls[Math.floor(Math.random() * this.nearWalls.length)];
@@ -498,8 +494,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     solidAt(x, y) {
-        var tile = this.layer_tiles.getTileAt(x, y);
-        if (tile && tile.properties && tile.properties.solid) {
+        var tile = this.layer_tiles.getTileAtWorldXY(x, y, true);
+        if (tile && (tile.collideUp || tile.collideDown || tile.collideLeft || tile.collideRight)) {
             return true;
         }
         if (tile && Tile_BorderWall.includes(tile.index)) {
@@ -507,7 +503,7 @@ class GameLevel extends Phaser.Scene {
         }
         return false;
     }
-
+    
     create() {
         window.inst = this;
 
@@ -527,6 +523,14 @@ class GameLevel extends Phaser.Scene {
             var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
             if (tile_bg.index == 4)
                 tile.setCollision(true);
+
+            // fix north doors
+            if (tile.index == 14 || tile.index == 92 || tile.index == 93) {
+                // set tile below as door
+                var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
+                tile_below.properties.door = true;
+            }
+
         });
         
         //JOYSTICK STUFF------------------------------------------------------------------------------------
@@ -571,6 +575,7 @@ class GameLevel extends Phaser.Scene {
         this.tp_door = {};
 
         // find walls to put decorations on
+        /*
         this.decorWalls = [];
         this.nearWalls = [];
         this.layer_tiles.forEachTile(tile => {
@@ -598,6 +603,7 @@ class GameLevel extends Phaser.Scene {
                 if (up) { this.nearWalls.push({x: x, y: y, wall: "up"}); return; }
             }
         });
+        */
 
         // set tile properties
         this.layer_tiles.forEachTile(tile => {
@@ -619,20 +625,12 @@ class GameLevel extends Phaser.Scene {
                 }
 
                 if (!nearDoor) {
-                    // found a new door
-                    
-                    // fine nearby wall
-                    var distLeft = tile.x;
-                    var distRight = (inst.map.layers[0].widthInPixels / inst.map.layers[0].tileWidth) - tile.x;
-                    var distUp = tile.y;
-                    var distDown = (inst.map.layers[0].heightInPixels / inst.map.layers[0].tileHeight) - tile.y;
-                    var wall = "";
 
-                    var minDist = Math.min(distLeft, distRight, distUp, distDown);
-                    if (minDist == distLeft) wall = "left";
-                    else if (minDist == distRight) wall = "right";
-                    else if (minDist == distUp) wall = "up";
-                    else if (minDist == distDown) wall = "down";
+                    var wall = "";
+                    if (tile.index == 53 || tile.index == 66) wall = "right";
+                    if (tile.index == 54 || tile.index == 67) wall = "left";
+                    if (tile.index == 42 || tile.index == 55) wall = "down";
+                    if (tile.index == 14 || tile.index == 92 || tile.index == 93) wall = "up";
                     
                     let door = {x: tile.x, y: tile.y, wall: wall};
                     levels[this.id].doors.push(door);
@@ -697,11 +695,20 @@ class GameLevel extends Phaser.Scene {
 
         }
 
+        // if no door connection, make one
+        if (this.tp_door.x == undefined) {
+            var door = levels[this.id].doors[0];
+            door.dest_id = levels[this.id].from_id;
+            this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
+            if (door.wall == 'up') this.tp_door.y += 120;
+        }
+
         this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
         this.projectile_player = this.add.group(); // projectiles launched by players
         this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
+        this.physics.add.collider(this.enemies, this.layer_tiles);
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -741,7 +748,6 @@ class GameLevel extends Phaser.Scene {
         this.wallBottom = this.physics.add.staticSprite(worldBounds.width / 2, worldBounds.height);
         this.wallBottom.setScale(worldBounds.width, 1);
         this.wallBottom.refreshBody();
-
 
          // task progress bar
         this.circularProgress = this.add.rexCircularProgress({
@@ -1291,7 +1297,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 };
