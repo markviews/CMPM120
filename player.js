@@ -442,7 +442,6 @@ class Player {
             if(dist == 0 || scene.solidAt(xdir, ydir, true)){
                 xdir = this.sprite.x;
                 ydir = this.sprite.y;
-                scene.add.circle(xdir, ydir, 10, 0xffff00, 0.5);
             }
 
 
