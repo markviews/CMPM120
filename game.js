@@ -361,22 +361,19 @@ class GameLevel extends Phaser.Scene {
 
     // returns a random location that is not solid
     getRandSpawnPoint() {
-
         while (true) {
             var x = Phaser.Math.Between(1, this.layer_tiles.width * 3);
             var y = Phaser.Math.Between(1, this.layer_tiles.height * 3);
-
             if (this.solidAt(x, y)) continue;
-
+            y -= 32;
             return {x: x, y: y};
         }
-
     }
 
     spawnStuff() {
-        let enemyCount = 20;
-        let floorPropCount = 20;
-        let wallPropCount = 100;
+        let enemyCount = 0;
+        let floorPropCount = 10;
+        let wallPropCount = 10;
 
         // spawn enemies
         for (var i = 0; i < enemyCount; i++) {
@@ -508,6 +505,10 @@ class GameLevel extends Phaser.Scene {
             return true;
         }
         return false;
+    }
+
+    handleCollisionProjectileWall(projectile, tile) {
+        projectile.destroy();
     }
     
     create() {
@@ -700,6 +701,7 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
         this.physics.add.collider(this.enemies, this.layer_tiles);
+        this.physics.add.collider(this.projectile_player, this.layer_tiles, this.handleCollisionProjectileWall, null, this);
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -869,8 +871,8 @@ class GameLevel extends Phaser.Scene {
         // #endregion map editor
 
         if (level == 12) {
-            bossIsHere = true;
-            this.boss.add(new Boss(this, centerX, centerY, 500));
+            //bossIsHere = true;
+            //this.boss.add(new Boss(this, centerX, centerY, 500));
         }
 
         // clear previous door data
