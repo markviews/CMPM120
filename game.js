@@ -222,7 +222,7 @@ class SetupLevel extends Phaser.Scene {
 
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
-        this.scene.launch('open');
+        this.scene.launch('menu');
         //let id = Phaser.Utils.String.UUID().substring(0, 10);
         //this.scene.launch('gamelevel', id).launch('ui');
     }
@@ -374,7 +374,7 @@ class GameLevel extends Phaser.Scene {
     spawnStuff() {
         let enemyCount = 20;
         let floorPropCount = 20;
-        let wallPropCount = 20;
+        let wallPropCount = 100;
 
         // spawn enemies
         for (var i = 0; i < enemyCount; i++) {
@@ -501,7 +501,7 @@ class GameLevel extends Phaser.Scene {
         var tile = this.layer_tiles.getTileAtWorldXY(x, y, true);
         if (tile && (tile.collideUp || tile.collideDown || tile.collideLeft || tile.collideRight)) {
             return true;
-        dddd}
+        }
         if (tile && Tile_BorderWall.includes(tile.index)) {
             return true;
         }
@@ -533,6 +533,7 @@ class GameLevel extends Phaser.Scene {
                 // set tile below as door
                 var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
                 tile_below.properties.door = true;
+                tile.properties.door = false;
             }
 
         });
@@ -616,31 +617,15 @@ class GameLevel extends Phaser.Scene {
             // check door connections
             if (properties && properties.door) {
                 //console.log(tile.x, tile.y);
-
-                // check if near a door
-                var nearDoor = false;
-                for (var door in levels[this.id].doors) {
-                    var door = levels[this.id].doors[door];
-                    var distance = Phaser.Math.Distance.Between(door.x, door.y, tile.x, tile.y);
-                    if (distance < 6) {
-                        nearDoor = true;
-                        break;
-                    }
-                }
-
-                if (!nearDoor) {
-
-                    var wall = "";
-                    if (tile.index == 53 || tile.index == 66) wall = "right";
-                    if (tile.index == 54 || tile.index == 67) wall = "left";
-                    if (tile.index == 42 || tile.index == 55) wall = "down";
-                    if (tile.index == 14 || tile.index == 92 || tile.index == 93) wall = "up";
-                    
-                    let door = {x: tile.x, y: tile.y, wall: wall};
-                    levels[this.id].doors.push(door);
-                    //console.log("Setup door ", door);
-                }
-
+                var wall = "";
+                if (tile.index == 53 || tile.index == 66) wall = "right";
+                else if (tile.index == 54 || tile.index == 67) wall = "left";
+                else if (tile.index == 42 || tile.index == 55) wall = "down";
+                else wall = "up";
+                
+                let door = {x: tile.x, y: tile.y, wall: wall};
+                levels[this.id].doors.push(door);
+                //console.log("Setup door ", door);
             }
 
         });
@@ -1266,8 +1251,10 @@ class Menu extends Phaser.Scene {
         this.title.displayHeight = window.innerHeight;
         this.title.x = (window.innerWidth - this.title.displayWidth) / 2;
         this.title.y = (window.innerHeight - this.title.displayHeight) / 2;
+
         //add TitleText
-        var TitleT=this.add.image(window.innerWidth / 2, window.innerHeight / 2 - 400, 'TitleText').setScale(1);
+        var TitleT = this.add.image(window.innerWidth / 2, scale * 60, 'TitleText').setScale(scale / 5.5);
+        TitleT.setOrigin(0.5, 0.5);
 
         // settings / credits book
         var book = this.add.sprite(window.innerWidth / 2, window.innerHeight / 2, 'inventory_empty');

@@ -277,7 +277,15 @@
       "imagewidth":448,
       "tileproperties":
       {
-         
+         "41": { "door": true },
+         "52": { "door": true },
+         "53": { "door": true },
+         "54": { "door": true },
+         "65": { "door": true },
+         "67": { "door": true },
+         "13": { "door": true },
+         "91": { "door": true },
+         "92": { "door": true }
       }
    }]
 }
