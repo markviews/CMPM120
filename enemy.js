@@ -1,10 +1,11 @@
 class Enemy extends Phaser.GameObjects.Sprite {
 
-    constructor(scene, type, x, y, health) {
+    constructor(scene, type, x, y, health, damage) {
         super(scene, x, y, type);
         this.scene = scene;
         this.type = type;
         this.health = health;
+        this.damage = damage;
 
         scene.add.existing(this);
         scene.physics.add.existing(this);
@@ -41,7 +42,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 
                 player.stunned = true;
                 player.sprite.play('fall');
-                player.health--;
+                player.health -= this.damage;
 
                 // knock player back
                 var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);

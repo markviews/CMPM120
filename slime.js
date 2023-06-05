@@ -5,8 +5,12 @@ class Slime extends Enemy {
 
     constructor(scene, x, y) {
         let type = "slimeBlue";
-        if (Math.random() > 0.5) type = "slime"; // 50 % chance to spawn a green slime
-        super(scene, type, x, y, 1);
+        let health = 3;
+        if (Math.random() > 0.5) {
+            type = "slime"; // 50 % chance to spawn a green slime
+            health = 2;
+        }
+        super(scene, type, x, y, health, 1);
         this.type = type;
         this.scene = scene;
         this.attackTick = 0;
@@ -44,7 +48,7 @@ class Slime extends Enemy {
 class Hunger extends Enemy {
 
     constructor(scene, x, y) {
-        super(scene, "hunger", x, y, 1);
+        super(scene, "hunger", x, y, 5, 4);
         this.scene = scene;
         this.attackTick = 0;
         this.autoAttackTick = Phaser.Math.Between(1500, 2000);
@@ -81,7 +85,7 @@ class Hunger extends Enemy {
 class CyberJelly extends Enemy {
 
     constructor(scene, x, y) {
-        super(scene, "cyberjelly", x, y, 1);
+        super(scene, "cyberjelly", x, y, 15, 3);
         this.scene = scene;
         this.attackTick = 0;
         this.autoAttackTick = Phaser.Math.Between(1500, 2000);
@@ -111,7 +115,7 @@ class CyberJelly extends Enemy {
 class Drone extends Enemy {
 
     constructor(scene, x, y) {
-        super(scene, "drone", x, y, 1);
+        super(scene, "drone", x, y, 5, 2);
         this.scene = scene;
         this.attackTick = 0;
         this.autoAttackTick = Phaser.Math.Between(1500, 2000);

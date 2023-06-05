@@ -51,6 +51,8 @@ function getItemData(itemID) {
         case 38: { data = { description: "Brass amulet: \n+3 Health", healthBoost: 0.03 }; break; }
         case 39: { data = { description: "Iron amulet: \n+1 Health", healthBoost: 0.01 }; break; }
 
+        case 40: { data = { description: "Health Potion: \n+25% Health", healthBoost: 0.01 }; break; }
+
         // if we see this message in game, we forgot to add an item description
         default: { data = { description: itemID }; break; }
     }
@@ -88,7 +90,7 @@ class Inventory extends Phaser.Scene {
         this.highlightSquare.strokeRect(x, y, width, height);
 
         // set empty slot description
-        if (itemSprite.frame.name == 40) {
+        if (itemSprite.frame.name == 41) {
             let slotType = itemSprite.slotType;
             let slotDescription = this.getEmptySlotDescription(slotType);
             this.description.text = slotDescription;
@@ -111,7 +113,7 @@ class Inventory extends Phaser.Scene {
     addItemSlot(x,y,slotType) {
         let slotID = this.slotID++;
         let itemInSlot = players[0].slots[slotID];
-        if (itemInSlot == undefined) itemInSlot = 40;
+        if (itemInSlot == undefined) itemInSlot = 41;
 
         let itemSlot = this.add.image(0, 0, 'items',  itemInSlot);
         itemSlot.setOrigin(0.25, 0.25);
@@ -130,6 +132,7 @@ class Inventory extends Phaser.Scene {
         if (itemID >= 22 && itemID <= 27) return "ring";
         if (itemID >= 28 && itemID <= 33) return "bracelet";
         if (itemID >= 34 && itemID <= 39) return "amulet";
+        return "item";
     }
 
     getEmptySlotDescription(slotType) {
@@ -163,7 +166,7 @@ class Inventory extends Phaser.Scene {
 
         itemSprite.on('pointerdown', () => {
             // if item is empty, return
-            if (itemSprite.frame.name == 40) return;
+            if (itemSprite.frame.name == 41) return;
 
             this.disableHighlight();
 
@@ -267,7 +270,7 @@ class Inventory extends Phaser.Scene {
                         }
 
                         if (this.holdingCount <= 1) {
-                            this.holdingSprite.setFrame(40);
+                            this.holdingSprite.setFrame(41);
                             this.holdingSprite.visible = true;
                         } 
 
