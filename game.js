@@ -63,7 +63,17 @@ class SetupLevel extends Phaser.Scene {
         this.load.audio('slime_move', 'assets/sounds/slime.mp3');
         this.load.audio('teleport_sound', 'assets/sounds/teleport.mp3');
         this.load.audio('BOSS_die', 'assets/sounds/yes.mp3');
-
+        //load new sounds from /assets/sounds
+        this.load.audio('Mag_cast', 'assets/sounds/Mag_Cast.mp3');
+        this.load.audio('Mag_1', 'assets/sounds/Mag1.mp3');
+        this.load.audio('Mag_2', 'assets/sounds/Mag2.mp3');
+        this.load.audio('Slime_attack', 'assets/sounds/Slime_at.mp3');
+        this.load.audio('Slime_move', 'assets/sounds/Slime_mov.mp3');
+        this.load.audio('Open_door', 'assets/sounds/OpenDoor.mp3');
+        this.load.audio('Boss_tel', 'assets/sounds/Boss_tele.mp3');
+        this.load.audio('Boss_Death', 'assets/sounds/Boss_Death.mp3');
+        this.load.audio('Boss_Explosion', 'assets/sounds/Boss_Explosion.mp3');
+        this.load.audio('Mag2_cast', 'assets/sounds/Boss_MagicSword_Cast.mp3');
 
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/Level Design Blocks.png');
@@ -80,6 +90,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
+        this.load.image('TitleText', 'assets/splash/TitleText.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -1036,10 +1047,11 @@ class UI extends Phaser.Scene {
         //     initalHP = players[0].hp;
         // }
         window.UIscene = this;
+        
         if(bossIsHere){
             var cenX = this.cameras.main.centerX;
-            var cenY = this.cameras.main.centerY;
-            this.bossHPBar = this.add.sprite(cenX, cenY + 550);
+            var cenY = window.innerHeight * 0.85;
+            this.bossHPBar = this.add.sprite(cenX, cenY);
             this.bossHPBar.setScale(10);
             this.bossHPBar.play('BossHP', true);
             this.bossHPBar.stop();
@@ -1176,6 +1188,8 @@ class Menu extends Phaser.Scene {
         this.title.displayHeight = window.innerHeight;
         this.title.x = (window.innerWidth - this.title.displayWidth) / 2;
         this.title.y = (window.innerHeight - this.title.displayHeight) / 2;
+        //add TitleText
+        var TitleT=this.add.image(window.innerWidth / 2, window.innerHeight / 2 - 400, 'TitleText').setScale(1);
 
         // settings / credits book
         var book = this.add.sprite(window.innerWidth / 2, window.innerHeight / 2, 'inventory_empty');
@@ -1192,6 +1206,7 @@ class Menu extends Phaser.Scene {
         this.placeText(this.page_home, 0, -40, 35, 'Start', () => this.goToPage("start"));
         this.placeText(this.page_home, 0, 0, 35, 'Settings', () => this.goToPage("settings"));
         this.placeText(this.page_home, 0, 40, 35, 'Credits', () => this.goToPage("credits"));
+        this.page_home.add(TitleT);
 
         // credits page
         this.placeText(this.page_credits, 0, -70, 19, 'Credits', null);
