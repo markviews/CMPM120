@@ -153,6 +153,29 @@ class Player {
                 gameObject2.setFrame(gameObject2.frame.name - 10);
                 scene.chests.remove(gameObject2);
 
+                // 25% chance to drop health potion
+                if (Math.random() > 0.75) {
+                     // spawn random item
+                    var index = RandItems[Math.floor(Math.random() * RandItems.length)];
+                    var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  40);
+                    item.setOrigin(0.5, 0.5);
+                    item.setScale(itemScale);
+                    item.setImmovable(true);
+                    item.body.onCollide = true;
+                    scene.items.add(item);
+                    
+                    // cool tween
+                    scene.tweens.add({
+                        targets: item,
+                        scaleX: itemScale * 1.1,
+                        scaleY: itemScale * 1.1,
+                        duration: 1000,
+                        ease: 'Linear',
+                        yoyo: true,
+                        repeat: -1
+                    });
+                }
+
                 // spawn random item
                 var index = RandItems[Math.floor(Math.random() * RandItems.length)];
                 var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  index);
@@ -251,6 +274,28 @@ class Player {
         let scene = this.scene;
 
         this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);
+
+        // auto use health potion
+        if (this.health < this.maxHealth * 0.75) {
+            
+
+            // if player has potion in item slot
+            if (this.slots[8] == 40) {
+
+                // drink potion from inventory
+                let potionsInv = this.items[40];
+                if (potionsInv && potionsInv > 0) {
+                    this.items[40]--;
+                    this.health += this.maxHealth * 0.25;
+                    if (this.items[40] == 0) delete this.items[40];
+                } else {
+                    delete this.slots[8];
+                    this.health += this.maxHealth * 0.25;
+                }
+                
+            }
+
+        }
 
         // #region inventory
 

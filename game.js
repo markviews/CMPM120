@@ -18,7 +18,7 @@ const RandItems = [
     16,17,18,19,20,21,22,23,
     24,25,26,27,28,29,30,31,
     32,33,34,35,36,37,38,39,
-    40,41
+    40,41,42
 ];
 const RandProps_Wall = [
     7,
@@ -46,6 +46,7 @@ const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 var levels = {};
 var players = [];
 var playMusic = true;
+var track = 'Title_Screen';
 
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
@@ -59,6 +60,10 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore1', 'assets/IntroLore_1.png');
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
+
+        this.load.audio('Title_Screen', 'assets/sounds/music/Title_Screen.mp3');
+        this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
+        this.load.audio('Boss_Theme', 'assets/sounds/music/Boss_Theme.mp3');
 
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
@@ -98,6 +103,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
         this.load.image('TitleText', 'assets/splash/TitleText.png');
+        this.load.image('potion', 'assets/sprites/Potion.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -226,7 +232,7 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
-        this.scene.launch('menu');
+        this.scene.launch('menu').launch('musicScene');
     }
 
 }
@@ -371,20 +377,33 @@ class GameLevel extends Phaser.Scene {
         }
     }
 
-    spawnStuff() {
-        let enemyCount = 0;
-        let floorPropCount = 10;
-        let wallPropCount = 10;
-
-        // spawn enemies
-        for (var i = 0; i < enemyCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
-            this.spawnEnemy(x, y);
+    getRandSpawnTile() {
+        
+        // get a random tile that's not solid
+        while (true) {
+            var x = Phaser.Math.Between(1, this.layer_background.layer.width - 1);
+            var y = Phaser.Math.Between(1, this.layer_background.layer.height - 1);
+            
+            var tile_bg = this.layer_background.getTileAt(x, y);
+            //console.log(x, y, tile_bg)
+            if (tile_bg.index == 4) continue;
+            return {x: tile_bg.x, y: tile_bg.y};
         }
+
+    }
+
+    spawnStuff() {
+        let enemyCount = 100;
+        let floorPropCount = 1000;
+        let wallPropCount = 10;
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
-            var {x, y} = this.getRandSpawnPoint();
+            var {x, y} = this.getRandSpawnTile();
+            x*= (32*3);
+            y*= (32*3);
+            x += 32;
+            y += 16;
             
             // pick random item from RandItems
             var index = RandProps_Floor[Math.floor(Math.random() * RandProps_Floor.length)];
@@ -465,7 +484,7 @@ class GameLevel extends Phaser.Scene {
         // spawn wall decor
         
         for (var i = 0; i < wallPropCount; i++) {
-            if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
+            if (this.decorWalls == undefined || this.decorWalls.length == 0) break;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
 
@@ -485,7 +504,11 @@ class GameLevel extends Phaser.Scene {
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
 
-        
+        // spawn enemies
+        for (var i = 0; i < enemyCount; i++) {
+            var {x, y} = this.getRandSpawnPoint();
+            this.spawnEnemy(x, y);
+        }
 
     }
 
@@ -520,9 +543,11 @@ class GameLevel extends Phaser.Scene {
 
         // background layer
         this.layer_background = this.map.createLayer(`${levels[this.id].level}_bg`, tileset);
+        this.layer_background.setDepth(-1);
         this.layer_background.setScale(3);
 
         this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
+        this.layer_tiles.setDepth(1);
         this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
@@ -851,6 +876,9 @@ class GameLevel extends Phaser.Scene {
         if (level == 12) {
             //bossIsHere = true;
             //this.boss.add(new Boss(this, centerX, centerY, 500));
+            track = 'Boss_Theme';
+        } else {
+            track = 'Dungeon_Theme';
         }
 
         // clear previous door data
@@ -1016,6 +1044,49 @@ class GameLevel extends Phaser.Scene {
         //#endregion tile editor
     }
 }
+
+class MusicScene extends Phaser.Scene {
+    constructor(){
+        super('musicScene');
+    }
+
+    switchTrack() {
+        this.playing = track;
+        this.Dungeon_Theme.stop();
+        this.Boss_Theme.stop();
+        this.Title_Screen.stop();
+
+        if (!playMusic) return;
+
+        switch(track) {
+            case 'Title_Screen':
+                this.Title_Screen.play();
+            break;
+            case 'Dungeon_Theme':
+                this.Dungeon_Theme.play();
+            break;
+            case 'Boss_Theme':
+                this.Boss_Theme.play();
+            break;
+        }
+    }
+    
+    create() {
+        this.sound.pauseOnBlur = false;
+        this.Title_Screen = this.sound.add('Title_Screen', {volume: 0.2});
+        this.Dungeon_Theme = this.sound.add('Dungeon_Theme', {volume: 0.2});
+        this.Boss_Theme = this.sound.add('Boss_Theme', {volume: 0.2});
+    }
+ 
+    update() {
+        if (this.playing != track) {
+            this.switchTrack();
+        }
+
+    }
+
+}
+
 class UI extends Phaser.Scene {
     
     constructor(){
@@ -1408,7 +1479,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, Lore, GameLevel, Inventory, Settings, UI, Menu],
+    scene: [ SetupLevel, Open, Lore, GameLevel, Inventory, Settings, UI, Menu, MusicScene],
     physics: {
         default: 'arcade',
         arcade: {
