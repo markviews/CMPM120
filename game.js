@@ -57,6 +57,10 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('addSoftware', 'assets/addSoftware.png');
         this.load.image('groupLogo', 'assets/groupLogo.png');
 
+        this.load.image('lore1', 'assets/IntroLore_1.png');
+        this.load.image('lore2', 'assets/IntroLore_2.png');
+        this.load.image('lore3', 'assets/IntroLore_3.png');
+
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
         this.load.audio('drone_die', 'assets/sounds/droneCrash.mp3');
@@ -223,7 +227,7 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
-        this.scene.launch('menu');
+        this.scene.launch('open');
     }
 
 }
@@ -782,12 +786,15 @@ class GameLevel extends Phaser.Scene {
 
             this.spawnStuff();
 
-            // spawn enemies
-            let enemyCount = 1;
-            for (var i = 0; i < enemyCount; i++) {
-                var {x, y} = this.getRandSpawnPoint();
-                this.spawnEnemy(x, y);
+            if (level != 13) {
+                // spawn enemies
+                let enemyCount = 10;
+                for (var i = 0; i < enemyCount; i++) {
+                    var {x, y} = this.getRandSpawnPoint();
+                    this.spawnEnemy(x, y);
+                }
             }
+            
 
             // move players to front
             players.forEach(player => this.children.bringToTop(player.sprite));
@@ -1212,6 +1219,76 @@ class UI extends Phaser.Scene {
     }    
 }
 
+class Lore extends Phaser.Scene {
+    constructor() {
+        super('lore');
+    }
+    create() {
+        this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
+        this.lore1.setAlpha(0).setScale();
+        this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
+        this.lore2.setAlpha(0).setScale();
+        this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
+        this.lore3.setAlpha(0).setScale();
+
+        this.tweens.add({
+            targets: this.lore1,
+            alpha: 1,
+            duration: 500,
+            onComplete: () => {
+                this.input.on('pointerdown', () => {
+                    // Create a tween to fade out the image after fading in
+                    this.tweens.add({
+                        targets: this.lore1,
+                        alpha: 0,
+                        duration: 500,
+                        onComplete: () => {
+                            this.lore1.setVisible(false);
+                            // Create a tween to fade out the image after fading in
+                            this.tweens.add({
+                                targets: this.lore2,
+                                alpha: 1,
+                                duration: 500,
+                                onComplete: () => {
+                                    this.input.on('pointerdown', () => {
+                                        this.tweens.add({
+                                            targets: this.lore2,
+                                            alpha: 0,
+                                            duration: 500,
+                                            onComplete: () => {
+                                                this.lore2.setVisible(false);
+                                                // Create a tween to fade out the image after fading in
+                                                this.tweens.add({
+                                                    targets: this.lore3,
+                                                    alpha: 1,
+                                                    duration: 500,
+                                                    onComplete: () => {
+                                                        this.input.on('pointerdown', () => {
+                                                            this.tweens.add({
+                                                                targets: this.lore3,
+                                                                alpha: 0,
+                                                                duration: 500,
+                                                                onComplete: () => {
+                                                                    this.scene.launch('gamelevel').launch('ui');
+                                                                    this.scene.remove('lore');
+                                                                },
+                                                            })
+                                                        })
+                                                    },
+                                                })
+                                            },
+                                        })
+                                    })
+                                },
+                            })
+                        }
+                    })
+                })
+            }
+        })
+    }
+}
+
 class Open extends Phaser.Scene {
     constructor() {
         super('open');
@@ -1390,14 +1467,12 @@ class Menu extends Phaser.Scene {
         // start page
         this.placeText(this.page_start, 0, -40, 35, '1 Player', () => {
             numPlayers = 1;
-            let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.start('lore');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 0, 35, '2 players', () => {
             numPlayers = 2;
-            let id = Phaser.Utils.String.UUID().substring(0, 10);
-            this.scene.launch('gamelevel', id).launch('ui');
+            this.scene.start('lore');
             this.scene.remove('menu');
         });
         this.placeText(this.page_start, 0, 40, 35, 'back', () => this.goToPage("home"));
@@ -1460,7 +1535,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu],
+    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu, Lore ],
     physics: {
         default: 'arcade',
         arcade: {
