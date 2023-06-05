@@ -10,7 +10,7 @@ var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 
-var level = 1;
+var level = 11;
 // list of random levels to choose from
 const RandItems = [
     0, 1, 2, 3, 4, 5, 6, 7,
@@ -393,7 +393,7 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let enemyCount = 100;
+        let enemyCount = 0;
         let floorPropCount = 1000;
         let wallPropCount = 10;
 
