@@ -10,7 +10,7 @@ var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 1;
-var level = 12;
+var level = 1;
 // list of random levels to choose from
 const RandItems = [
     4, 5, 6, 7,
@@ -180,28 +180,28 @@ class SetupLevel extends Phaser.Scene {
         //Last 3 line above im not sure about in terms of after the frames
 
         // player animations Girl
-        // this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
-        // this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
-        // this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
-        // this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
-        // this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
-        // this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
-        // this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
-        // this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
-        // this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
-        // this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
+        this.anims.create({ key: 'guy_fall', frames: this.anims.generateFrameNumbers('girl', { frames: [ 0,1,2,3 ] }), frameRate: 8});
+        this.anims.create({ key: 'guy_idle_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 96,97,98,99,100,101,102,103,104,105,106,107 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'guy_idle_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 84,85,86,87,88,89,90,91 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'guy_idle_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 108,109,110,111,112,113,114,115,116 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'guy_walk_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 36,37,38,39,40,41 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'guy_walk_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 12,13,14,15 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({ key: 'guy_walk_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 24,25,26,27,28,29] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'guy_attack_down', frames: this.anims.generateFrameNumbers('girl', { frames: [ 60,61,62,63,64,65 ] }), frameRate: 16 });
+        this.anims.create({ key: 'guy_attack_right', frames: this.anims.generateFrameNumbers('girl', { frames: [ 72,73,74,75,76] }), frameRate: 10 });
+        this.anims.create({ key: 'guy_attack_up', frames: this.anims.generateFrameNumbers('girl', { frames: [ 48,49,50,51,52,53,54] }), frameRate: 16 });
         
         //player animations Guy
-        this.anims.create({key: 'fall', frames: this.anims.generateFrameNumbers('guy', { frames: [ 107,108,109,110] }), frameRate: 8});
-        this.anims.create({ key: 'idle_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'idle_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 36,37,38,39,40 ] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'walk_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 60,61,62,63,64 ] }), frameRate: 8, repeat: -1});
-        this.anims.create({ key: 'walk_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 48,49,50,51,52] }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
-        this.anims.create({ key: 'attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
-        this.anims.create({ key: 'attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
+        this.anims.create({ key: 'girl_fall', frames: this.anims.generateFrameNumbers('guy', { frames: [ 107,108,109,110] }), frameRate: 8});
+        this.anims.create({ key: 'girl_idle_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 12,13,14,15,16,17 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'girl_idle_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 24,25,26,27,28,29 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'girl_idle_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 0,1,2,3,4,5 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'girl_walk_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 36,37,38,39,40 ] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'girl_walk_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 60,61,62,63,64 ] }), frameRate: 8, repeat: -1});
+        this.anims.create({ key: 'girl_walk_up', frames: this.anims.generateFrameNumbers('guy', { frames: [ 48,49,50,51,52] }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'girl_attack_down', frames: this.anims.generateFrameNumbers('guy', { frames: [ 83,84,85,86,87,88,89,90,91,92,93,94 ] }), frameRate: 16 });
+        this.anims.create({ key: 'girl_attack_right', frames: this.anims.generateFrameNumbers('guy', { frames: [ 73,74,75,76,77,78,79,80,81,82] }), frameRate: 10 });
+        this.anims.create({ key: 'girl_attack_up', frames: this.anims.generateFrameNumbers('guy', { frames: [97,98,99,100,102,103,104,105,106] }), frameRate: 16 });
 
         //Fireball Animations
         this.anims.create({key: 'moveFire', frames: this.anims.generateFrameNumbers('FireBall', { frames: [ 0,1,2,3,4,5,6] }), frameRate: 8, repeat: -1 });
@@ -242,6 +242,7 @@ class GameLevel extends Phaser.Scene {
         // create players if not all spawned in
         for (var i = players.length; i < numPlayers; i++) {
             players.push(new Player());
+            players[i].skin = 'girl';
         }
     }
 
@@ -370,8 +371,7 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let enemyCount = 10;
-        let floorPropCount = 100;
+        let floorPropCount = 40;
         let wallPropCount = 10;
 
         // spawn props
@@ -476,8 +476,6 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
-
-        
 
     }
 
@@ -783,6 +781,13 @@ class GameLevel extends Phaser.Scene {
             loadStuff = true;
 
             this.spawnStuff();
+
+            // spawn enemies
+            let enemyCount = 20;
+            for (var i = 0; i < enemyCount; i++) {
+                var {x, y} = this.getRandSpawnPoint();
+                this.spawnEnemy(x, y);
+            }
 
             // move players to front
             players.forEach(player => this.children.bringToTop(player.sprite));
@@ -1457,7 +1462,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 };

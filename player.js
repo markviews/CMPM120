@@ -12,6 +12,7 @@ var startDragPos;
 class Player {
 
     constructor() {
+        this.skin = "guy";
         this.dir = "right";
         this.idle = false;
         this.onFire = false;
@@ -56,7 +57,7 @@ class Player {
 
         this.sprite = scene.add.sprite();
         this.sprite.setScale(2.5);
-        this.sprite.play('walk_right');
+        this.sprite.play(this.skin + '_walk_right');
         this.sprite.id = this.playerID;
         this.sprite.name = "player"
         this.sprite.setDepth(2);
@@ -114,7 +115,7 @@ class Player {
             this.dir = directions[Math.floor(Math.random() * directions.length)]
         }
         
-        this.sprite.play(`idle_${this.dir}`);
+        this.sprite.play(this.skin + `_idle_${this.dir}`);
         
         // pick up item event
         scene.physics.world.on('collide', (gameObject1, gameObject2) => {
@@ -214,14 +215,14 @@ class Player {
 
         // melee attack end event
         this.sprite.on('animationcomplete', (anim) => {
-            if (anim.key.startsWith("attack_")) {
+            if (anim.key.startsWith(this.skin + "_attack_")) {
                 this.attacking = false;
             }
         });
 
         // melee attack hitbox
         this.sprite.on('animationupdate', (anim) => {
-            if (anim.key.startsWith("attack_right")) {
+            if (anim.key.startsWith(this.skin + "_attack_right")) {
                 if (this.dir == "right") {
                     this.Meleehitbox.x = this.sprite.x + 10;
                     this.Meleehitbox.y = this.sprite.y - 10;
@@ -233,12 +234,12 @@ class Player {
                     this.Meleehitbox.body.setSize(70, 70);
                 }
             }
-            if (anim.key.startsWith("attack_up")) {
+            if (anim.key.startsWith(this.skin + "_attack_up")) {
                 this.Meleehitbox.x = this.sprite.x;
                 this.Meleehitbox.y = this.sprite.y - 30;
                 this.Meleehitbox.body.setSize(60, 40);
             }
-            if (anim.key.startsWith("attack_down")) {
+            if (anim.key.startsWith(this.skin + "_attack_down")) {
                 this.Meleehitbox.x = this.sprite.x;
                 this.Meleehitbox.y = this.sprite.y;
                 this.Meleehitbox.body.setSize(80, 80);
@@ -321,7 +322,7 @@ class Player {
             // melee attack
             if (enemy_dist < 100) {
                 this.attacking = true;
-                var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
+                var anim = this.skin + "_" + `attack_${this.dir == "left" ? "right" : this.dir}`;
                 this.sprite.play(anim);
             }
             
@@ -368,7 +369,7 @@ class Player {
             if (enemy_dist < 100) {
                 this.attacking = true;
                 var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
-                this.sprite.play(anim);
+                this.sprite.play(this.skin + "_" + anim);
             }
             
             // projectile attack
@@ -557,7 +558,7 @@ class Player {
         if (this.dir == "right") this.sprite.flipX = false;
 
         if (!this.attacking) {
-            var anim = `${this.idle ? "idle" : "walk"}_${this.dir == "left" ? "right" : this.dir}`;
+            var anim = this.skin + "_" + `${this.idle ? "idle" : "walk"}_${this.dir == "left" ? "right" : this.dir}`;
             if (this.sprite.anims.currentAnim.key != anim) this.sprite.play(anim);
 
             this.Meleehitbox.x = -100;
