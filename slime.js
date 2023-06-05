@@ -23,6 +23,7 @@ class Slime extends Enemy {
 
             var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
             if (player == null) return;
+            if (!player.hasLineOfSight(this))  return;
 
             var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
             if (distance < attackDistance) {
@@ -33,16 +34,7 @@ class Slime extends Enemy {
 
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-            this.scene.tweens.add({
-                targets: this,
-                x: this.x + Math.cos(angle) * 30,
-                y: this.y + Math.sin(angle) * 30,
-                duration: 500,
-                ease: 'Power2',
-                repeat: 0,
-                delay: 200
-            });
-
+            this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
         }
 
     }
@@ -68,6 +60,7 @@ class Hunger extends Enemy {
 
             var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
             if (player == null) return;
+            if (!player.hasLineOfSight(this))  return;
 
             var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
             if (distance < attackDistance) {
@@ -87,16 +80,7 @@ class Hunger extends Enemy {
             } else {
                 this.flipY = false;
             }
-
-            this.scene.tweens.add({
-                targets: this,
-                x: this.x + Math.cos(angle) * 30,
-                y: this.y + Math.sin(angle) * 30,
-                duration: 500,
-                ease: 'Power2',
-                repeat: 0,
-                delay: 200
-            });
+            this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
 
         }
 
@@ -123,20 +107,11 @@ class CyberJelly extends Enemy {
 
             var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
             if (player == null) return;
+            if (!player.hasLineOfSight(this))  return;
 
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
-
-            this.scene.tweens.add({
-                targets: this,
-                x: this.x + Math.cos(angle) * 30,
-                y: this.y + Math.sin(angle) * 30,
-                duration: 500,
-                ease: 'Power2',
-                repeat: 0,
-                delay: 200
-            });
-
+            this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
         }
 
     }
@@ -156,6 +131,7 @@ class Drone extends Enemy {
 
         var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
         if (player == null) return;
+        if (!player.hasLineOfSight(this))  return;
 
         // jump towards nearest player
         var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
