@@ -9,7 +9,7 @@ const itemsGrid = true;         // items snap to grid when placed
 var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
-const Boss_MaxHp = 1;
+const Boss_MaxHp = 500;
 var level = 1;
 // list of random levels to choose from
 const RandItems = [
@@ -783,7 +783,7 @@ class GameLevel extends Phaser.Scene {
             this.spawnStuff();
 
             // spawn enemies
-            let enemyCount = 20;
+            let enemyCount = 1;
             for (var i = 0; i < enemyCount; i++) {
                 var {x, y} = this.getRandSpawnPoint();
                 this.spawnEnemy(x, y);
@@ -909,9 +909,7 @@ class GameLevel extends Phaser.Scene {
         // #endregion map editor
 
         if (level == 13) {
-            bossIsHere = true;
             this.boss.add(new Boss(this, centerX, centerY, Boss_MaxHp));
-            bossIsHere = true;
         }
 
         // clear previous door data
@@ -1141,16 +1139,6 @@ class UI extends Phaser.Scene {
         //     hpBar.anims.nextFrame();
         //     initalHP = players[0].hp;
         // }
-        window.UIscene = this;
-        
-        if(bossIsHere){
-            var cenX = this.cameras.main.centerX;
-            var cenY = window.innerHeight * 0.85;
-            this.bossHPBar = this.add.sprite(cenX, cenY);
-            this.bossHPBar.setScale(10);
-            this.bossHPBar.play('BossHP', true);
-            this.bossHPBar.stop();
-        }
         
         this.inventory_sound = this.sound.add('inventory_sound');
         uiContainer = this.add.container(0, 0);
@@ -1177,6 +1165,19 @@ class UI extends Phaser.Scene {
         uiContainer.add(this.icon);
     }
     update() {
+
+        if (inst.boss.getChildren(0)[0]!=null && bossIsHere == false) {
+            bossIsHere = true;
+            if(inst.boss.getChildren(0)[0]!=null){
+                var cenX = this.cameras.main.centerX;
+                var cenY = window.innerHeight * 0.85;
+                this.bossHPBar = this.add.sprite(cenX, cenY);
+                this.bossHPBar.setScale(10);
+                this.bossHPBar.play('BossHP', true);
+                this.bossHPBar.stop();
+            }
+        }
+
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
                 this.game.renderer.snapshot((image) => {
@@ -1200,10 +1201,11 @@ class UI extends Phaser.Scene {
             this.Dash.play('dash', true);  
         }
 
-        if(bossIsHere && inst.boss.getChildren(0)[0]!=null){
+        if(inst.boss.getChildren(0)[0]!=null){
             var frameIndex_boss = 59 - Math.round(inst.boss.getChildren(0)[0].health/ Boss_MaxHp* 58);
             if(frameIndex_boss > 58) frameIndex_boss = 58;
-            this.bossHPBar.setFrame(frameIndex_boss);
+            if (this.bossHPBar != null)
+                this.bossHPBar.setFrame(frameIndex_boss);
         }
 
 
