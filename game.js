@@ -372,7 +372,7 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let enemyCount = 10;
+        let enemyCount = 0;
         let floorPropCount = 10;
         let wallPropCount = 10;
 
@@ -643,44 +643,21 @@ class GameLevel extends Phaser.Scene {
             else if (levels[this.id].from_wall == "up") find_door = "down";
             else if (levels[this.id].from_wall == "down") find_door = "up";
 
-            //console.log("Teleporting player to door", find_door)
-
-            // find previous connection
-            for (var door in levels[this.id].doors) {
-                var door = levels[this.id].doors[door];
-
-                if (door.dest_id == levels[this.id].from_id) {
-                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
-
-                    // adjust north door TP location
-                    if (find_door == 'up') this.tp_door.y += 96;
-                    break;
-                }
-            }
-
             // make new connection
             if (this.tp_door.x == undefined) {
-                //console.log("this.tp_door.x == undefined");
 
                 for (var door in levels[this.id].doors) {
                     var door = levels[this.id].doors[door];
 
-                    //console.log("Searching for door to TP to: ",door);
-
                     if (door.wall == find_door) {
-
-                        // if door already has a diffrent connection, skip it
-                        if (door.dest_id != undefined && door.dest_id != levels[this.id].from_id) {
-                            continue;
-                        }
-
                         door.dest_id = levels[this.id].from_id;
                         this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
 
                         // adjust north door TP location
                         if (find_door == 'up') this.tp_door.y += 96;
 
-                        //console.log("Made new door connection", this.tp_door);
+                        // delete door from levels[this.id].doors
+                        levels[this.id].doors = levels[this.id].doors.filter(d => d.x != door.x || d.y != door.y);
                         break;
                     }
                 }
@@ -1205,6 +1182,7 @@ class Lore extends Phaser.Scene {
                         alpha: 0,
                         duration: 500,
                         onComplete: () => {
+                            this.lore1.setVisible(false);
                             // Create a tween to fade out the image after fading in
                             this.tweens.add({
                                 targets: this.lore2,
