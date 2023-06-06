@@ -124,6 +124,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('Mag_Magic', 'assets/sprites/characters/Boss_Magic.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('Mag1_trail', 'assets/Mag1_trail.png', {frameWidth: 3, frameHeight: 3});
         this.load.spritesheet('Mag2_trail', 'assets/Ma2_trail.png', {frameWidth: 3, frameHeight: 3});
+        this.load.spritesheet('Telep', 'assets/Teleporter.png', {frameWidth: 74, frameHeight: 64});
         //load Dash spritesheet
         this.load.spritesheet('dash', 'assets/ui/Dash.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('BossHP', 'assets/B_H.png', {frameWidth: 64, frameHeight: 64});
@@ -231,6 +232,9 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
+        //Teleporter animations
+        this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
+
         //this.scene.launch('open').launch('musicScene');
         this.scene.launch('gamelevel').launch('ui').launch('musicScene');
     }
@@ -929,6 +933,11 @@ class GameLevel extends Phaser.Scene {
             this.scene.stop('ui');
             var {x, y} = this.getRandSpawnPoint();
             this.boss.add(new Boss(this, x, y, Boss_MaxHp));
+            //add Teleporter sprite
+            this.tel = this.add.sprite(0,0,'Teleporter');
+            this.tel.play('Telepo');
+            this.tel.setScale(3);
+            this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
             this.scene.stop('ui');
             this.scene.launch('ui');
             //console.log("924: boss is made ui relaunched");
@@ -1185,7 +1194,6 @@ class UI extends Phaser.Scene {
         this.Dash.play('dash', true);
         this.Dash.stop();
         this.Dash.setFrame(30);
-        this.numbosses = 0;
         uiContainer.add(this.hpBar);
         uiContainer.add(this.XPBAR);
         uiContainer.add(this.Dash);
@@ -1193,7 +1201,7 @@ class UI extends Phaser.Scene {
     }
     update() {
 
-        if (inst.boss.getChildren(0)[0]!=null && this.numbosses == 0) {
+        if (inst.boss.getChildren(0)[0]!=null && bossIsHere == false) {
             console.log(" 1183 boss is here");
             if(inst.boss.getChildren(0)[0]!=null){
                 var cenX = this.cameras.main.centerX;
@@ -1203,6 +1211,7 @@ class UI extends Phaser.Scene {
                 this.bossHPBar.play('BossHP', true);
                 this.bossHPBar.stop();
                 this.numbosses++;
+                bossIsHere = true;
             }
         }
 
