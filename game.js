@@ -122,7 +122,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('Mag2_trail', 'assets/Ma2_trail.png', {frameWidth: 3, frameHeight: 3});
         //load Dash spritesheet
         this.load.spritesheet('dash', 'assets/ui/Dash.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.spritesheet('BossHP', 'assets/ui/BossHP.png', {frameWidth: 64, frameHeight: 64});
+        this.load.spritesheet('BossHP', 'assets/B_H.png', {frameWidth: 64, frameHeight: 64});
     }
 
     create() {
