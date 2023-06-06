@@ -66,18 +66,18 @@ class Enemy extends Phaser.GameObjects.Sprite {
                     return;
                 }
                 if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
-                    var flashes = 4;
-                   this.funny =  scene.tweens.add({
-                        targets: this,
-                        alpha: 0,
-                        duration: 200,
-                        repeat: flashes * 2 -1,
-                        yoyo: true,
-                        onComplete: () =>{
-                            this.alpha = 1;
-                        },
-                    });
-                }
+                    this.funny =  scene.tweens.add({
+                         targets: this,
+                         tint: 0xEE4B2B,
+                         alpha: 1,
+                         duration: 200,
+                         yoyo: true,
+                         onComplete: () =>{
+                             //this.alpha = 1;
+                             this.setTint(0xFFFFFF);
+                         },
+                     });
+                 }
 
                 // knockback
                 var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
@@ -105,18 +105,18 @@ class Enemy extends Phaser.GameObjects.Sprite {
                     return;
                 }
                 if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
-                    var flashes = 4;
-                   this.funny =  scene.tweens.add({
-                        targets: this,
-                        alpha: 0,
-                        duration: 200,
-                        repeat: flashes * 2 -1,
-                        yoyo: true,
-                        onComplete: () =>{
-                            this.alpha = 1;
-                        },
-                    });
-                }
+                    this.funny =  scene.tweens.add({
+                         targets: this,
+                         tint: 0xEE4B2B,
+                         alpha: 1,
+                         duration: 200,
+                         yoyo: true,
+                         onComplete: () =>{
+                             //this.alpha = 1;
+                             this.setTint(0xFFFFFF);
+                         },
+                     });
+                 }
                 // knockback
                 var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
                 scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
