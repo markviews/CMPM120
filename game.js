@@ -7,6 +7,7 @@ const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 var bossIsHere = false;         // is the boss in the level?
+var bossSpawn = false;
 let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 500;
@@ -938,18 +939,6 @@ class GameLevel extends Phaser.Scene {
         // #endregion map editor
 
         if (level == 13) {
-            //console.log("920: boss is about to be made");
-            this.scene.stop('ui');
-            var {x, y} = this.getRandSpawnPoint();
-            this.boss.add(new Boss(this, x, y, Boss_MaxHp));
-            //add Teleporter sprite
-            this.tel = this.add.sprite(0,0,'Teleporter');
-            this.tel.play('Telepo');
-            this.tel.setScale(3);
-            this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
-            this.scene.stop('ui');
-            this.scene.launch('ui');
-            //console.log("924: boss is made ui relaunched");
             track = 'Boss_Theme';
         } else {
             track = 'Dungeon_Theme';
@@ -964,6 +953,21 @@ class GameLevel extends Phaser.Scene {
         // camera variables
         var playersDoor = 0; // number of players at door this frame
        // this.uiGroup.setPosition(players[0].x, players[0].y);
+       if (level == 13 && bossSpawn == false) {
+            //console.log("920: boss is about to be made");
+            this.scene.stop('ui');
+            var {x, y} = this.getRandSpawnPoint();
+            this.boss.add(new Boss(this, x, y, Boss_MaxHp));
+            //add Teleporter sprite
+            this.tel = this.add.sprite(0,0,'Teleporter');
+            this.tel.play('Telepo');
+            this.tel.setScale(3);
+            this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
+            this.scene.stop('ui');
+            this.scene.launch('ui');
+            //console.log("924: boss is made ui relaunched");
+            bossSpawn = true;
+        }
         for (var player of players) {
             player.update(time, delta);
             
