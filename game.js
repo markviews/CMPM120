@@ -238,8 +238,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel').launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+        //this.scene.launch('gamelevel').launch('ui').launch('musicScene');
     }
 
 }
