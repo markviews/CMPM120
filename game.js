@@ -10,7 +10,7 @@ var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 500;
-var level = 12;
+var level = 1;
 // list of random levels to choose from
 const RandItems = [
     10,11,12,13,14,15,
