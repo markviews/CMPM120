@@ -283,12 +283,51 @@ class Player {
     update(time, delta) {
         let scene = this.scene;
 
+        // auto use health potion
+        if (this.health < this.maxHealth * 0.75) {
+            // drink potion from inventory
+            let potionsInv = this.items[40];
+            if (potionsInv && potionsInv > 0) {
+                inst.gulp.play();
+                this.items[40]--;
+                this.health += this.maxHealth * 0.25;
+                if (this.items[40] == 0) delete this.items[40];
+            } else if (this.slots[8] == 40) {
+                inst.gulp.play();
+                delete this.slots[8];
+                this.health += this.maxHealth * 0.25;
+            }
+        }
+
         this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);
 
         // #region inventory
 
         if (Phaser.Input.Keyboard.JustDown(this.controls.pause)){
             
+            if (inst.layer_tiles.layer.name == "level12") {
+                
+                // flash InvDisabled image on screen using a tween
+                var flashes = 2;
+                var InvDisabled = scene.add.image(this.sprite.x, this.sprite.y - 70, 'invDisabled');
+                InvDisabled.setOrigin(0.5, 0.5);
+                InvDisabled.setDepth(5);
+                InvDisabled.setAlpha(0);
+                InvDisabled.setScale(0.4);
+                scene.tweens.add({
+                    targets: InvDisabled,
+                    alpha: 1,
+                    duration: 100,
+                    repeat: flashes * 2 -1,
+                    yoyo: true,
+                    onComplete: () =>{
+                        InvDisabled.destroy();
+                    },
+                });
+                
+                return;
+            }
+
             scene.game.renderer.snapshot((image) => {
                 this.inventory_sound.play();
                 scene.scene.launch('inventory', { screenshot: image, player: this });
