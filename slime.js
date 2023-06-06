@@ -39,6 +39,11 @@ class Slime extends Enemy {
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
             this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
+
+            // flip if to left of player
+            angle *= (180/Math.PI);
+            if (angle > 90 || angle < -90) this.flipX = false;
+            else this.flipX = true;
         }
 
     }
@@ -76,6 +81,11 @@ class Hunger extends Enemy {
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
             this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
+
+            // flip if to left of player
+            angle *= (180/Math.PI);
+            if (angle > 90 || angle < -90) this.flipX = false;
+            else this.flipX = true;
         }
 
     }
@@ -97,7 +107,7 @@ class CyberJelly extends Enemy {
         if (this.attackTick > this.autoAttackTick) {
             this.attackTick = 0;
 
-            if (this.stunned) return;
+            
 
             var player = this.scene.getNearestPlayer(this.x, this.y, viewDistance);
             if (player == null) return;
@@ -106,6 +116,18 @@ class CyberJelly extends Enemy {
             // jump towards nearest player
             var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
             this.scene.physics.moveTo(this, this.x + Math.cos(angle) * 30, this.y + Math.sin(angle) * 30, 30);
+
+            // flip if to left of player
+            if (angle > 90 || angle < -90) this.flipY = true;
+            else this.flipY = false;
+
+            if (this.stunned) return;
+
+            // flip if to left of player
+            angle *= (180/Math.PI);
+            if (angle > 90 || angle < -90) this.flipX = false;
+            else this.flipX = true;
+            
         }
 
     }
@@ -130,6 +152,12 @@ class Drone extends Enemy {
         // jump towards nearest player
         var angle = Math.atan2( player.sprite.y - this.y, player.sprite.x - this.x);
         var distance = Phaser.Math.Distance.Between(this.x, this.y, player.sprite.x, player.sprite.y);
+
+        // flip if to left of player
+        angle *= (180/Math.PI);
+        if (angle > 90 || angle < -90) this.flipX = false;
+        else this.flipX = true;
+
         if (distance > 500) {
             // set velicoty
             this.body.velocity.x = Math.cos(angle) * 30;

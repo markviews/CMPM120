@@ -309,6 +309,7 @@ class Boss extends Phaser.GameObjects.Sprite {
         return players[0].sprite.y;
     }
     castMagic(x, y, player_angle, scene){
+        if (scene == null) return;
                 let magic = scene.add.sprite(x, y, 'magister_magic');
                 scene.physics.add.existing(magic);
                 magic.play('magister_magic');
@@ -375,6 +376,7 @@ class Boss extends Phaser.GameObjects.Sprite {
     }
     castSword(swords, x,player_x ,player_y){
         if(swords >= 1){
+            if (this.scene == null) return;
                 let sword = this.scene.add.sprite(x, player_y, 'magister_sword');
                 this.scene.physics.add.existing(sword);
                 sword.play('magister_sword');

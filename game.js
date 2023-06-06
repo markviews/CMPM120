@@ -65,6 +65,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
         this.load.audio('Boss_Theme', 'assets/sounds/music/Boss_Theme.mp3');
 
+        this.load.audio('gulp', 'assets/sounds/Gulp.mp3');
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
         this.load.audio('drone_die', 'assets/sounds/droneCrash.mp3');
@@ -87,6 +88,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.audio('Boss_Explosion', 'assets/sounds/Boss_Explosion.mp3');
         this.load.audio('Mag2_cast', 'assets/sounds/Boss_MagicSword_Cast.mp3');
 
+        this.load.image('invDisabled', 'assets/Inventory_Disabled.png');
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
@@ -528,6 +530,7 @@ class GameLevel extends Phaser.Scene {
     
     create() {
         window.inst = this;
+        this.gulp = this.sound.add('gulp');
 
         this.map = this.make.tilemap({ key: 'map', tileWidth: 32, tileHeight: 32 });
         const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
@@ -819,7 +822,6 @@ class GameLevel extends Phaser.Scene {
         }
         this.cameras.main.startFollow(players[0].sprite);
 
-        // #region map editor
         this.editMode = EditMode.NotEditing;
         this.tile_painting = 1;
         this.mapDisplay = this.make.tilemap({ key: 'map' });
@@ -852,12 +854,19 @@ class GameLevel extends Phaser.Scene {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
             var x = this.map.worldToTileX(worldPoint.x);
             var y = this.map.worldToTileY(worldPoint.y);
+
+            console.log(x, y)
             
         
             switch(this.editMode) {
                 case EditMode.NotEditing:
                 break;
                 case EditMode.Selecting:
+                    var mapTile = this.map.getTileAt(x, y);
+                    if (mapTile) {
+                        console.log(mapTile.x, mapTile.y);
+                    }
+
                     var tile = this.mapDisplay.getTileAt(x, y);
                     if (tile) {
                         this.tile_painting = tile.index;
@@ -1570,7 +1579,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true
+            debug: false
         }
     },
 };
