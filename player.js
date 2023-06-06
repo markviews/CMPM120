@@ -65,8 +65,16 @@ class Player {
         // physics
         scene.physics.add.existing(this.sprite);
         //this.sprite.body.setCollideWorldBounds(true);
+
+        if (this.skin == "girl") {
+            this.sprite.body.setOffset(-25,0);
+        }
+
+        if (this.skin == "guy") {
+            this.sprite.body.setOffset(25,25);
+        }
+
         this.sprite.body.setSize(12, 12);
-        this.sprite.body.setOffset(25,25);
         this.sprite.setOrigin(0.5, 0.5);
 
         // player hitbox
