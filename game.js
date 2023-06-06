@@ -112,7 +112,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('Health', 'assets/B_H.png', {frameWidth: 48, frameHeight: 48});
+        this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('XP', 'assets/ui/XPBar.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('Mag1', 'assets/Mag1.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Mag2', 'assets/Mag2.png', {frameWidth: 20, frameHeight: 48});
