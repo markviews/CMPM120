@@ -13,8 +13,7 @@ const Boss_MaxHp = 500;
 var level = 1;
 // list of random levels to choose from
 const RandItems = [
-    4, 5, 6, 7,
-    8, 9,10,11,12,13,14,15,
+    10,11,12,13,14,15,
     16,17,18,19,20,21,22,23,
     24,25,26,27,28,29,30,31,
     32,33,34,35,36,37,38,39,
@@ -46,6 +45,7 @@ const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
 var levels = {};
 var players = [];
 var playMusic = true;
+var track = 'Title_Screen';
 
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
@@ -60,6 +60,10 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore1', 'assets/IntroLore_1.png');
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
+
+        this.load.audio('Title_Screen', 'assets/sounds/music/Title_Screen.mp3');
+        this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
+        this.load.audio('Boss_Theme', 'assets/sounds/music/Boss_Theme.mp3');
 
         this.load.audio('dash_sound', 'assets/sounds/dash.mp3');
         this.load.audio('die_sound', 'assets/sounds/die.mp3');
@@ -227,8 +231,8 @@ class SetupLevel extends Phaser.Scene {
         //Dash animations
         this.anims.create({key: 'dash', frames: this.anims.generateFrameNumbers('dash', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30 ] }), frameRate: 18, duration: players[0].dashTimer});
         
-        //this.scene.launch('open');
-        this.scene.launch('gamelevel').launch('ui');
+        //this.scene.launch('open').launch('musicScene');
+        this.scene.launch('gamelevel').launch('ui').launch('musicScene');
     }
 
 }
@@ -273,6 +277,10 @@ class GameLevel extends Phaser.Scene {
             return tile.properties;
         }
         return {};
+    }
+
+    handleCollisionProjectileWall(projectile, tile) {
+        projectile.destroy();
     }
 
     printMap() {
@@ -373,7 +381,7 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let floorPropCount = 1000;
+        let floorPropCount = 60;
         //let wallPropCount = 1000;
 
         console.log('Spawning stuff...')
@@ -726,6 +734,7 @@ class GameLevel extends Phaser.Scene {
         this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
         this.physics.add.collider(this.enemies, this.layer_tiles);
+        this.physics.add.collider(this.projectile_player, this.layer_tiles, this.handleCollisionProjectileWall, null, this);
 
         const centerX = this.cameras.main.centerX;
         const centerY = this.cameras.main.centerY;
@@ -923,6 +932,9 @@ class GameLevel extends Phaser.Scene {
             this.scene.stop('ui');
             this.scene.launch('ui');
             //console.log("924: boss is made ui relaunched");
+            track = 'Boss_Theme';
+        } else {
+            track = 'Dungeon_Theme';
         }
 
         // clear previous door data
@@ -1096,10 +1108,9 @@ class MusicScene extends Phaser.Scene {
     }
 
     switchTrack() {
-        this.playing = track;
-        this.Dungeon_Theme.pause();
-        this.Boss_Theme.pause();
-        this.Title_Screen.pause();
+        this.Dungeon_Theme.stop();
+        this.Boss_Theme.stop();
+        this.Title_Screen.stop();
 
         if (!playMusic) return;
 
@@ -1135,6 +1146,7 @@ class MusicScene extends Phaser.Scene {
         }
 
         if (this.playing != track) {
+            this.playing = track;
             this.switchTrack();
         }
 
@@ -1545,7 +1557,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu, Lore ],
+    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu, Lore, MusicScene ],
     physics: {
         default: 'arcade',
         arcade: {

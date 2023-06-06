@@ -33,12 +33,12 @@ class Enemy extends Phaser.GameObjects.Sprite {
          // collide event
          scene.physics.world.on('collide', (gameObject1, gameObject2) => {
             if (gameObject2 != this) return;
-            if (this.stunned) return;
             
             var player = players[gameObject1.id]
 
             // player getting hit by enemy
             if (gameObject1.name == "player") {
+                if (this.stunned) return;
                 if (player.stunned) return;
                 
                 player.stunned = true;
@@ -58,6 +58,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
 
             // enemy getting hit by player's sword
             if (gameObject1.name == "melee_hitbox") {
+                if (this.stunned) return;
                 this.stunned = true;
                 this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
                 if (this.health <= 0) {
@@ -93,6 +94,10 @@ class Enemy extends Phaser.GameObjects.Sprite {
             
             // enemy getting hit by player's projectile
             if (gameObject1.name == "projectile") {
+                if (this.stunned) {
+                    gameObject1.destroy();
+                    return;
+                }
                 this.stunned = true;
                 this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
                 if (this.health <= 0) {
