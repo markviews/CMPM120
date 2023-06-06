@@ -72,7 +72,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.audio('teleport_sound', 'assets/sounds/teleport.mp3');
         this.load.audio('BOSS_die', 'assets/sounds/yes.mp3');
         //load new sounds from /assets/sounds
-        this.load.audio('Mag_cast', 'assets/sounds/Mag_Cast.mp3');
+        this.load.audio('Mag_cast', 'assets/M_C.mp3');
         this.load.audio('Mag_1', 'assets/sounds/Mag1.mp3');
         this.load.audio('Mag_2', 'assets/sounds/Mag2.mp3');
         this.load.audio('Slime_attack', 'assets/sounds/Slime_at.mp3');
@@ -112,7 +112,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.spritesheet('slime', 'assets/sprites/characters/Enemy Slime.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('slimeBlue', 'assets/sprites/characters/Enemy Slime Blue.png', { frameWidth: 48, frameHeight: 48 });
         this.load.spritesheet('magister', 'assets/sprites/characters/Enemy Magister.png', { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('Health', 'assets/ui/HPBar.png', {frameWidth: 48, frameHeight: 48});
+        this.load.spritesheet('Health', 'assets/B_H.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('XP', 'assets/ui/XPBar.png', {frameWidth: 48, frameHeight: 48});
         this.load.spritesheet('Mag1', 'assets/Mag1.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Mag2', 'assets/Mag2.png', {frameWidth: 20, frameHeight: 48});

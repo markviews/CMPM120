@@ -60,15 +60,27 @@ class Enemy extends Phaser.GameObjects.Sprite {
             if (gameObject1.name == "melee_hitbox") {
                 this.stunned = true;
                 this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
-
-                // knockback
-                var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
-                scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
-
                 if (this.health <= 0) {
                     this.play(this.type + '_die');
                     return;
                 }
+                if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
+                    var flashes = 4;
+                   this.funny =  scene.tweens.add({
+                        targets: this,
+                        alpha: 0,
+                        duration: 200,
+                        repeat: flashes * 2 -1,
+                        yoyo: true,
+                        onComplete: () =>{
+                            this.alpha = 1;
+                        },
+                    });
+                }
+
+                // knockback
+                var angle = Math.atan2(this.y - player.sprite.y, this.x - player.sprite.x);
+                scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
 
                 setTimeout(() => {
                     this.body.setVelocity(0, 0);
@@ -83,16 +95,27 @@ class Enemy extends Phaser.GameObjects.Sprite {
             if (gameObject1.name == "projectile") {
                 this.stunned = true;
                 this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
-
-                // knockback
-                var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
-                scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
-                gameObject1.destroy();
-
                 if (this.health <= 0) {
                     this.play(this.type + '_die');
                     return;
                 }
+                if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
+                    var flashes = 4;
+                   this.funny =  scene.tweens.add({
+                        targets: this,
+                        alpha: 0,
+                        duration: 200,
+                        repeat: flashes * 2 -1,
+                        yoyo: true,
+                        onComplete: () =>{
+                            this.alpha = 1;
+                        },
+                    });
+                }
+                // knockback
+                var angle = Math.atan2(this.y - gameObject1.y, this.x - gameObject1.x);
+                scene.physics.velocityFromRotation(angle, 10, this.body.velocity);
+                gameObject1.destroy();
 
                 setTimeout(() => {
                     this.body.setVelocity(0, 0);
