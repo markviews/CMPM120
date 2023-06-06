@@ -356,6 +356,9 @@ class GameLevel extends Phaser.Scene {
         }
 
     }
+    spawnBoss(scene, x, y, hp) {
+        this.boss.add(new Boss(scene, x, y, hp));
+    }
 
     spawnEnemy(x, y) {
         var types = ['slime', 'cyberjelly', 'hunger', 'drone'];
@@ -811,6 +814,17 @@ class GameLevel extends Phaser.Scene {
                     this.spawnEnemy(x, y);
                 }
             }
+            if (level == 13) {
+                var {x, y} = this.getRandSpawnPoint();
+                this.spawnBoss(this, x, y, Boss_MaxHp);
+                //add Teleporter sprite
+                this.tel = this.add.sprite(0,0,'Teleporter');
+                this.tel.play('Telepo');
+                this.tel.setScale(3);
+                this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
+                this.scene.stop('ui');
+                this.scene.launch('ui');
+            }
             
 
             // move players to front
@@ -953,21 +967,6 @@ class GameLevel extends Phaser.Scene {
         // camera variables
         var playersDoor = 0; // number of players at door this frame
        // this.uiGroup.setPosition(players[0].x, players[0].y);
-       if (level == 13 && bossSpawn == false) {
-            //console.log("920: boss is about to be made");
-            this.scene.stop('ui');
-            var {x, y} = this.getRandSpawnPoint();
-            this.boss.add(new Boss(this, x, y, Boss_MaxHp));
-            //add Teleporter sprite
-            this.tel = this.add.sprite(0,0,'Teleporter');
-            this.tel.play('Telepo');
-            this.tel.setScale(3);
-            this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
-            this.scene.stop('ui');
-            this.scene.launch('ui');
-            //console.log("924: boss is made ui relaunched");
-            bossSpawn = true;
-        }
         for (var player of players) {
             player.update(time, delta);
             
@@ -1215,7 +1214,6 @@ class UI extends Phaser.Scene {
     update() {
 
         if (inst.boss.getChildren(0)[0]!=null && bossIsHere == false) {
-            console.log(" 1183 boss is here");
             if(inst.boss.getChildren(0)[0]!=null){
                 var cenX = this.cameras.main.centerX;
                 var cenY = window.innerHeight * 0.85;
@@ -1223,7 +1221,6 @@ class UI extends Phaser.Scene {
                 this.bossHPBar.setScale(10);
                 this.bossHPBar.play('BossHP', true);
                 this.bossHPBar.stop();
-                this.numbosses++;
                 bossIsHere = true;
             }
         }
