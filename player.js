@@ -304,29 +304,6 @@ class Player {
         // #region inventory
 
         if (Phaser.Input.Keyboard.JustDown(this.controls.pause)){
-            
-            if (inst.layer_tiles.layer.name == "level12") {
-                
-                // flash InvDisabled image on screen using a tween
-                var flashes = 2;
-                var InvDisabled = scene.add.image(this.sprite.x, this.sprite.y - 70, 'invDisabled');
-                InvDisabled.setOrigin(0.5, 0.5);
-                InvDisabled.setDepth(5);
-                InvDisabled.setAlpha(0);
-                InvDisabled.setScale(0.4);
-                scene.tweens.add({
-                    targets: InvDisabled,
-                    alpha: 1,
-                    duration: 100,
-                    repeat: flashes * 2 -1,
-                    yoyo: true,
-                    onComplete: () =>{
-                        InvDisabled.destroy();
-                    },
-                });
-                
-                return;
-            }
 
             scene.game.renderer.snapshot((image) => {
                 this.inventory_sound.play();

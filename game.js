@@ -11,7 +11,7 @@ var bossSpawn = false;
 let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 500;
-var level = 1;
+var level = 12;
 // list of random levels to choose from
 const RandItems = [
     10,11,12,13,14,15,
@@ -89,7 +89,6 @@ class SetupLevel extends Phaser.Scene {
         this.load.audio('Boss_Explosion', 'assets/sounds/Boss_Explosion.mp3');
         this.load.audio('Mag2_cast', 'assets/sounds/Boss_MagicSword_Cast.mp3');
 
-        this.load.image('invDisabled', 'assets/Inventory_Disabled.png');
         this.load.tilemapTiledJSON('map', 'assets/tile_properties.json');
         this.load.image('tiles', 'assets/Level Design Blocks.png');
         this.load.spritesheet('girl',  'assets/sprites/characters/Girl.png', {frameWidth: 48, frameHeight: 48});
