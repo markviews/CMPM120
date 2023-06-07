@@ -310,7 +310,7 @@ class Boss extends Phaser.GameObjects.Sprite {
     }
     castMagic(x, y, player_angle, scene){
         if (scene == null) return;
-                let magic = scene.add.sprite(x, y, 'magister_magic');
+                let magic = scene.add.sprite(x, y);
                 scene.physics.add.existing(magic);
                 magic.play('magister_magic');
                 this.Mag_1.play();
@@ -349,7 +349,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                     magY = magic.y + Math.sin(Phaser.Math.DegToRad(magic.angle)) * this.distance;
                 }
                 for(let i = 0; i <= 30; i ++){
-                    let clone = scene.add.sprite(magic.x, magic.y, 'Mag1_trail');
+                    let clone = scene.add.sprite(magic.x, magic.y);
                     clone.setScale(6);
                     clone.setPosition(magic.x, magic.y);
                     clone.dir = magic.body.dir;
@@ -377,7 +377,7 @@ class Boss extends Phaser.GameObjects.Sprite {
     castSword(swords, x,player_x ,player_y){
         if(swords >= 1){
             if (this.scene == null) return;
-                let sword = this.scene.add.sprite(x, player_y, 'magister_sword');
+                let sword = this.scene.add.sprite(x, player_y);
                 this.scene.physics.add.existing(sword);
                 sword.play('magister_sword');
                 this.Mag_2.play();
@@ -405,7 +405,7 @@ class Boss extends Phaser.GameObjects.Sprite {
 
             if(this.state == 'normal' || this.state == 'enhanced' || this.state == 'enraged'){
                 for(let i = 0; i <= 1; i ++){
-                    let clone = this.scene.add.sprite(sword.x, sword.y, 'magister_sword');
+                    let clone = this.scene.add.sprite(sword.x, sword.y);
                     clone.setScale(4);
                     clone.setPosition(sword.x, sword.y);
                     clone.dir = sword.body.dir;
