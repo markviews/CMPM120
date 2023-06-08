@@ -31,17 +31,3 @@ The main character of the game is sent to a different timeline and has to find a
 * Font by Pwnage Block
 * Additional SFX: freeSound.org
 
-## Non-interactive cinematic
-* Game studio splash screen
-
-## Interactive cinematic
-* Start screen text zooms on hover, background moves
-
-## Choreography in code
-* Our startup scene uses tween chains (game.js line 1331)
-
-
-
-
-### Live preview: (takes a few mins to update)
-https://markviews.github.io/CMPM120/
