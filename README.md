@@ -1,8 +1,31 @@
-# ARTG / CMPM 120 Group project
+# CMPM 120 Group project / Project Archive
 
 ### TODO / Tasks:
-https://github.com/users/markviews/projects/2/views/1
-<br>
-<br>
+
+# [Project Archive] The team has submitted a self-contained archive of their design and deployment work (e.g. a repository on GitHub). This archive contains some documentation (e.g. a README.md file) that is immediately visible even to non-technical audiences.
+* This is the README that contains documentation of our project accomplishments
+*[Main Game] https://markviews.github.io/CMPM120/
+*[Prototypes]: 
+1. https://github.com/markviews/CMPM120/tree/main/Core%20Gameplay%20Prototype
+2. https://github.com/markviews/CMPM120/tree/main/Scene%20Flow%20Prototype
+3. https://github.com/markviews/CMPM120/tree/main/Cinematics%20Prototype
+*[Theme]: The main character of the game is sent to a different timeline and has to find a way to get back to their own timeline, this is by a means of a portal which is near but they will have to get through challenging tasks to reach it.
+*[Selectable requirements]:
+**Data-Driven Experience Progression: Our game loads information from JSON that contains level data (current level, level background, music, number of decorations, number of monsters, whether to spawn a boss or not, and door entered). We also have another Json file which contains the exact placement of tiles and their exact location on the map. 
+***These two such files are: tile_properties.json levelData.json
+**Advanced Visual Assets: 
+
+## Non-interactive cinematic
+* Game studio splash screen
+
+## Interactive cinematic
+* Start screen text zooms on hover, background moves
+
+## Choreography in code
+* Our startup scene uses tween chains (game.js line 1331)
+
+
+
+
 ### Live preview: (takes a few mins to update)
 https://markviews.github.io/CMPM120/

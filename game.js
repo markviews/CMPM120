@@ -21,6 +21,10 @@ var track = 'Title_Screen';
 class SetupLevel extends Phaser.Scene {
 
     preload() {
+        //video
+        this.load.video('kv', 'assets/videos/KillEnemies.mp4');
+        this.load.video('dv', 'assets/videos/Dashing.mp4');
+
         //load sounds from /assets/sounds
         this.load.image('madeWith', 'assets/madeWith.png');
         this.load.image('addSoftware', 'assets/addSoftware.png');
@@ -210,8 +214,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+       // this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -935,6 +939,25 @@ class GameLevel extends Phaser.Scene {
         // clear previous door data
         delete levels[this.id].from_id;
         delete levels[this.id].from_wall;
+
+        //load video if on first level
+        if (level == 0) {
+            this.killenem = this.add.video(25, 800, 'kv').setOrigin(0, 0);
+            this.dashvid = this.add.video(1080, 800, 'dv').setOrigin(0, 0);
+            this.killenem.setDisplaySize(1920/6, 1080/6);
+            this.dashvid.setDisplaySize(1920/8, 1080/8);
+            this.killenem.play(true);
+            this.dashvid.play(true);
+            let text2 = this.add.text(1080, 750, 'Press Space to Dash', { font: '25px Arial', fill: '#FFFFFF' });
+            let text = this.add.text(25, 750, 'Kill Enemies to continue', { font: '30px Arial', fill: '#FFFFFF' });
+            this.tweens.add({
+                targets: [text, text2],
+                scale: 1.05,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+            });
+        }
     }
 
     update(time, delta) {
