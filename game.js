@@ -224,7 +224,7 @@ class GameLevel extends Phaser.Scene {
         if (levels[id] == undefined) {
             levels[id] = {};
         }
-        if(levels[id].firstLoad == undefined) {
+        if (levels[id].firstLoad == undefined) {
             level++;
             levels[id].firstLoad = true;
         }
