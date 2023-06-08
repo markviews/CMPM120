@@ -165,7 +165,7 @@ class Player {
                 // 25% chance to drop health potion
                 if (Math.random() > 0.75) {
                      // spawn random item
-                    var index = RandItems[Math.floor(Math.random() * RandItems.length)];
+                    var index = levelData.settings.RandItems[Math.floor(Math.random() * levelData.settings.RandItems.length)];
                     var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  40);
                     item.setOrigin(0.5, 0.5);
                     item.setScale(itemScale);
@@ -187,7 +187,7 @@ class Player {
                 }
 
                 // spawn random item
-                var index = RandItems[Math.floor(Math.random() * RandItems.length)];
+                var index = levelData.settings.RandItems[Math.floor(Math.random() * levelData.settings.RandItems.length)];
                 var item = scene.physics.add.image(gameObject2.x, gameObject2.y, 'items',  index);
                 item.setOrigin(0.5, 0.5);
                 item.setScale(itemScale);
@@ -214,7 +214,7 @@ class Player {
             if (gameObject2?.texture?.key == "Mag2" || gameObject2?.texture?.key == "Mag1") {
                 gameObject2.destroy();
                 if (this.invincible) return;
-                this.health -= 1;
+                players[0].health -= 1;
                 this.invincible = true;
                 return;
             }
@@ -284,19 +284,24 @@ class Player {
         let scene = this.scene;
 
         // auto use health potion
-        if (this.health < this.maxHealth * 0.75) {
+        if (players[0].health < this.maxHealth * 0.75) {
             // drink potion from inventory
             let potionsInv = this.items[40];
             if (potionsInv && potionsInv > 0) {
                 inst.gulp.play();
                 this.items[40]--;
-                this.health += this.maxHealth * 0.25;
+                players[0].health += this.maxHealth * 0.25;
                 if (this.items[40] == 0) delete this.items[40];
             } else if (this.slots[8] == 40) {
                 inst.gulp.play();
                 delete this.slots[8];
-                this.health += this.maxHealth * 0.25;
+                players[0].health += this.maxHealth * 0.25;
             }
+        }
+
+        // respawn if dead
+        if (players[0].health <= 0) {
+            scene.respawn();
         }
 
         this.hithox.setPosition(this.sprite.body.position.x, this.sprite.body.position.y);

@@ -43,7 +43,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 
                 player.stunned = true;
                 player.sprite.play('fall');
-                player.health -= this.damage;
+                players[0].health -= this.damage;
 
                 // knock player back
                 var angle = Math.atan2(player.sprite.y - this.y, player.sprite.x - this.x);
@@ -72,7 +72,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                          alpha: 1,
                          duration: 200,
                          yoyo: true,
-                         onComplete: () =>{
+                         onComplete: () => {
                              //this.alpha = 1;
                              this.setTint(0xFFFFFF);
                          },
@@ -84,6 +84,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 scene.physics.velocityFromRotation(angle, 100, this.body.velocity);
 
                 setTimeout(() => {
+                    if (!this || !this.body) return;
                     this.body.setVelocity(0, 0);
                     this.play(this.type + '_idle');
                     this.stunned = false;
@@ -123,6 +124,7 @@ class Enemy extends Phaser.GameObjects.Sprite {
                 gameObject1.destroy();
 
                 setTimeout(() => {
+                    if (!this || !this.body) return;
                     this.body.setVelocity(0, 0);
                     this.play(this.type + '_idle');
                     this.stunned = false;
