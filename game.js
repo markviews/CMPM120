@@ -210,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -795,7 +795,7 @@ class GameLevel extends Phaser.Scene {
             this.spawnStuff();
 
             // spawn enemies
-            let enemyCount = 1;
+            let enemyCount = levelData.levels[level].monsters;
             for (var i = 0; i < enemyCount; i++) {
                 var {x, y} = this.getRandSpawnPoint();
                 this.spawnEnemy(x, y);
@@ -938,14 +938,6 @@ class GameLevel extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.input.gamepad.total == 0)
-        {
-            this.input.gamepad.once('connected', pad => {
-                console.log("Made pad");
-                this.pad = pad;
-                control = this.pad;
-            });
-        }
         // camera variables
         var playersDoor = 0; // number of players at door this frame
        // this.uiGroup.setPosition(players[0].x, players[0].y);
