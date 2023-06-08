@@ -6,7 +6,6 @@ const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, Del
 const Boss_MaxHp = 500;
 
 var bossIsHere = false;         // is the boss in the level?
-var bossSpawn = false;
 let uiContainer;
 let numPlayers = 1;
 var level = -1;
@@ -480,14 +479,11 @@ class GameLevel extends Phaser.Scene {
             */
         }
 
-        
         // spawn wall decor
         for (var i = 0; i < wallPropCount; i++) {
-            console.log("the");
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
             var index = levelData.settings.RandProps_Wall[Math.floor(Math.random() * levelData.settings.RandProps_Wall.length)];
-            console.log("the2");
             if (index == 7) {
                 // spawn a torch
                 var torch = this.add.sprite(x * 32 * 3, (y * 32 * 3) + 96, 'torch');
@@ -495,7 +491,6 @@ class GameLevel extends Phaser.Scene {
                 torch.anims.play('torch_front');
                 continue;
             }
-            console.log("the3");
 
             var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
             prop.setScale(5);
@@ -504,7 +499,6 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
-        
 
     }
 
@@ -553,6 +547,13 @@ class GameLevel extends Phaser.Scene {
             }
         return true;
     }
+
+    isTopWall(index) {
+        if (index == 2 || index == 3 || index == 5 || index == 81 || index == 96 || index == 98 || index == 99 || index == 101) {
+            return true;
+        }
+        return false;
+    }
     
     create() {
         if (this.input.gamepad.total === 0) {
@@ -596,8 +597,18 @@ class GameLevel extends Phaser.Scene {
                 tile.properties.door = false;
             }
 
-            // define wall tiles for decorations
-            if (index == 2 || index == 3 || index == 5 || index == 81 || index == 96 || index == 98 || index == 99 || index == 101) {
+            var tile_bg = this.layer_background.getTileAt(tile.x, tile.y);
+            var tileRight_bg = this.layer_background.getTileAt(tile.x + 1, tile.y);
+            var tile_right = this.layer_tiles.getTileAt(tile.x + 1, tile.y);
+            
+            if (tile_bg == undefined || tileRight_bg == undefined || tile_right == undefined) return;
+
+            let is_tileWall = this.isTopWall(index);                     // if this tile is a wall
+            let is_rightWall = this.isTopWall(tile_right.index);         // if tile to right is a wall
+            let is_bgWall = this.isTopWall(tile_bg.index);               // if background tile is a wall
+            let is_rightBgWall = this.isTopWall(tileRight_bg.index);     // if background tile to right is a wall
+
+            if ((is_tileWall || is_bgWall) && (is_rightWall || is_rightBgWall)) {
                 this.decorWalls.push({x: tile.x, y: tile.y});
             }
 
@@ -732,6 +743,7 @@ class GameLevel extends Phaser.Scene {
         }
         this.cameras.main.startFollow(players[0].sprite);
 
+        // #region map editor
         this.editMode = EditMode.NotEditing;
         this.tile_painting = 1;
         this.mapDisplay = this.make.tilemap({ key: 'map' });
@@ -1206,7 +1218,6 @@ class Lore extends Phaser.Scene {
             yoyo: true,
             repeat: -1,
         });
-
 
         this.tweens.add({
             targets: this.lore1,
