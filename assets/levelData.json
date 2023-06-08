@@ -14,7 +14,8 @@
             "tileset": "level1",
             "tileset_bg": "level1_bg",
             "music": "Dungeon_Theme",
-            "decorations": 60,
+            "decorations_floor": 60,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": false,
             "enterDoor": "up"
@@ -23,7 +24,8 @@
             "tileset": "level2",
             "tileset_bg": "level2_bg",
             "music": "Dungeon_Theme",
-            "decorations": 60,
+            "decorations_floor": 60,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": false,
             "enterDoor": "left"
@@ -32,7 +34,8 @@
             "tileset": "level4",
             "tileset_bg": "level4_bg",
             "music": "Dungeon_Theme",
-            "decorations": 60,
+            "decorations_floor": 60,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": false
         },
@@ -40,7 +43,8 @@
             "tileset": "level5",
             "tileset_bg": "level5_bg",
             "music": "Dungeon_Theme",
-            "decorations": 60,
+            "decorations_floor": 60,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": false
         },
@@ -48,7 +52,8 @@
             "tileset": "level11",
             "tileset_bg": "level11_bg",
             "music": "Dungeon_Theme",
-            "decorations": 60,
+            "decorations_floor": 60,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": false,
             "enterDoor": "left"
@@ -57,7 +62,8 @@
             "tileset": "level12",
             "tileset_bg": "level12_bg",
             "music": "Boss_Theme",
-            "decorations": 0,
+            "decorations_floor": 0,
+            "decorations_wall": 50,
             "monsters": 0,
             "spawnBoss": true,
             "enterDoor": "down"

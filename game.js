@@ -212,8 +212,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        this.scene.launch('open').launch('musicScene');
-        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        //this.scene.launch('open').launch('musicScene');
+        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -398,8 +398,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let floorPropCount = levelData.levels[level].decorations;
-        //let wallPropCount = 1000;
+        let floorPropCount = levelData.levels[level].decorations_floor;
+        let wallPropCount = levelData.levels[level].decorations_wall;
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
@@ -480,13 +480,14 @@ class GameLevel extends Phaser.Scene {
             */
         }
 
-        /*
+        
         // spawn wall decor
         for (var i = 0; i < wallPropCount; i++) {
+            console.log("the");
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
-            var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
-
+            var index = levelData.settings.RandProps_Wall[Math.floor(Math.random() * levelData.settings.RandProps_Wall.length)];
+            console.log("the2");
             if (index == 7) {
                 // spawn a torch
                 var torch = this.add.sprite(x * 32 * 3, (y * 32 * 3) + 96, 'torch');
@@ -494,6 +495,7 @@ class GameLevel extends Phaser.Scene {
                 torch.anims.play('torch_front');
                 continue;
             }
+            console.log("the3");
 
             var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
             prop.setScale(5);
@@ -502,7 +504,7 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
-        */
+        
 
     }
 
@@ -576,57 +578,33 @@ class GameLevel extends Phaser.Scene {
         this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
-        // enable collisions on walls
+        this.decorWalls = [];
+        this.nearWalls = [];
         this.layer_tiles.forEachTile(tile => {
+            let index = tile.index;
 
+            // enable collisions on walls
             if (this.solidAt(tile.x, tile.y)) {
                 tile.setCollision(true);
             }
                 
 
             // fix north doors
-            if (tile.index == 14 || tile.index == 92 || tile.index == 93  || tile.index == 72) {
+            if (index == 14 || index == 92 || index == 93  || index == 72) {
                 var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
                 tile_below.properties.door = true;
                 tile.properties.door = false;
             }
 
+            // define wall tiles for decorations
+            if (index == 2 || index == 3 || index == 5 || index == 81 || index == 96 || index == 98 || index == 99 || index == 101) {
+                this.decorWalls.push({x: tile.x, y: tile.y});
+            }
+
         });
         
-
         // store location of door players are coming from
         this.tp_door = {};
-
-        // find walls to put decorations on
-        /*
-        this.decorWalls = [];
-        this.nearWalls = [];
-        this.layer_tiles.forEachTile(tile => {
-            var properties = tile.properties;
-            var solid = this.solidAt(tile.x, tile.y);
-            var x = tile.x;
-            var y = tile.y;
-
-            let left = this.solidAt(x - 1, y);
-            let right = this.solidAt(x + 1, y);
-            let down = this.solidAt(x, y + 1);
-            let up = this.solidAt(x, y - 1);
-            
-            if (solid) {
-                if (left && right && down) {
-                    this.decorWalls.push({x: x, y: y});
-                    //tile.index = 57;
-                }
-            } else {
-                //if (left || right || down || up) tile.index = 57;
-
-                if (left) { this.nearWalls.push({x: x, y: y, wall: "left"}); return; }
-                if (right) { this.nearWalls.push({x: x, y: y, wall: "right"}); return; }
-                if (down) { this.nearWalls.push({x: x, y: y, wall: "down"}); return; }
-                if (up) { this.nearWalls.push({x: x, y: y, wall: "up"}); return; }
-            }
-        });
-        */
 
         // set tile properties
         this.layer_tiles.forEachTile(tile => {
