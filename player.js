@@ -444,9 +444,9 @@ class Player {
             });
         }
         // #region dodge
-        if(scene.pad!=null){
-            for (var i = 0; i < scene.pad.buttons.length; i++) {
-                var button = scene.pad.buttons[i];
+        if(control!=null){
+            for (var i = 0; i < control.buttons.length; i++) {
+                var button = control.buttons[i];
                 if (button.value === 1) {
                     if(button.index == 0 && this.dodging == false){
                         this.dodge(scene);
@@ -495,19 +495,19 @@ class Player {
         }
         
         //gamepad movement
-       if(scene.pad != null && scene.pad.axes.length > 0){
+       if(control != null && control.axes.length > 0){
             //console.log("in player scene.");
             
-            var X = scene.pad.axes[0].getValue(); //gets value between -1 and 1
-            var Y = scene.pad.axes[1].getValue(); //gets value between -1 and 1
+            var X = control.axes[0].getValue(); //gets value between -1 and 1
+            var Y = control.axes[1].getValue(); //gets value between -1 and 1
             var angle = Math.atan2(Y, X);  //gets angle in radians
             if(angle < 0){
                 angle += 2 * Math.PI; //converts to a number between 0 and 2PI
             }
             this.angle = angle * 180 / Math.PI; //converts to degrees
             this.idle = false; //character is moving
-            var X = scene.pad.axes[0].getValue(); //gets value between -1 and 1
-            var Y = scene.pad.axes[1].getValue(); //gets value between -1 and 1
+            var X = control.axes[0].getValue(); //gets value between -1 and 1
+            var Y = control.axes[1].getValue(); //gets value between -1 and 1
             if(X == 0 && Y == 0){ //if the player let go of the stick then the character is idle
                 this.idle = true;
             }
