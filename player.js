@@ -539,8 +539,8 @@ class Player {
 
         
         // joystick input
-        if (scene.joyStick && scene.joyStick.angle != 0) {
-            this.angle = scene.joyStick.angle;
+        if (window.joyStick && window.joyStick.angle != 0) {
+            this.angle = window.joyStick.angle;
             if (this.angle < 0) this.angle += 360;
             this.idle = false;
         }
@@ -549,21 +549,7 @@ class Player {
         if (!this.idle) {
             this.sprite.body.setVelocityX((this.speed * this.buffs.speedBoost) * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);
             this.sprite.body.setVelocityY((this.speed * this.buffs.speedBoost) * Math.sin(Phaser.Math.DegToRad(this.angle)) * 100);
-            if(scene.joyStick){
-                // Function to update joystick position
-                var joystick = scene.joyStick;
-    
-                // Calculate the target position based on the cursor's current position
-                var targetX = scene.input.activePointer.worldX;
-                var targetY = scene.input.activePointer.worldY;
 
-                // Set the easing factor to control the smoothness of the movement
-                var easingFactor = 0.07;
-    
-                // Interpolate the joystick's position towards the target position
-                joystick.x += (targetX - joystick.x) * easingFactor;
-                joystick.y += (targetY - joystick.y) * easingFactor;
-            }
             
              // set this.dir based on angle
              if (this.angle >= 315 || this.angle <= 45) this.dir = "right";

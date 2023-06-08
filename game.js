@@ -584,20 +584,7 @@ class GameLevel extends Phaser.Scene {
         //     fixed: false,
         // });
        
-        // var visible = this.joyStick.visible;
-        // this.input.on('pointerdown', () => {
-        //     this.joyStick.setVisible(visible);
-        //     this.joyStick.setPosition(this.input.activePointer.worldX, this.input.activePointer.worldY);
-        //     //this.joyStick.fixed = true;
-        //     //this.joyStick.setScrollFactor(0.8);
-
-        // });
-        // this.input.on('pointerup', () => {
-        //     this.joyStick.setVisible(false);
-        //     this.joyStick.fixed = false;
-        //     //this.joyStick.setScrollFactor(0);
-
-        // });
+       
 
         //END OF JOYSTICK --------------------------------------------------------------------------------------
 
@@ -1161,6 +1148,7 @@ class MusicScene extends Phaser.Scene {
 
 }
 
+//UI SCENE
 class UI extends Phaser.Scene {
     
     constructor(){
@@ -1196,6 +1184,28 @@ class UI extends Phaser.Scene {
         uiContainer.add(this.XPBAR);
         uiContainer.add(this.Dash);
         uiContainer.add(this.icon);
+
+        //JOYSTICK STUFF------------------------------------------------------------------------------------
+        //CIRCLES FOR JOYSTICK-------------------------
+        //----------------------------------------------
+
+        let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
+        cir1.setAlpha(0.4);
+        let cir2 = this.add.circle(0, 0, 20, 0x541675);
+        cir2.setAlpha(0.3);
+        
+        window.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(window, {
+            x: window.innerWidth - (window.innerWidth - 200) ,
+            y: window.innerHeight - 200,
+            radius: 100,
+            base: cir1,
+            thumb: cir2,
+            dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+            forceMin: 16,
+            enable: true,
+            fixed: true,
+        });
+        
     }
     update() {
 
