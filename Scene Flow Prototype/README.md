@@ -1,4 +1,4 @@
-# Core gameplay prototype
+# Scene Flow Prototype
 
 ## Scene types
 * Main title scene: first scene that displays
