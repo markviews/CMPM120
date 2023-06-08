@@ -1196,7 +1196,7 @@ class UI extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
-       // if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
+        if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
             
             //set up dash button for mobile
             this.Dash.setPosition(window.innerWidth - 200, window.innerHeight - 200);
@@ -1220,11 +1220,11 @@ class UI extends Phaser.Scene {
                 fixed: true,
             });
             console.log("Mobile device detected");
-        //} 
-        // else {
-        //     // User is not on a mobile device
-        //     console.log("Not a mobile device");
-        // }
+        } 
+        else {
+            // User is not on a mobile device
+            console.log("Not a mobile device");
+        }
         
     }
     update() {
