@@ -33,6 +33,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore1', 'assets/IntroLore_1.png');
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
+        this.load.image('control1', 'assets/Controls_1.png');
+        this.load.image('control2', 'assets/Controls_2.png');
         this.load.image('deathScreen', 'assets/Death Screen.png');
         this.load.image('winScreen', 'assets/Winning Screen.png');
 
@@ -233,7 +235,6 @@ class GameLevel extends Phaser.Scene {
             level++;
             levels[id].firstLoad = true;
         }
-        if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
 
         // create players if not all spawned in
@@ -401,8 +402,8 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let floorPropCount = levelData.levels[level].decorations;
-        //let wallPropCount = 1000;
+        let floorPropCount = levelData.levels[level].decorations_floor;
+        let wallPropCount = levelData.levels[level].decorations_wall;
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
@@ -483,13 +484,14 @@ class GameLevel extends Phaser.Scene {
             */
         }
 
-        /*
+        
         // spawn wall decor
         for (var i = 0; i < wallPropCount; i++) {
+            console.log("the");
             if (this.decorWalls == undefined || this.decorWalls.length == 0) return;
             var {x, y} = this.decorWalls[Math.floor(Math.random() * this.decorWalls.length)];
-            var index = RandProps_Wall[Math.floor(Math.random() * RandProps_Wall.length)];
-
+            var index = levelData.settings.RandProps_Wall[Math.floor(Math.random() * levelData.settings.RandProps_Wall.length)];
+            console.log("the2");
             if (index == 7) {
                 // spawn a torch
                 var torch = this.add.sprite(x * 32 * 3, (y * 32 * 3) + 96, 'torch');
@@ -497,6 +499,7 @@ class GameLevel extends Phaser.Scene {
                 torch.anims.play('torch_front');
                 continue;
             }
+            console.log("the3");
 
             var prop = this.add.image(x * 32 * 3, y * 32 * 3, 'props', index);
             prop.setScale(5);
@@ -505,11 +508,13 @@ class GameLevel extends Phaser.Scene {
             // remove value so we don't pick it again
             this.decorWalls = this.decorWalls.filter(wall => wall.x != x || wall.y != y);
         }
-        */
+        
 
     }
 
-    goToLevel(id) {
+    goToLevel() {
+        let id = Phaser.Utils.String.UUID().substring(0, 10);
+        levels[id] = {};
 
         if (levelData.levels[level].spawnBoss) {
             if (inst.boss.getChildren().length == 0) {
@@ -577,66 +582,42 @@ class GameLevel extends Phaser.Scene {
         this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
-        // enable collisions on walls
+        this.decorWalls = [];
+        this.nearWalls = [];
         this.layer_tiles.forEachTile(tile => {
+            let index = tile.index;
 
+            // enable collisions on walls
             if (this.solidAt(tile.x, tile.y)) {
                 tile.setCollision(true);
             }
                 
 
             // fix north doors
-            if (tile.index == 14 || tile.index == 92 || tile.index == 93  || tile.index == 72) {
-                // set tile below as door
+            if (index == 14 || index == 92 || index == 93  || index == 72) {
                 var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
                 tile_below.properties.door = true;
                 tile.properties.door = false;
             }
 
+            // define wall tiles for decorations
+            if (index == 2 || index == 3 || index == 5 || index == 81 || index == 96 || index == 98 || index == 99 || index == 101) {
+                this.decorWalls.push({x: tile.x, y: tile.y});
+            }
+
         });
         
-
         // store location of door players are coming from
         this.tp_door = {};
-
-        // find walls to put decorations on
-        /*
-        this.decorWalls = [];
-        this.nearWalls = [];
-        this.layer_tiles.forEachTile(tile => {
-            var properties = tile.properties;
-            var solid = this.solidAt(tile.x, tile.y);
-            var x = tile.x;
-            var y = tile.y;
-
-            let left = this.solidAt(x - 1, y);
-            let right = this.solidAt(x + 1, y);
-            let down = this.solidAt(x, y + 1);
-            let up = this.solidAt(x, y - 1);
-            
-            if (solid) {
-                if (left && right && down) {
-                    this.decorWalls.push({x: x, y: y});
-                    //tile.index = 57;
-                }
-            } else {
-                //if (left || right || down || up) tile.index = 57;
-
-                if (left) { this.nearWalls.push({x: x, y: y, wall: "left"}); return; }
-                if (right) { this.nearWalls.push({x: x, y: y, wall: "right"}); return; }
-                if (down) { this.nearWalls.push({x: x, y: y, wall: "down"}); return; }
-                if (up) { this.nearWalls.push({x: x, y: y, wall: "up"}); return; }
-            }
-        });
-        */
 
         // set tile properties
         this.layer_tiles.forEachTile(tile => {
             var properties = tile.properties;
 
+            if (this.tp_door.x) return;
+
             // check door connections
             if (properties && properties.door) {
-                //console.log(tile.x, tile.y);
                 var wall = "";
                 if (tile.index == 53 || tile.index == 66) wall = "right";
                 else if (tile.index == 54 || tile.index == 67) wall = "left";
@@ -650,86 +631,14 @@ class GameLevel extends Phaser.Scene {
                 
                 let door = {x: tile.x, y: tile.y, wall: wall};
 
-                var dupe = false;
-                for (var d in levels[this.id].doors) {
-                    var d = levels[this.id].doors[d];
-                    if (d.x == door.x && d.y == door.y) {
-                        dupe = true;
-                        return;
-                    }
+                if (wall == levelData.levels[level].enterDoor || levelData.levels[level].enterDoor == undefined) {
+                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
+                    tile.properties.door = false;
+                    return;
                 }
-
-                if (!dupe)
-                levels[this.id].doors.push(door);
-                //console.log("Setup door ", door);
             }
 
         });
-
-        // create door connection / teleport player to proper door
-        if (levels[this.id].from_wall) {
-
-            var find_door = "";
-            if (levels[this.id].from_wall == "left") find_door = "right";
-            else if (levels[this.id].from_wall == "right") find_door = "left";
-            else if (levels[this.id].from_wall == "up") find_door = "down";
-            else if (levels[this.id].from_wall == "down") find_door = "up";
-
-            //console.log("Teleporting player to door", find_door)
-
-            // find previous connection
-            for (var door in levels[this.id].doors) {
-                var door = levels[this.id].doors[door];
-
-                if (door.dest_id == levels[this.id].from_id) {
-                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
-
-                    // adjust north door TP location
-                    if (find_door == 'up') this.tp_door.y += 96;
-                    break;
-                }
-            }
-
-            // make new connection
-            if (this.tp_door.x == undefined) {
-                //console.log("this.tp_door.x == undefined");
-
-                for (var door in levels[this.id].doors) {
-                    var door = levels[this.id].doors[door];
-
-                    //console.log("Searching for door to TP to: ",door);
-
-                    if (door.wall == find_door) {
-
-                        // if door already has a diffrent connection, skip it
-                        if (door.dest_id != undefined && door.dest_id != levels[this.id].from_id) {
-                            continue;
-                        }
-
-                        door.dest_id = levels[this.id].from_id;
-                        this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
-
-                        // adjust north door TP location
-                        if (find_door == 'up') this.tp_door.y += 96;
-
-                        //console.log("Made new door connection", this.tp_door);
-                        break;
-                    }
-                }
-            }
-
-        }
-
-        // if no door connection, make one
-        if (this.tp_door.x == undefined) {
-            var door = levels[this.id].doors[0];
-            door.dest_id = levels[this.id].from_id;
-            this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
-            if (door.wall == 'up') this.tp_door.y += 120;
-
-            // delete door from levels[this.id].doors
-            //delete levels[this.id].doors[0];
-        }
 
         this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
@@ -1005,29 +914,7 @@ class GameLevel extends Phaser.Scene {
                                 onComplete: function () {
                                     this.circularProgress.visible = false;
                                     this.circularProgress.value = 0;
-                                    var foundDoor = false;
-
-                                    // find nearby door
-                                    levels[this.id].doors.forEach(door => {
-                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/96, player.sprite.y/96, door.x, door.y);
-                                        //console.log("Door dist:", dist)
-                                        if (dist < 4) {
-                                            
-                                            // if door doesn't have a destination set, generate one
-                                            if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
-
-                                            // setup new level
-                                            if (levels[door.dest_id] == undefined) levels[door.dest_id] = {};
-                                            levels[door.dest_id].from_wall = door.wall;
-                                            levels[door.dest_id].from_id = this.id;
-
-                                            this.goToLevel(door.dest_id);
-                                            foundDoor = true;
-                                        }
-                                    });
-
-                                    if (!foundDoor)
-                                        console.log("Failed to find door... (not good)");
+                                    this.goToLevel();
                                 }
                             });
 
@@ -1325,10 +1212,29 @@ class Lore extends Phaser.Scene {
         this.lore1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore1');
         this.lore2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore2');
         this.lore3 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore3');
+        this.control1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'control1');
+        this.control2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'control2');
         let scale = Math.min(this.cameras.main.width / this.lore1.width, this.cameras.main.height / this.lore1.height) * 1;
         this.lore1.setAlpha(0).setScale(scale);
         this.lore2.setAlpha(0).setScale(scale);
         this.lore3.setAlpha(0).setScale(scale);
+        this.control1.setAlpha(0).setScale(scale);
+        this.control2.setAlpha(0).setScale(scale);
+
+        let text = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 240, 'Click to continue', { fontFamily: 'minecraft_font', fontSize: 50, fill: '#ffffff' });
+        text.setOrigin(0.5, 0.5);
+        text.setDepth(1001);
+
+        // tween make text bigger and smaller
+        this.tweens.add({
+            targets: text,
+            scale: 1.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+        });
+
+
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
@@ -1381,7 +1287,7 @@ class Lore extends Phaser.Scene {
                                 })
                             }
                         })
-                }); 
+                });
                 this.input.on('pointerdown', () => {
                     // Create a tween to fade out the image after fading in
                     this.tweens.add({
@@ -1415,8 +1321,53 @@ class Lore extends Phaser.Scene {
                                                                 alpha: 0,
                                                                 duration: 500,
                                                                 onComplete: () => {
-                                                                    this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui');
-                                                                    this.scene.remove('lore');
+
+                                                                    this.lore3.setVisible(false);
+                                                                    // Create a tween to fade out the image after fading in
+                                                                    this.tweens.add({
+                                                                        targets: this.control1,
+                                                                        alpha: 1,
+                                                                        duration: 500,
+                                                                        onComplete: () => {
+                                                                            this.input.on('pointerdown', () => {
+                                                                                this.tweens.add({
+                                                                                    targets: this.control1,
+                                                                                    alpha: 0,
+                                                                                    duration: 500,
+                                                                                    onComplete: () => {
+
+
+                                                                                        this.control1.setVisible(false);
+                                                                                        // Create a tween to fade out the image after fading in
+                                                                                        this.tweens.add({
+                                                                                            targets: this.control2,
+                                                                                            alpha: 1,
+                                                                                            duration: 500,
+                                                                                            onComplete: () => {
+                                                                                                this.input.on('pointerdown', () => {
+                                                                                                    this.tweens.add({
+                                                                                                        targets: this.control2,
+                                                                                                        alpha: 0,
+                                                                                                        duration: 500,
+                                                                                                        onComplete: () => {
+
+                                                                                                            this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui');
+                                                                                                            this.scene.remove('lore');
+
+                                                                                                        },
+                                                                                                    })
+                                                                                                })
+                                                                                            },
+                                                                                        })
+
+
+                                                                                    },
+                                                                                })
+                                                                            })
+                                                                        },
+                                                                    })
+
+
                                                                 },
                                                             })
                                                         })
@@ -1713,15 +1664,15 @@ class Menu extends Phaser.Scene {
             }
         });
 
-        this.placeText(this.page_settings, 0, 20, 19, 'Other sounds: on', (text, shadow) => {
+        this.placeText(this.page_settings, 0, 20, 19, 'Mute all: off', (text, shadow) => {
             if (this.sound.mute) {
                 this.sound.mute = false;
-                text.setText("Other sounds: on");
-                shadow.setText("Other sounds: on");
+                text.setText("Mute all: off");
+                shadow.setText("Mute all: off");
             } else {
                 this.sound.mute = true;
-                text.setText("Other sounds: off");
-                shadow.setText("Other sounds: off");
+                text.setText("Mute all: on");
+                shadow.setText("Mute all: on");
             }
         });
         this.placeText(this.page_settings, 110, 75, 20, 'back', () => this.goToPage("home"));

@@ -514,17 +514,17 @@ class Settings extends Phaser.Scene {
                 }
             });
 
-            let soundText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 25, "Other sounds: off", { fontFamily: 'minecraft_font', fontSize: this.invScale * 14, color: '#000000' });
-            if (!this.sound.mute) soundText.text = "Other sounds: on";
+            let soundText = this.add.text(this.inv.x - this.invScale * 119, this.inv.y - this.invScale * 25, "Mute all: on", { fontFamily: 'minecraft_font', fontSize: this.invScale * 14, color: '#000000' });
+            if (!this.sound.mute) soundText.text = "Mute all: off";
             soundText.setInteractive();
             soundText.on('pointerover', () => soundText.setColor('#626770'));
             soundText.on('pointerout', () => soundText.setColor('#000000'));
             soundText.on('pointerdown', () => {
                 if (!this.sound.mute) {
-                    soundText.text = "Other sounds: off";
+                    soundText.text = "Mute all: on";
                     this.sound.mute = true;
                 } else {
-                    soundText.text = "Other sounds: on";
+                    soundText.text = "Mute all: off";
                     this.sound.mute = false;
                 }
             });
