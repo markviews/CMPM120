@@ -29,6 +29,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore1', 'assets/IntroLore_1.png');
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
+        this.load.image('control1', 'assets/Controls_1.png');
+        this.load.image('control2', 'assets/Controls_2.png');
         this.load.image('deathScreen', 'assets/Death Screen.png');
         this.load.image('winScreen', 'assets/Winning Screen.png');
 
@@ -1205,10 +1207,14 @@ class Lore extends Phaser.Scene {
         this.lore1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore1');
         this.lore2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore2');
         this.lore3 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore3');
+        this.control1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'control1');
+        this.control2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'control2');
         let scale = Math.min(this.cameras.main.width / this.lore1.width, this.cameras.main.height / this.lore1.height) * 1;
         this.lore1.setAlpha(0).setScale(scale);
         this.lore2.setAlpha(0).setScale(scale);
         this.lore3.setAlpha(0).setScale(scale);
+        this.control1.setAlpha(0).setScale(scale);
+        this.control2.setAlpha(0).setScale(scale);
 
         let text = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 240, 'Click to continue', { fontFamily: 'minecraft_font', fontSize: 50, fill: '#ffffff' });
         text.setOrigin(0.5, 0.5);
@@ -1276,7 +1282,7 @@ class Lore extends Phaser.Scene {
                                 })
                             }
                         })
-                }); 
+                });
                 this.input.on('pointerdown', () => {
                     // Create a tween to fade out the image after fading in
                     this.tweens.add({
@@ -1310,8 +1316,53 @@ class Lore extends Phaser.Scene {
                                                                 alpha: 0,
                                                                 duration: 500,
                                                                 onComplete: () => {
-                                                                    this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui');
-                                                                    this.scene.remove('lore');
+
+                                                                    this.lore3.setVisible(false);
+                                                                    // Create a tween to fade out the image after fading in
+                                                                    this.tweens.add({
+                                                                        targets: this.control1,
+                                                                        alpha: 1,
+                                                                        duration: 500,
+                                                                        onComplete: () => {
+                                                                            this.input.on('pointerdown', () => {
+                                                                                this.tweens.add({
+                                                                                    targets: this.control1,
+                                                                                    alpha: 0,
+                                                                                    duration: 500,
+                                                                                    onComplete: () => {
+
+
+                                                                                        this.control1.setVisible(false);
+                                                                                        // Create a tween to fade out the image after fading in
+                                                                                        this.tweens.add({
+                                                                                            targets: this.control2,
+                                                                                            alpha: 1,
+                                                                                            duration: 500,
+                                                                                            onComplete: () => {
+                                                                                                this.input.on('pointerdown', () => {
+                                                                                                    this.tweens.add({
+                                                                                                        targets: this.control2,
+                                                                                                        alpha: 0,
+                                                                                                        duration: 500,
+                                                                                                        onComplete: () => {
+
+                                                                                                            this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui');
+                                                                                                            this.scene.remove('lore');
+
+                                                                                                        },
+                                                                                                    })
+                                                                                                })
+                                                                                            },
+                                                                                        })
+
+
+                                                                                    },
+                                                                                })
+                                                                            })
+                                                                        },
+                                                                    })
+
+
                                                                 },
                                                             })
                                                         })
