@@ -210,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -1209,6 +1209,21 @@ class Lore extends Phaser.Scene {
         this.lore1.setAlpha(0).setScale(scale);
         this.lore2.setAlpha(0).setScale(scale);
         this.lore3.setAlpha(0).setScale(scale);
+
+        let text = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 240, 'Click to continue', { fontFamily: 'minecraft_font', fontSize: 50, fill: '#ffffff' });
+        text.setOrigin(0.5, 0.5);
+        text.setDepth(1001);
+
+        // tween make text bigger and smaller
+        this.tweens.add({
+            targets: text,
+            scale: 1.1,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+        });
+
+
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
