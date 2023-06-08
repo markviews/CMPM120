@@ -3,7 +3,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
-const Boss_MaxHp = 1;
+const Boss_MaxHp = 500;
 
 var bossIsHere = false;         // is the boss in the level?
 var bossSpawn = false;
