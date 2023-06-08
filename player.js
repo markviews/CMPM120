@@ -357,7 +357,8 @@ class Player {
             // projectile attack
             else if (enemy_dist < 500) {
                 let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y);
-                mySprite.play('moveFire');
+                if (this.skin == "girl") mySprite.play('moveFire');
+                else mySprite.play('moveIce');
                 mySprite.setScale(3);
 
                 mySprite.name = "projectile";
@@ -404,7 +405,8 @@ class Player {
             // projectile attack
             else if (enemy_dist < 500) {
                 let mySprite = scene.add.sprite(this.sprite.x, this.sprite.y);
-                mySprite.play('moveFire');
+                if (this.skin == "girl") mySprite.play('moveFire');
+                else mySprite.play('moveIce');
                 mySprite.setScale(3);
 
                 mySprite.name = "projectile";
