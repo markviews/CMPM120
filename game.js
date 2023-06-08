@@ -1630,7 +1630,8 @@ class Menu extends Phaser.Scene {
         // credits page
         this.placeText(this.page_credits, 0, -70, 19, 'Credits', null);
         this.page_credits.add(book);
-        this.placeText(this.page_credits, 0, 10, 19, 'Nicolas Bellomo - Lead Artist & Composer\n\nOliver Mason - SFX & Additional Art\n\nMarcus Olivas - Lead Programer\n\nAbner Salazar - Programer', null);
+        this.placeText(this.page_credits, 0, 10, 19, 'Nicolas Bellomo - Lead Artist & Composer\nOliver Mason - SFX & Additional Art\nMarcus Olivas - Lead Programer\nAbner Salazar - Programer', null);
+        this.placeText(this.page_credits, -80, 70, 10, 'Font by: Pwnage Block\nAdditional SFX: freesounds.org', null);
         this.placeText(this.page_credits, 110, 75, 20, 'back', () => this.goToPage("home"));
 
         // start page
