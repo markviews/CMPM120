@@ -210,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        this.scene.launch('open').launch('musicScene');
-        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        //this.scene.launch('open').launch('musicScene');
+        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -229,7 +229,6 @@ class GameLevel extends Phaser.Scene {
             level++;
             levels[id].firstLoad = true;
         }
-        if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
 
         // create players if not all spawned in
@@ -505,7 +504,9 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    goToLevel(id) {
+    goToLevel() {
+        let id = Phaser.Utils.String.UUID().substring(0, 10);
+        levels[id] = {};
 
         if (levelData.levels[level].spawnBoss) {
             if (inst.boss.getChildren().length == 0) {
@@ -583,7 +584,6 @@ class GameLevel extends Phaser.Scene {
 
             // fix north doors
             if (tile.index == 14 || tile.index == 92 || tile.index == 93  || tile.index == 72) {
-                // set tile below as door
                 var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
                 tile_below.properties.door = true;
                 tile.properties.door = false;
@@ -630,9 +630,10 @@ class GameLevel extends Phaser.Scene {
         this.layer_tiles.forEachTile(tile => {
             var properties = tile.properties;
 
+            if (this.tp_door.x) return;
+
             // check door connections
             if (properties && properties.door) {
-                //console.log(tile.x, tile.y);
                 var wall = "";
                 if (tile.index == 53 || tile.index == 66) wall = "right";
                 else if (tile.index == 54 || tile.index == 67) wall = "left";
@@ -646,86 +647,14 @@ class GameLevel extends Phaser.Scene {
                 
                 let door = {x: tile.x, y: tile.y, wall: wall};
 
-                var dupe = false;
-                for (var d in levels[this.id].doors) {
-                    var d = levels[this.id].doors[d];
-                    if (d.x == door.x && d.y == door.y) {
-                        dupe = true;
-                        return;
-                    }
+                if (wall == levelData.levels[level].enterDoor || levelData.levels[level].enterDoor == undefined) {
+                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
+                    tile.properties.door = false;
+                    return;
                 }
-
-                if (!dupe)
-                levels[this.id].doors.push(door);
-                //console.log("Setup door ", door);
             }
 
         });
-
-        // create door connection / teleport player to proper door
-        if (levels[this.id].from_wall) {
-
-            var find_door = "";
-            if (levels[this.id].from_wall == "left") find_door = "right";
-            else if (levels[this.id].from_wall == "right") find_door = "left";
-            else if (levels[this.id].from_wall == "up") find_door = "down";
-            else if (levels[this.id].from_wall == "down") find_door = "up";
-
-            //console.log("Teleporting player to door", find_door)
-
-            // find previous connection
-            for (var door in levels[this.id].doors) {
-                var door = levels[this.id].doors[door];
-
-                if (door.dest_id == levels[this.id].from_id) {
-                    this.tp_door = {x: (door.x * 96) + 32, y: door.y * 96 }
-
-                    // adjust north door TP location
-                    if (find_door == 'up') this.tp_door.y += 96;
-                    break;
-                }
-            }
-
-            // make new connection
-            if (this.tp_door.x == undefined) {
-                //console.log("this.tp_door.x == undefined");
-
-                for (var door in levels[this.id].doors) {
-                    var door = levels[this.id].doors[door];
-
-                    //console.log("Searching for door to TP to: ",door);
-
-                    if (door.wall == find_door) {
-
-                        // if door already has a diffrent connection, skip it
-                        if (door.dest_id != undefined && door.dest_id != levels[this.id].from_id) {
-                            continue;
-                        }
-
-                        door.dest_id = levels[this.id].from_id;
-                        this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
-
-                        // adjust north door TP location
-                        if (find_door == 'up') this.tp_door.y += 96;
-
-                        //console.log("Made new door connection", this.tp_door);
-                        break;
-                    }
-                }
-            }
-
-        }
-
-        // if no door connection, make one
-        if (this.tp_door.x == undefined) {
-            var door = levels[this.id].doors[0];
-            door.dest_id = levels[this.id].from_id;
-            this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
-            if (door.wall == 'up') this.tp_door.y += 120;
-
-            // delete door from levels[this.id].doors
-            //delete levels[this.id].doors[0];
-        }
 
         this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
@@ -931,10 +860,6 @@ class GameLevel extends Phaser.Scene {
         // #endregion map editor
 
         track = levelData.levels[level].music;
-
-        // clear previous door data
-        delete levels[this.id].from_id;
-        delete levels[this.id].from_wall;
     }
 
     update(time, delta) {
@@ -982,29 +907,7 @@ class GameLevel extends Phaser.Scene {
                                 onComplete: function () {
                                     this.circularProgress.visible = false;
                                     this.circularProgress.value = 0;
-                                    var foundDoor = false;
-
-                                    // find nearby door
-                                    levels[this.id].doors.forEach(door => {
-                                        var dist = Phaser.Math.Distance.Between(player.sprite.x/96, player.sprite.y/96, door.x, door.y);
-                                        //console.log("Door dist:", dist)
-                                        if (dist < 4) {
-                                            
-                                            // if door doesn't have a destination set, generate one
-                                            if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
-
-                                            // setup new level
-                                            if (levels[door.dest_id] == undefined) levels[door.dest_id] = {};
-                                            levels[door.dest_id].from_wall = door.wall;
-                                            levels[door.dest_id].from_id = this.id;
-
-                                            this.goToLevel(door.dest_id);
-                                            foundDoor = true;
-                                        }
-                                    });
-
-                                    if (!foundDoor)
-                                        console.log("Failed to find door... (not good)");
+                                    this.goToLevel();
                                 }
                             });
 
@@ -1674,15 +1577,15 @@ class Menu extends Phaser.Scene {
             }
         });
 
-        this.placeText(this.page_settings, 0, 20, 19, 'Other sounds: on', (text, shadow) => {
+        this.placeText(this.page_settings, 0, 20, 19, 'Mute all: off', (text, shadow) => {
             if (this.sound.mute) {
                 this.sound.mute = false;
-                text.setText("Other sounds: on");
-                shadow.setText("Other sounds: on");
+                text.setText("Mute all: off");
+                shadow.setText("Mute all: off");
             } else {
                 this.sound.mute = true;
-                text.setText("Other sounds: off");
-                shadow.setText("Other sounds: off");
+                text.setText("Mute all: on");
+                shadow.setText("Mute all: on");
             }
         });
         this.placeText(this.page_settings, 110, 75, 20, 'back', () => this.goToPage("home"));
