@@ -15,7 +15,6 @@ class Player {
         this.skin = "guy";
         this.dir = "right";
         this.idle = false;
-        this.onFire = false;
         this.attacking = false;
         this.stunned = false;
         this.speed = 3.5;
@@ -550,30 +549,6 @@ class Player {
             this.Meleehitbox.y = -100;
         }
         //#endregion animation
-
-        // #region fire
-        var properties = scene.getTileProperties(this.sprite.x, this.sprite.y);
-        if (properties.fire) {
-            this.onFire = true;
-            this.fireTick = Date.now();
-            
-            if (!this.fireEmitter) {
-                this.fireParticles = scene.add.particles('fire');
-                this.fireEmitter = this.fireParticles.createEmitter({ x: this.sprite.x, y: this.sprite.y, speed: 100, lifespan: 300, alpha: { start: 0.6, end: 0 } });
-            }
-
-        }
-
-        if (this.onFire && Date.now() - this.fireTick > 2000) {
-            this.onFire = false;
-            this.fireParticles.destroy()
-            this.fireEmitter = undefined
-        }
-
-        if (this.onFire) {
-            this.fireEmitter.setPosition(this.sprite.x, this.sprite.y);
-        }
-        //#endregion fire
 
     }
 
