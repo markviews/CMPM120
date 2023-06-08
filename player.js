@@ -442,7 +442,79 @@ class Player {
             });
         }
         // #region dodge
+        if(scene.pad!=null){
+            for (var i = 0; i < scene.pad.buttons.length; i++) {
+                var button = scene.pad.buttons[i];
+            
+                if (button.value === 1) {
+                    if(button.index == 0 && this.dodging == false){
+                        var flashes = 3;
+                        this.dodging = true;
+                        this.invincible = true;
+                        this.dash_sound.play();
+                        setTimeout(() => {
+                            this.dodging = false; 
+                        }, this.dashTimer * players[0].buffs.dashCooldown);
+                        //console.log(this.angle);
+                        xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                        ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
+                        
+                        let dist = dodgeDistance;
+                        while(dist > 0){
+                            xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dist;
+                            ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dist;
+                            
+                            var isSolid = scene.solidAt(xdir, ydir, true);
+                            if(!isSolid){
+                                break;
+                            }
+                            else{
+                                dist-= 20;
+                            }
+                        }
+                        if(dist == 0 || scene.solidAt(xdir, ydir, true)){
+                            xdir = this.sprite.x;
+                            ydir = this.sprite.y;
+                        }
 
+                        this.sprite.inputEnabled = false;
+                        scene.tweens.add({
+                            targets: this.sprite,
+                            x: xdir, // Move the sprite 100 pixels to the right
+                            y: ydir,
+                            duration: dodgeDuration, // Half the duration for the first part of the dodge
+                            repeat: 0, // Repeat the tween once to complete the dodge motion
+                        });
+                        for(let i = 0; i <= 5; i ++){
+                            let clone = scene.add.sprite();
+                            clone.setScale(2.5);
+                            clone.id = this.sprite.id;
+                            clone.setPosition(this.sprite.x, this.sprite.y);
+                            clone.dir = this.sprite.dir;
+                            let animation_key = this.sprite.anims.currentAnim.key;
+                            clone.play(animation_key);
+                            if (this.dir == "left") clone.flipX = true;
+                            if (this.dir == "right") clone.flipX = false;
+                            clone.anims.stop();
+                            clone.alpha = 1;
+
+                            scene.tweens.add({
+                                targets: clone,
+                                x: xdir, // Move the sprite 100 pixels to the right
+                                y: ydir,
+                                alpha: clone.alpha - 0.2 * i,
+                                duration: dodgeDuration + 50 * i, // Half the duration for the first part of the dodge
+                                repeat: 0, // Repeat the tween once to complete the dodge motion
+                                onComplete: () => {
+                                    this.sprite.inputEnabled = true;
+                                    clone.destroy();
+                                },
+                            });
+                        }
+                    }
+                }    
+            }    
+        }
         if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && this.dodging == false){
             var flashes = 3;
             this.dodging = true;
@@ -549,6 +621,7 @@ class Player {
         //gamepad movement
        if(scene.pad != null && scene.pad.axes.length > 0){
             //console.log("in player scene.");
+            
             var X = scene.pad.axes[0].getValue(); //gets value between -1 and 1
             var Y = scene.pad.axes[1].getValue(); //gets value between -1 and 1
             var angle = Math.atan2(Y, X);  //gets angle in radians
