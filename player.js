@@ -28,7 +28,7 @@ class Player {
         this.dashTimer = 1000;
         this.dodging = false;
         this.invincible = false;
-        this.meleeDamage = 1; // how much damage to do when melee attacking
+        this.meleeDamage = 3; // how much damage to do when melee attacking
         this.projectileDamage = 1; // how much damage to do when projectile attacking
     }
 
@@ -89,6 +89,7 @@ class Player {
         this.Meleehitbox.body.onCollide = true;
         this.Meleehitbox.name = "melee_hitbox";
         this.Meleehitbox.id = this.playerID;
+        this.Meleehitbox.body.setSize(150,150);
         
         // hixbox colliders
         scene.physics.add.collider(this.hithox, scene.chests);
@@ -227,32 +228,6 @@ class Player {
             }
         });
 
-        // melee attack hitbox
-        this.sprite.on('animationupdate', (anim) => {
-            if (anim.key.startsWith(this.skin + "_attack_right")) {
-                if (this.dir == "right") {
-                    this.Meleehitbox.x = this.sprite.x + 10;
-                    this.Meleehitbox.y = this.sprite.y - 10;
-                    this.Meleehitbox.body.setSize(70, 70);
-                }
-                if (this.dir == "left") {
-                    this.Meleehitbox.x = this.sprite.x - 10;
-                    this.Meleehitbox.y = this.sprite.y - 10;
-                    this.Meleehitbox.body.setSize(70, 70);
-                }
-            }
-            if (anim.key.startsWith(this.skin + "_attack_up")) {
-                this.Meleehitbox.x = this.sprite.x;
-                this.Meleehitbox.y = this.sprite.y - 30;
-                this.Meleehitbox.body.setSize(60, 40);
-            }
-            if (anim.key.startsWith(this.skin + "_attack_down")) {
-                this.Meleehitbox.x = this.sprite.x;
-                this.Meleehitbox.y = this.sprite.y;
-                this.Meleehitbox.body.setSize(80, 80);
-            }
-        });
-
         switch(this.playerID) {
             case 0:
                 this.controls = { 
@@ -348,8 +323,9 @@ class Player {
             let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
 
             // melee attack
-            if (enemy_dist < 100) {
+            if (enemy_dist < 100 && !this.attacking) {
                 this.attacking = true;
+                this.Meleehitbox.setPosition(this.sprite.x, this.sprite.y);
                 var anim = this.skin + "_" + `attack_${this.dir == "left" ? "right" : this.dir}`;
                 this.sprite.play(anim);
             }
