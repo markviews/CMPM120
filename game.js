@@ -857,7 +857,7 @@ class GameLevel extends Phaser.Scene {
             this.dashvid.setDisplaySize(1920/8, 1080/8);
             this.killenem.play(true);
             this.dashvid.play(true);
-            let text2 = this.add.text(1080, 750, 'Press Space to Dash', { font: '25px Arial', fill: '#FFFFFF' });
+            let text2 = this.add.text(1080, 750, 'Press SHIFT to Dash', { font: '25px Arial', fill: '#FFFFFF' });
             let text = this.add.text(25, 750, 'Kill Enemies to continue', { font: '30px Arial', fill: '#FFFFFF' });
             this.tweens.add({
                 targets: [text, text2],

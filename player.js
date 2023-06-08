@@ -263,6 +263,7 @@ class Player {
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
                     dodge: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
                     pause: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC),
+                    dodge2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
                 }
             break;
             case 1:
@@ -455,6 +456,9 @@ class Player {
             }    
         }
         if (Phaser.Input.Keyboard.JustDown(this.controls.dodge) && this.dodging == false){
+            this.dodge(scene);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.controls.dodge2) && this.dodging == false){
             this.dodge(scene);
         }
         
