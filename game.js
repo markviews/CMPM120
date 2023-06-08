@@ -210,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        this.scene.launch('open').launch('musicScene');
-        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        //this.scene.launch('open').launch('musicScene');
+        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -1178,6 +1178,7 @@ class UI extends Phaser.Scene {
         this.XPBAR.setScale(10);
         this.hpBar.setScale(10);
         this.Dash.setScale(3);
+        this.Dash.setInteractive();
         this.icon.setScale(8);
         this.icon.setInteractive();
         this.XPBAR.play('XPBar', true);
@@ -1195,10 +1196,11 @@ class UI extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
-        if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
+       // if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
             
             //set up dash button for mobile
             this.Dash.setPosition(window.innerWidth - 200, window.innerHeight - 200);
+            this.Dash.setScale(5);
 
             // User is on a mobile device
             let cir1 = this.add.circle(0, 0, 70, 0x7E38B7);
@@ -1218,11 +1220,11 @@ class UI extends Phaser.Scene {
                 fixed: true,
             });
             console.log("Mobile device detected");
-        } 
-        else {
-            // User is not on a mobile device
-            console.log("Not a mobile device");
-        }
+        //} 
+        // else {
+        //     // User is not on a mobile device
+        //     console.log("Not a mobile device");
+        // }
         
     }
     update() {
@@ -1239,6 +1241,11 @@ class UI extends Phaser.Scene {
             }
         }
 
+        this.Dash.on('pointerdown', () => {
+            if(players[0].dodging == false){
+                players[0].dodge(inst);
+            }
+        });
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
                 this.game.renderer.snapshot((image) => {
