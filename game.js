@@ -1,56 +1,22 @@
 // global settings
-const minSpeed = .5;            // min value a player's speed can get set to if they have multiple slowness effects
-const freezeMelee = true;       // freeze player movement while using melee attacks
-const freezeProjectile = false; // freeze player movement while using projectile attacks
 const camMinZoom = 1.5;         // smallest the camera will zoom
-const camPadding = 80;          // area between player and edge of screen
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
+const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
+const Boss_MaxHp = 500;
+
 var bossIsHere = false;         // is the boss in the level?
 var bossSpawn = false;
 let uiContainer;
 let numPlayers = 1;
-const Boss_MaxHp = 500;
-var level = 1;
+var level = -1;
 var pad = null;
 
-// list of random levels to choose from
-const RandItems = [
-    10,11,12,13,14,15,
-    16,17,18,19,20,21,22,23,
-    24,25,26,27,28,29,30,31,
-    32,33,34,35,36,37,38,39,
-    40,41
-];
-const RandProps_Wall = [
-    7,
-    20, 21, 22, 23, 26, 27, 28, 29,
-    42, 43, 55, 45, 46, 47,
-    60, 61, 62, 63, 64, 65, 66, 67,
-    70, 71, 72, 73, 74, 75
-];
-const RandProps_Floor = [
-    7,
-    10, 11, 12, 13, 14, 15, 16,
-    24, 25,
-    30, 31, 32, 33, 34, 35, 36, 37, 38,
-    40, 41, 48, 49,
-    50, 51, 52, 53, 54, 56, 57, 59,
-    65, 66, 67,
-];
-const RandProps_nearWall = [ 7, 24, 25 ];
-const RandProps_DontRotate = [ 10, 11, 12, 13, 14, 15, 16, 50, 51 ]; // chests, and mushrooms
-const RandProps_Chest = [ 10, 11, 12, 13, 14, 15, 16 ];
-const RandTile_Floor = [ 81,82,83 ]; //21, 22, 23, 24, 25
-const Tile_BorderWall = [ 7, 8, 29, 35, 40, 45, 50, 57, 58 ];
-
-// global variables
 var levels = {};
 var players = [];
+var levelData = {};
 var playMusic = true;
 var track = 'Title_Screen';
-
-const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
 class SetupLevel extends Phaser.Scene {
 
@@ -63,6 +29,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore1', 'assets/IntroLore_1.png');
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
+        this.load.image('deathScreen', 'assets/Death Screen.png');
 
         this.load.audio('Title_Screen', 'assets/sounds/music/Title_Screen.mp3');
         this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
@@ -106,7 +73,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
-        this.load.image('TitleText', 'assets/splash/TitleText.png');
+        this.load.image('TitleText', 'assets/splash/Title Screen text.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -132,9 +99,12 @@ class SetupLevel extends Phaser.Scene {
         //load Dash spritesheet
         this.load.spritesheet('dash', 'assets/ui/Dash.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('BossHP', 'assets/B_H.png', {frameWidth: 64, frameHeight: 64});
+        this.load.json('levelData', 'assets/levelData.json');
     }
 
     create() {
+        levelData = this.cache.json.get('levelData')
+        
         //Add all sounds
         //this.dash_sound = this.sound.add('dash_sound');
         this.die_sound = this.sound.add('die_sound');
@@ -251,8 +221,10 @@ class GameLevel extends Phaser.Scene {
     }
 
     init (id) {
-        if (levels[id] == undefined) levels[id] = {};
-        if (levels[id].level == undefined) levels[id].level = "level" + level++;
+        if (levels[id] == undefined) {
+            levels[id] = {};
+            level++;
+        }
         if (levels[id].doors == undefined) levels[id].doors = [];
         this.id = id;
 
@@ -261,6 +233,35 @@ class GameLevel extends Phaser.Scene {
             players.push(new Player());
             players[i].skin = 'girl';
         }
+    }
+
+    respawn() {
+        // my lazy to make sure player dosen't die again during respawn phase 
+        players[0].health = 100000;
+
+        // dispay deathScreen image
+        let image = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'deathScreen')
+        let scale = Math.min(this.cameras.main.width / image.width, this.cameras.main.height / image.height) * 0.75;
+        image.setScale(scale).setScrollFactor(0);
+        image.setAlpha(0);
+        image.setDepth(1000);
+
+        // tween fade death screen in then to black
+        this.tweens.add({
+            targets: image,
+            alpha: 1,
+            duration: 1000,
+            ease: 'Linear',
+            onComplete: () => {
+                this.cameras.main.fadeOut(1000, 0, 0, 0);
+                this.time.delayedCall(1000, () => {
+                    players[0].health = players[0].maxHealth;
+                    this.scene.restart();
+                });
+                
+            }
+        });
+
     }
 
     getNearestPlayer(x, y, viewDistance) {
@@ -392,20 +393,18 @@ class GameLevel extends Phaser.Scene {
     }
 
     spawnStuff() {
-        let floorPropCount = 60;
+        let floorPropCount = levelData.levels[level].decorations;
         //let wallPropCount = 1000;
-
-        console.log('Spawning stuff...')
 
         // spawn props
         for (var i = 0; i < floorPropCount; i++) {
             var {x, y} = this.getRandSpawnPoint();
             
             // pick random item from RandItems
-            var index = RandProps_Floor[Math.floor(Math.random() * RandProps_Floor.length)];
+            var index = levelData.settings.RandProps_Floor[Math.floor(Math.random() * levelData.settings.RandProps_Floor.length)];
 
             // if chest, add physics
-            if (RandProps_Chest.includes(index)) {
+            if (levelData.settings.RandProps_Chest.includes(index)) {
                 var prop = this.physics.add.image(x, y, 'props',  index);
                 this.physics.add.existing(prop);
                 prop.setScale(2);
@@ -423,7 +422,7 @@ class GameLevel extends Phaser.Scene {
             var prop = this.add.image(x, y, 'props', index);
             prop.setScale(2);
             prop.setOrigin(0.5, 0.5);
-            if (!RandProps_DontRotate.includes(index)) prop.rotation = Math.random() * Math.PI * 2;
+            if (!levelData.settings.RandProps_DontRotate.includes(index)) prop.rotation = Math.random() * Math.PI * 2;
 
             /*
             // if near wall prop
@@ -549,10 +548,10 @@ class GameLevel extends Phaser.Scene {
         const tileset = this.map.addTilesetImage('tiles', 'tiles', 32,32);
 
         // background layer
-        this.layer_background = this.map.createLayer(`${levels[this.id].level}_bg`, tileset);
+        this.layer_background = this.map.createLayer(levelData.levels[level].tileset_bg, tileset);
         this.layer_background.setScale(3);
 
-        this.layer_tiles = this.map.createLayer(levels[this.id].level, tileset);
+        this.layer_tiles = this.map.createLayer(levelData.levels[level].tileset, tileset);
         this.map.setCollision([1,2,3,5,14,15,16,18,20,21,24,25,33,34,37,38,79,80,81,92,93,94,96,98,99,101,109,111,112,114]);
         this.layer_tiles.setScale(3);
 
@@ -778,15 +777,16 @@ class GameLevel extends Phaser.Scene {
 
             this.spawnStuff();
 
-            if (level != 13) {
-                // spawn enemies
-                let enemyCount = 10;
-                for (var i = 0; i < enemyCount; i++) {
-                    var {x, y} = this.getRandSpawnPoint();
-                    this.spawnEnemy(x, y);
-                }
+            // spawn enemies
+            let enemyCount = levelData.levels[level].monsters;
+            for (var i = 0; i < enemyCount; i++) {
+                var {x, y} = this.getRandSpawnPoint();
+                this.spawnEnemy(x, y);
             }
-            if (level == 13) {
+
+            let spawnBoss = levelData.levels[level].spawnBoss;
+
+            if (spawnBoss) {
                 var {x, y} = this.getRandSpawnPoint();
                 this.spawnBoss(this, x, y, Boss_MaxHp);
                 //add Teleporter sprite
@@ -797,7 +797,6 @@ class GameLevel extends Phaser.Scene {
                 this.scene.stop('ui');
                 this.scene.launch('ui');
             }
-            
 
             // move players to front
             players.forEach(player => this.children.bringToTop(player.sprite));
@@ -841,19 +840,11 @@ class GameLevel extends Phaser.Scene {
             var worldPoint = this.input.activePointer.positionToCamera(this.cameras.main);
             var x = this.map.worldToTileX(worldPoint.x);
             var y = this.map.worldToTileY(worldPoint.y);
-
-            console.log(x, y)
-            
         
             switch(this.editMode) {
                 case EditMode.NotEditing:
                 break;
                 case EditMode.Selecting:
-                    var mapTile = this.map.getTileAt(x, y);
-                    if (mapTile) {
-                        console.log(mapTile.x, mapTile.y);
-                    }
-
                     var tile = this.mapDisplay.getTileAt(x, y);
                     if (tile) {
                         this.tile_painting = tile.index;
@@ -924,11 +915,7 @@ class GameLevel extends Phaser.Scene {
         });
         // #endregion map editor
 
-        if (level == 13) {
-            track = 'Boss_Theme';
-        } else {
-            track = 'Dungeon_Theme';
-        }
+        track = levelData.levels[level].music;
 
         // clear previous door data
         delete levels[this.id].from_id;
@@ -1556,12 +1543,6 @@ class Menu extends Phaser.Scene {
     }
 
 }
-
-window.addEventListener('resize', function () {
-    gameWidth = window.innerWidth;
-    gameHeight = window.innerHeight;
-    //inst.game.resize(gameWidth, gameHeight);
-});
 
 var config = {
     type: Phaser.AUTO,
