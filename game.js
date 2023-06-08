@@ -1197,7 +1197,9 @@ class UI extends Phaser.Scene {
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
         if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
-            
+            //pointer 2 for interaction
+            this.input.addPointer(2);
+
             //set up dash button for mobile
             this.Dash.setPosition(window.innerWidth - 200, window.innerHeight - 200);
             this.Dash.setScale(5);
@@ -1246,6 +1248,7 @@ class UI extends Phaser.Scene {
                 players[0].dodge(inst);
             }
         });
+
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
                 this.game.renderer.snapshot((image) => {
