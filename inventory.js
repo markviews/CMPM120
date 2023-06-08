@@ -505,9 +505,11 @@ class Settings extends Phaser.Scene {
             musicText.on('pointerdown', () => {
                 if (playMusic) {
                     musicText.text = "Music: off";
+                    localStorage.setItem("music", false);
                     playMusic = false;
                 } else {
                     musicText.text = "Music: on";
+                    localStorage.setItem("music", true);
                     playMusic = true;
                 }
             });
