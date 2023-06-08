@@ -73,7 +73,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('inventory_inv', 'assets/ui/Inventory Button.PNG');
         this.load.image('inventory_invpull', 'assets/ui/Inventory Button_Hover.png');
         this.load.image('inv_icon', 'assets/ui/Inventory_Icon.png');
-        //this.load.image('TitleText', 'assets/splash/Title Screen text.png');
+        this.load.image('TitleText', 'assets/ui/TitleText.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
         this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
@@ -209,8 +209,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel').launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+        //this.scene.launch('gamelevel').launch('ui').launch('musicScene');
     }
 
 }
