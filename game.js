@@ -1285,12 +1285,13 @@ class Lore extends Phaser.Scene {
         }
         //
         control = this.input.gamepad.pad1;
-        this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
-        this.lore1.setAlpha(0).setScale();
-        this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
-        this.lore2.setAlpha(0).setScale();
-        this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
-        this.lore3.setAlpha(0).setScale();
+        this.lore1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore1');
+        this.lore2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore2');
+        this.lore3 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore3');
+        let scale = Math.min(this.cameras.main.width / this.lore1.width, this.cameras.main.height / this.lore1.height) * 1;
+        this.lore1.setAlpha(0).setScale(scale);
+        this.lore2.setAlpha(0).setScale(scale);
+        this.lore3.setAlpha(0).setScale(scale);
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
@@ -1411,12 +1412,13 @@ class Open extends Phaser.Scene {
                 control = this.pad;
             });
         }
-        this.made = this.add.image(innerWidth * .5 , innerHeight * .5, 'madeWith');
-        this.made.setAlpha(0);
-        this.softW = this.add.image(innerWidth * .5 , innerHeight * .5, 'addSoftware');
-        this.softW.setAlpha(0).setScale(.85);
-        this.logo = this.add.image(innerWidth * .5 , innerHeight * .5, 'groupLogo');
-        this.logo.setAlpha(0).setScale(.75);
+        this.made = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'madeWith');
+        this.softW = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'addSoftware');
+        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'groupLogo');
+        let scale = Math.min(this.cameras.main.width / this.made.width, this.cameras.main.height / this.made.height) * 1;
+        this.made.setAlpha(0).setScale(scale);
+        this.softW.setAlpha(0).setScale(scale);
+        this.logo.setAlpha(0).setScale(scale);
 
         this.tweens.add({
             targets: this.made,
