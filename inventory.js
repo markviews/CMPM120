@@ -406,7 +406,7 @@ class Inventory extends Phaser.Scene {
             resumeButton.on('pointerout', () => resumeButton.setTexture('inventory_esc'));
             resumeButton.on('pointerdown', () => {
                 this.inventory_sound.play();
-                this.scene.resume('gamelevel');
+                this.scene.resume('gamelevel').resume('ui');
                 this.scene.stop('inventory');
             });
 
@@ -453,7 +453,7 @@ class Inventory extends Phaser.Scene {
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
             this.inventory_sound.play();
-            this.scene.resume('gamelevel');
+            this.scene.resume('gamelevel').resume('ui');
             this.scene.stop('inventory');
         }
 
@@ -552,7 +552,7 @@ class Settings extends Phaser.Scene {
             resumeButton.on('pointerover', () => resumeButton.setTexture('inventory_escpull'));
             resumeButton.on('pointerout', () => resumeButton.setTexture('inventory_esc'));
             resumeButton.on('pointerdown', () => {
-                this.scene.resume('gamelevel');
+                this.scene.resume('gamelevel').resume('ui');
                 this.scene.stop('settings');
             });
 
@@ -575,7 +575,7 @@ class Settings extends Phaser.Scene {
     update() {
 
         if (Phaser.Input.Keyboard.JustDown(this.resumeKey)) {
-            this.scene.resume('gamelevel');
+            this.scene.resume('gamelevel').resume('ui');
             this.scene.stop('settings');
         }
 
