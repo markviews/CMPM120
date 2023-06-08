@@ -1174,23 +1174,30 @@ class UI extends Phaser.Scene {
         //JOYSTICK STUFF------------------------------------------------------------------------------------
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
-
-        let cir1 = this.add.circle(0, 0, 70, 0x7E38B7);
-        cir1.setAlpha(0.4);
-        let cir2 = this.add.circle(0, 0, 40, 0x541675);
-        cir2.setAlpha(0.3);
-        
-        window.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(window, {
-            x: window.innerWidth - (window.innerWidth - 200) ,
-            y: window.innerHeight - 200,
-            radius: 100,
-            base: cir1,
-            thumb: cir2,
-            dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
-            forceMin: 16,
-            enable: true,
-            fixed: true,
-        });
+        if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
+            // User is on a mobile device
+            let cir1 = this.add.circle(0, 0, 70, 0x7E38B7);
+            cir1.setAlpha(0.4);
+            let cir2 = this.add.circle(0, 0, 40, 0x541675);
+            cir2.setAlpha(0.3);
+            
+            window.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(window, {
+                x: window.innerWidth - (window.innerWidth - 200) ,
+                y: window.innerHeight - 200,
+                radius: 100,
+                base: cir1,
+                thumb: cir2,
+                dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
+                forceMin: 16,
+                enable: true,
+                fixed: true,
+            });
+            console.log("Mobile device detected");
+        } 
+        else {
+            // User is not on a mobile device
+            console.log("Not a mobile device");
+        }
         
     }
     update() {

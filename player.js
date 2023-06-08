@@ -557,6 +557,8 @@ class Player {
             }
             this.angle = angle * 180 / Math.PI; //converts to degrees
             this.idle = false; //character is moving
+            var X = scene.pad.axes[0].getValue(); //gets value between -1 and 1
+            var Y = scene.pad.axes[1].getValue(); //gets value between -1 and 1
             if(X == 0 && Y == 0){ //if the player let go of the stick then the character is idle
                 this.idle = true;
             }
