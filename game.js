@@ -1120,6 +1120,13 @@ class MusicScene extends Phaser.Scene {
     }
     
     create() {
+        const music = localStorage.getItem("music");
+        if (music == "true") {
+            playMusic = true;
+        } else {
+            playMusic = false;
+        }
+
         this.sound.pauseOnBlur = false;
         this.Title_Screen = this.sound.add('Title_Screen', {volume: 0.2});
         this.Title_Screen.loop = true;
@@ -1127,7 +1134,7 @@ class MusicScene extends Phaser.Scene {
         this.Dungeon_Theme.loop = true;
         this.Boss_Theme = this.sound.add('Boss_Theme', {volume: 0.2});
         this.Boss_Theme.loop = true;
-        this.playMusic = true;
+        this.playMusic = playMusic;
     }
  
     update() {
@@ -1578,10 +1585,12 @@ class Menu extends Phaser.Scene {
                 playMusic = false;
                 text.setText("Music: off");
                 shadow.setText("Music: off");
+                localStorage.setItem("music", false);
             } else {
                 playMusic = true;
                 text.setText("Music: on");
                 shadow.setText("Music: on");
+                localStorage.setItem("music", true);
             }
         });
 
