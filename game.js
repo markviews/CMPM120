@@ -3,7 +3,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
-const Boss_MaxHp = 500;
+const Boss_MaxHp = 1;
 
 var bossIsHere = false;         // is the boss in the level?
 var bossSpawn = false;
@@ -30,6 +30,7 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('lore2', 'assets/IntroLore_2.png');
         this.load.image('lore3', 'assets/IntroLore_3.png');
         this.load.image('deathScreen', 'assets/Death Screen.png');
+        this.load.image('winScreen', 'assets/Winning Screen.png');
 
         this.load.audio('Title_Screen', 'assets/sounds/music/Title_Screen.mp3');
         this.load.audio('Dungeon_Theme', 'assets/sounds/music/Dungeon_Theme.mp3');
@@ -209,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        this.scene.launch('open').launch('musicScene');
-        //this.scene.launch('gamelevel').launch('ui').launch('musicScene');
+        //this.scene.launch('open').launch('musicScene');
+        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -505,6 +506,19 @@ class GameLevel extends Phaser.Scene {
     }
 
     goToLevel(id) {
+
+        if (levelData.levels[level].spawnBoss) {
+            if (inst.boss.getChildren().length == 0) {
+                console.log("Boss is here");
+
+                this.scene.stop('ui');
+                this.scene.stop('gamelevel');
+
+                this.scene.start('endcredits');
+            }
+            return;
+        }
+
         // unload current level
         this.enemies = undefined;
 
@@ -536,14 +550,13 @@ class GameLevel extends Phaser.Scene {
     }
     
     create() {
-
-        if (this.input.gamepad.total === 0)
-        {
+        if (this.input.gamepad.total === 0) {
             this.input.gamepad.once('connected', pad => {
                 console.log("Made pad");
                 this.pad = pad;
             });
         }
+
         window.inst = this;
         this.gulp = this.sound.add('gulp');
 
@@ -567,7 +580,7 @@ class GameLevel extends Phaser.Scene {
                 
 
             // fix north doors
-            if (tile.index == 14 || tile.index == 92 || tile.index == 93) {
+            if (tile.index == 14 || tile.index == 92 || tile.index == 93  || tile.index == 72) {
                 // set tile below as door
                 var tile_below = this.layer_tiles.getTileAt(tile.x, tile.y + 1);
                 tile_below.properties.door = true;
@@ -703,7 +716,6 @@ class GameLevel extends Phaser.Scene {
 
         // if no door connection, make one
         if (this.tp_door.x == undefined) {
-
             var door = levels[this.id].doors[0];
             door.dest_id = levels[this.id].from_id;
             this.tp_door = {x: door.x * 96 + 32, y: door.y * 96 }
@@ -977,7 +989,7 @@ class GameLevel extends Phaser.Scene {
                                         var dist = Phaser.Math.Distance.Between(player.sprite.x/96, player.sprite.y/96, door.x, door.y);
                                         //console.log("Door dist:", dist)
                                         if (dist < 4) {
-
+                                            
                                             // if door doesn't have a destination set, generate one
                                             if (door.dest_id == undefined) door.dest_id = Phaser.Utils.String.UUID().substring(0, 10);
 
@@ -986,8 +998,7 @@ class GameLevel extends Phaser.Scene {
                                             levels[door.dest_id].from_wall = door.wall;
                                             levels[door.dest_id].from_id = this.id;
 
-                                            if (level != 13)
-                                                this.goToLevel(door.dest_id);
+                                            this.goToLevel(door.dest_id);
                                             foundDoor = true;
                                         }
                                     });
@@ -997,7 +1008,7 @@ class GameLevel extends Phaser.Scene {
                                 }
                             });
 
-                        } 
+                        }
                         
                         // all enemies not dead, door locked
                         else {
@@ -1301,7 +1312,7 @@ class Lore extends Phaser.Scene {
                                                                 alpha: 0,
                                                                 duration: 500,
                                                                 onComplete: () => {
-                                                                    this.scene.launch('gamelevel').launch('ui');
+                                                                    this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui');
                                                                     this.scene.remove('lore');
                                                                 },
                                                             })
@@ -1386,6 +1397,46 @@ class Open extends Phaser.Scene {
                 })
             }
         })
+    }
+}
+
+class EndCredits extends Phaser.Scene {
+    constructor() {
+        super('endcredits');
+    }
+
+    create() {
+        let thing = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'winScreen');
+        let scale = Math.min(this.cameras.main.width / thing.width, this.cameras.main.height / thing.height) * 1;
+        thing.setScale(scale).setScrollFactor(0);
+        thing.setAlpha(0);
+        thing.setDepth(1000);
+
+        this.tweens.add({
+            targets: thing,
+            alpha: 1,
+            duration: 1000,
+            onComplete: () => {
+                let text = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 240, 'Click to continue', { fontFamily: 'minecraft_font', fontSize: 50, fill: '#ffffff' });
+                text.setOrigin(0.5, 0.5);
+                text.setDepth(1001);
+
+                // tween make text bigger and smaller
+                this.tweens.add({
+                    targets: text,
+                    scale: 1.1,
+                    duration: 1000,
+                    yoyo: true,
+                    repeat: -1,
+                });
+
+                this.input.on('pointerdown', () => {
+                    this.scene.start('menu');
+                });
+
+            }
+        })
+
     }
 }
 
@@ -1562,7 +1613,7 @@ var config = {
     backgroundColor: '#000000',
     parent: 'phaser-example',
     pixelArt: true,
-    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu, Lore, MusicScene ],
+    scene: [ SetupLevel, Open, GameLevel, Inventory, Settings, UI, Menu, Lore, MusicScene, EndCredits ],
     physics: {
         default: 'arcade',
         arcade: {
