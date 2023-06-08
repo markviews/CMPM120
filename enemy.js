@@ -65,8 +65,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
                     this.play(this.type + '_die');
                     return;
                 }
-                if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
-                    this.funny =  scene.tweens.add({
+                if(this.stunned == true && !(this.flash && this.flash.isPlaying())){
+                    this.flash =  scene.tweens.add({
                          targets: this,
                          tint: 0xEE4B2B,
                          alpha: 1,
@@ -105,8 +105,8 @@ class Enemy extends Phaser.GameObjects.Sprite {
                     this.play(this.type + '_die');
                     return;
                 }
-                if(this.stunned == true && !(this.funny && this.funny.isPlaying())){
-                    this.funny =  scene.tweens.add({
+                if(this.stunned == true && !(this.flash && this.flash.isPlaying())){
+                    this.flash =  scene.tweens.add({
                          targets: this,
                          tint: 0xEE4B2B,
                          alpha: 1,
