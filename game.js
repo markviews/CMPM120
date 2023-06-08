@@ -3,7 +3,7 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
-const Boss_MaxHp = 1;
+const Boss_MaxHp = 500;
 
 var bossIsHere = false;         // is the boss in the level?
 var bossSpawn = false;
@@ -133,10 +133,10 @@ class SetupLevel extends Phaser.Scene {
         this.anims.create({key: 'cyberjelly_idle', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17 ] }), frameRate: 24, repeat: -1 });
         this.anims.create({key: 'cyberjelly_die', frames: this.anims.generateFrameNumbers('cyberjelly', { frames: [ 50,51,52,53,54,55,56,57,58,59,60,61,62,63 ] }), frameRate: 12 });
         //Enemy Hunger animatons
-        this.anims.create({key: 'hunger_attack', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 0,1,2,3,4,5,6,7 ] }), frameRate: 6, repeat: -1 });
-        this.anims.create({key: 'hunger_die', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 9,10,11 ] }), frameRate: 6 });
-        this.anims.create({key: 'hunger_idle', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 18,19 ] }), frameRate: 6, repeat: -1 });
-        this.anims.create({key: 'hunger_move', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 27,28,29,30 ] }), frameRate: 6 });
+        this.anims.create({key: 'hunger_attack', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 24,25,26,27,28,29,30,31 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'hunger_die', frames: this.anims.generateFrameNumbers('hunger', { frames: [16,17,18 ] }), frameRate: 6 });
+        this.anims.create({key: 'hunger_idle', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 8,9 ] }), frameRate: 6, repeat: -1 });
+        this.anims.create({key: 'hunger_move', frames: this.anims.generateFrameNumbers('hunger', { frames: [ 0,1,2,3 ] }), frameRate: 6 });
         //Enemy Slime (Green) animatons
         this.anims.create({key: 'slime_idle', frames: this.anims.generateFrameNumbers('slime', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 6, repeat: -1 });
         this.anims.create({key: 'slime_jump', frames: this.anims.generateFrameNumbers('slime', { frames: [ 11,12,13,14,15,16,17 ] }), frameRate: 6});
@@ -310,7 +310,7 @@ class GameLevel extends Phaser.Scene {
             row.forEach(tile => {
                 var index = tile.index;
                 if (index == -1) index = 0;
-                tiles_bg.push(index)
+                tiles_bg.push(index);
             });
         });
         console.log(`Background: [${tiles_bg.toString()}]`)
@@ -1070,7 +1070,8 @@ class UI extends Phaser.Scene {
         //     hpBar.anims.nextFrame();
         //     initalHP = players[0].hp;
         // }
-        
+        //pointer 2 for interaction
+        this.input.addPointer(2);
         this.inventory_sound = this.sound.add('inventory_sound');
         uiContainer = this.add.container(0, 0);
         uiContainer.setVisible(true);
@@ -1081,6 +1082,7 @@ class UI extends Phaser.Scene {
         this.XPBAR.setScale(10);
         this.hpBar.setScale(10);
         this.Dash.setScale(3);
+        this.Dash.setInteractive();
         this.icon.setScale(8);
         this.icon.setInteractive();
         this.XPBAR.play('XPBar', true);
@@ -1099,6 +1101,12 @@ class UI extends Phaser.Scene {
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
         if (this.sys.game.device.os.android || this.sys.game.device.os.iOS || this.sys.game.device.os.iPhone || this.sys.game.device.os.iPad || this.sys.game.device.os.windowsPhone) {
+            
+
+            //set up dash button for mobile
+            this.Dash.setPosition(window.innerWidth - 200, window.innerHeight - 200);
+            this.Dash.setScale(5);
+
             // User is on a mobile device
             let cir1 = this.add.circle(0, 0, 70, 0x7E38B7);
             cir1.setAlpha(0.4);
@@ -1137,6 +1145,12 @@ class UI extends Phaser.Scene {
                 bossIsHere = true;
             }
         }
+
+        this.Dash.on('pointerdown', () => {
+            if(players[0].dodging == false){
+                players[0].dodge(inst);
+            }
+        });
 
         //on pointerdown icon is clicked
         this.icon.on('pointerdown', () => {
@@ -1188,12 +1202,13 @@ class Lore extends Phaser.Scene {
         }
         //
         control = this.input.gamepad.pad1;
-        this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
-        this.lore1.setAlpha(0).setScale();
-        this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
-        this.lore2.setAlpha(0).setScale();
-        this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
-        this.lore3.setAlpha(0).setScale();
+        this.lore1 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore1');
+        this.lore2 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore2');
+        this.lore3 = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'lore3');
+        let scale = Math.min(this.cameras.main.width / this.lore1.width, this.cameras.main.height / this.lore1.height) * 1;
+        this.lore1.setAlpha(0).setScale(scale);
+        this.lore2.setAlpha(0).setScale(scale);
+        this.lore3.setAlpha(0).setScale(scale);
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
@@ -1314,12 +1329,13 @@ class Open extends Phaser.Scene {
                 control = this.pad;
             });
         }
-        this.made = this.add.image(innerWidth * .5 , innerHeight * .5, 'madeWith');
-        this.made.setAlpha(0);
-        this.softW = this.add.image(innerWidth * .5 , innerHeight * .5, 'addSoftware');
-        this.softW.setAlpha(0).setScale(.85);
-        this.logo = this.add.image(innerWidth * .5 , innerHeight * .5, 'groupLogo');
-        this.logo.setAlpha(0).setScale(.75);
+        this.made = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'madeWith');
+        this.softW = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'addSoftware');
+        this.logo = this.add.image(this.cameras.main.width / 2, this.cameras.main.height / 2, 'groupLogo');
+        let scale = Math.min(this.cameras.main.width / this.made.width, this.cameras.main.height / this.made.height) * 1;
+        this.made.setAlpha(0).setScale(scale);
+        this.softW.setAlpha(0).setScale(scale);
+        this.logo.setAlpha(0).setScale(scale);
 
         this.tweens.add({
             targets: this.made,
