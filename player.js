@@ -537,9 +537,26 @@ class Player {
         if (window.joyStick && window.joyStick.angle != 0) {
             this.angle = window.joyStick.angle;
             if (this.angle < 0) this.angle += 360;
+            console.log(this.angle, 'angle');
             this.idle = false;
         }
         
+        //gamepad movement
+       if(scene.pad != null && scene.pad.axes.length > 0){
+            //console.log("in player scene.");
+            var X = scene.pad.axes[0].getValue(); //gets value between -1 and 1
+            var Y = scene.pad.axes[1].getValue(); //gets value between -1 and 1
+            var angle = Math.atan2(Y, X);  //gets angle in radians
+            if(angle < 0){
+                angle += 2 * Math.PI; //converts to a number between 0 and 2PI
+            }
+            this.angle = angle * 180 / Math.PI; //converts to degrees
+            this.idle = false; //character is moving
+            if(X == 0 && Y == 0){ //if the player let go of the stick then the character is idle
+                this.idle = true;
+            }
+       }
+
         // if moving this frame
         if (!this.idle) {
             this.sprite.body.setVelocityX((this.speed * this.buffs.speedBoost) * Math.cos(Phaser.Math.DegToRad(this.angle)) * 100);

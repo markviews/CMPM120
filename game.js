@@ -12,6 +12,8 @@ let uiContainer;
 let numPlayers = 1;
 const Boss_MaxHp = 500;
 var level = 1;
+var pad = null;
+
 // list of random levels to choose from
 const RandItems = [
     10,11,12,13,14,15,
@@ -532,6 +534,14 @@ class GameLevel extends Phaser.Scene {
     }
     
     create() {
+
+        if (this.input.gamepad.total === 0)
+        {
+            this.input.gamepad.once('connected', pad => {
+                console.log("Made pad");
+                this.pad = pad;
+            });
+        }
         window.inst = this;
         this.gulp = this.sound.add('gulp');
 
@@ -564,30 +574,6 @@ class GameLevel extends Phaser.Scene {
 
         });
         
-        //JOYSTICK STUFF------------------------------------------------------------------------------------
-        //CIRCLES FOR JOYSTICK-------------------------
-        //----------------------------------------------
-
-        // let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
-        // cir1.setAlpha(0.4);
-        // let cir2 = this.add.circle(0, 0, 20, 0x541675);
-        // cir2.setAlpha(0.3);
-        
-        // this.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-        //     x: 0,
-        //     y: 0,
-        //     radius: 100,
-        //     base: cir1,
-        //     thumb: cir2,
-        //     dir: '8dir',   // 'up&down'|0|'left&right'|1|'4dir'|2|'8dir'|3
-        //     forceMin: 16,
-        //     enable: true,
-        //     fixed: false,
-        // });
-       
-       
-
-        //END OF JOYSTICK --------------------------------------------------------------------------------------
 
         // store location of door players are coming from
         this.tp_door = {};
@@ -1202,9 +1188,9 @@ class UI extends Phaser.Scene {
         //CIRCLES FOR JOYSTICK-------------------------
         //----------------------------------------------
 
-        let cir1 = this.add.circle(0, 0, 50, 0x7E38B7);
+        let cir1 = this.add.circle(0, 0, 70, 0x7E38B7);
         cir1.setAlpha(0.4);
-        let cir2 = this.add.circle(0, 0, 20, 0x541675);
+        let cir2 = this.add.circle(0, 0, 40, 0x541675);
         cir2.setAlpha(0.3);
         
         window.joyStick = this.plugins.get("rexvirtualjoystickplugin").add(window, {
@@ -1591,6 +1577,9 @@ var config = {
         arcade: {
             debug: false
         }
+    },
+    input:{
+        gamepad: true
     },
 };
 
