@@ -66,6 +66,19 @@ class Boss extends Phaser.GameObjects.Sprite {
             if (gameObject1.name == "melee_hitbox") {
                 this.stunned = true;
                 this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
+                if(this.stunned == true && !(this.flash && this.flash.isPlaying())){
+                    this.flash =  scene.tweens.add({
+                         targets: this,
+                         tint: 0xEE4B2B,
+                         alpha: 1,
+                         duration: 200,
+                         yoyo: true,
+                         onComplete: () => {
+                             //this.alpha = 1;
+                             this.setTint(0xFFFFFF);
+                         },
+                     });
+                 }
 
                 if (this.health <= 0) {
                     if(animKey!='magister_die'){
@@ -81,7 +94,21 @@ class Boss extends Phaser.GameObjects.Sprite {
             }
             if (gameObject1.name == "projectile") {
                 this.stunned = true;
+                gameObject1.destroy();
                 this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
+                if(this.stunned == true && !(this.flash && this.flash.isPlaying())){
+                    this.flash =  scene.tweens.add({
+                         targets: this,
+                         tint: 0xEE4B2B,
+                         alpha: 1,
+                         duration: 200,
+                         yoyo: true,
+                         onComplete: () => {
+                             //this.alpha = 1;
+                             this.setTint(0xFFFFFF);
+                         },
+                     });
+                 }
 
                 if (this.health <= 0) {
                     if(animKey!='magister_die'){

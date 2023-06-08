@@ -809,8 +809,6 @@ class GameLevel extends Phaser.Scene {
                 this.tel.play('Telepo');
                 this.tel.setScale(3);
                 this.tel.setPosition(16.5 * 32 * 3, 2 * 32 * 3);
-                this.scene.stop('ui');
-                this.scene.launch('ui');
             }
 
             // move players to front
