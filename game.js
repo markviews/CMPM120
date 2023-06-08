@@ -10,7 +10,7 @@ var bossSpawn = false;
 let uiContainer;
 let numPlayers = 1;
 var level = -1;
-var pad = null;
+var control = null;
 
 var levels = {};
 var players = [];
@@ -210,8 +210,8 @@ class SetupLevel extends Phaser.Scene {
         //Teleporter animations
         this.anims.create({key: 'Telepo', frames: this.anims.generateFrameNumbers('Telep', { frames: [ 0,1,2,3,4,5,6,7,8 ] }), frameRate: 18, repeat: -1});
 
-        //this.scene.launch('open').launch('musicScene');
-        this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
+        this.scene.launch('open').launch('musicScene');
+        //this.scene.launch('gamelevel', Phaser.Utils.String.UUID().substring(0, 10)).launch('ui').launch('musicScene');
     }
 
 }
@@ -554,9 +554,11 @@ class GameLevel extends Phaser.Scene {
             this.input.gamepad.once('connected', pad => {
                 console.log("Made pad");
                 this.pad = pad;
+                control = this.pad;
             });
         }
-
+        //
+        control = this.input.gamepad.pad1;
         window.inst = this;
         this.gulp = this.sound.add('gulp');
 
@@ -1272,18 +1274,76 @@ class Lore extends Phaser.Scene {
         super('lore');
     }
     create() {
+        //gamepad listener
+        if (this.input.gamepad.total == 0)
+        {
+            this.input.gamepad.once('connected', pad => {
+                console.log("Made pad");
+                this.pad = pad;
+                control = this.pad;
+            });
+        }
+        //
+        control = this.input.gamepad.pad1;
         this.lore1 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore1');
         this.lore1.setAlpha(0).setScale();
         this.lore2 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore2');
         this.lore2.setAlpha(0).setScale();
         this.lore3 = this.add.image(innerWidth * .5, innerHeight * .5, 'lore3');
         this.lore3.setAlpha(0).setScale();
-
         this.tweens.add({
             targets: this.lore1,
             alpha: 1,
             duration: 500,
             onComplete: () => {
+                this.input.gamepad.on('down', ()=>{
+                        // Create a tween to fade out the image after fading in
+                        this.tweens.add({
+                            targets: this.lore1,
+                            alpha: 0,
+                            duration: 500,
+                            onComplete: () => {
+                                this.lore1.setVisible(false);
+                                // Create a tween to fade out the image after fading in
+                                this.tweens.add({
+                                    targets: this.lore2,
+                                    alpha: 1,
+                                    duration: 500,
+                                    onComplete: () => {
+                                        this.input.gamepad.on('down', ()=>{
+                                            this.tweens.add({
+                                                targets: this.lore2,
+                                                alpha: 0,
+                                                duration: 500,
+                                                onComplete: () => {
+                                                    this.lore2.setVisible(false);
+                                                    // Create a tween to fade out the image after fading in
+                                                    this.tweens.add({
+                                                        targets: this.lore3,
+                                                        alpha: 1,
+                                                        duration: 500,
+                                                        onComplete: () => {
+                                                            this.input.gamepad.on('down', ()=>{
+                                                                this.tweens.add({
+                                                                    targets: this.lore3,
+                                                                    alpha: 0,
+                                                                    duration: 500,
+                                                                    onComplete: () => {
+                                                                        this.scene.launch('gamelevel').launch('ui');
+                                                                        this.scene.remove('lore');
+                                                                    },
+                                                                })
+                                                            })
+                                                        },
+                                                    })
+                                                },
+                                            })
+                                        })
+                                    },
+                                })
+                            }
+                        })
+                }); 
                 this.input.on('pointerdown', () => {
                     // Create a tween to fade out the image after fading in
                     this.tweens.add({
@@ -1335,6 +1395,7 @@ class Lore extends Phaser.Scene {
             }
         })
     }
+    
 }
 
 class Open extends Phaser.Scene {
@@ -1342,6 +1403,14 @@ class Open extends Phaser.Scene {
         super('open');
     }
     create() {
+        if (this.input.gamepad.total == 0)
+        {
+            this.input.gamepad.once('connected', pad => {
+                console.log("Made pad");
+                this.pad = pad;
+                control = this.pad;
+            });
+        }
         this.made = this.add.image(innerWidth * .5 , innerHeight * .5, 'madeWith');
         this.made.setAlpha(0);
         this.softW = this.add.image(innerWidth * .5 , innerHeight * .5, 'addSoftware');
@@ -1512,6 +1581,17 @@ class Menu extends Phaser.Scene {
     }
 
     create() {
+        //gamepad check
+        if (this.input.gamepad.total == 0)
+        {
+            this.input.gamepad.once('connected', pad => {
+                console.log("Made pad");
+                this.pad = pad;
+                control = this.pad;
+            });
+        }
+        //
+        control = this.input.gamepad.pad1;
         window.menuInst = this;
 
         let scale = Math.min(window.innerWidth, window.innerHeight) * 0.004;
