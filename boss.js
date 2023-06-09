@@ -13,7 +13,7 @@
 class Boss extends Phaser.GameObjects.Sprite {
 
     constructor(scene, x, y, health) {
-        super(scene, x, y, health);
+        super(scene, x, y);
         this.scene = scene;
         this.health = health;
         this.maxHealth = health;
