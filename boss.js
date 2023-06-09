@@ -58,7 +58,6 @@ class Boss extends Phaser.GameObjects.Sprite {
     
         scene.physics.world.on('collide', (gameObject1, gameObject2) => {
             if (this == null) return;
-            if (this.stunned) return;
             if (this.anims == null) return;
             if (gameObject2 != this) return;
 
@@ -66,6 +65,7 @@ class Boss extends Phaser.GameObjects.Sprite {
             var player = players[gameObject1.id];
             
             if (gameObject1.name == "melee_hitbox") {
+                if (this.stunned) return;
                 this.stunned = true;
                 this.health -= player.meleeDamage * players[0].buffs.meleeDamage * players[0].buffs.damageBoost;
                 if(this.stunned == true && !(this.flash && this.flash.isPlaying())){

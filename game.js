@@ -366,8 +366,9 @@ class GameLevel extends Phaser.Scene {
         }
 
     }
-    spawnBoss(scene, x, y, hp) {
-        this.boss.add(new Boss(scene, x, y, hp));
+
+    spawnBoss(x, y, hp) {
+        this.boss.add(new Boss(this, x, y, hp));
     }
 
     spawnEnemy(x, y) {
@@ -524,6 +525,7 @@ class GameLevel extends Phaser.Scene {
 
         // unload current level
         this.enemies = undefined;
+        this.boss = undefined;
 
         // go new level
         this.scene.start('gamelevel', id);
@@ -729,7 +731,7 @@ class GameLevel extends Phaser.Scene {
 
             if (spawnBoss) {
                 var {x, y} = this.getRandSpawnPoint();
-                this.spawnBoss(inst, x, y, Boss_MaxHp);
+                this.spawnBoss(x, y, Boss_MaxHp);
                 //add Teleporter sprite
                 this.tel = this.add.sprite(0,0,'Teleporter');
                 this.tel.play('Telepo');
@@ -1215,7 +1217,7 @@ class UI extends Phaser.Scene {
         }
 
 
-    }    
+    }  
 }
 
 class Lore extends Phaser.Scene {
