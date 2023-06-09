@@ -561,9 +561,9 @@ class Player {
         this.dodging = true;
         this.invincible = true;
         this.dash_sound.play();
-        setTimeout(() => {
-            this.dodging = false; 
-        }, this.dashTimer * players[0].buffs.dashCooldown);
+        // setTimeout(() => {
+        //     this.dodging = false; 
+        // }, this.dashTimer * players[0].buffs.dashCooldown);
         //console.log(this.angle);
         xdir = this.sprite.x + Math.cos(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;
         ydir = this.sprite.y + Math.sin(Phaser.Math.DegToRad(this.angle)) * dodgeDistance;

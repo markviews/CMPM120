@@ -1165,6 +1165,12 @@ class UI extends Phaser.Scene {
             }
         }
 
+        this.Dash.on('animationcomplete-dash', () => {
+            if(players[0].dodging == true){
+                players[0].dodging = false;
+            }
+        });
+
         this.Dash.on('pointerdown', () => {
             if(players[0].dodging == false){
                 players[0].dodge(inst);
@@ -1191,6 +1197,9 @@ class UI extends Phaser.Scene {
         this.hpBar.setFrame(frameIndex);
         this.XPBAR.setFrame(players[0].exp);
         if(players[0].dodging == true){
+            var Duration = players[0].dashTimer * players[0].buffs.dashCooldown;
+            var frames = 31;
+            this.Dash.frameRate = frames.length / (Duration/1000);
             this.Dash.play('dash', true);  
         }
 
