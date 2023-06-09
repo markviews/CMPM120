@@ -14,7 +14,7 @@
             "tileset": "level1",
             "tileset_bg": "level1_bg",
             "music": "Dungeon_Theme",
-            "decorations_floor": 10000,
+            "decorations_floor": 60,
             "decorations_wall": 50,
             "monsters": 20,
             "spawnBoss": false,
