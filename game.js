@@ -729,7 +729,7 @@ class GameLevel extends Phaser.Scene {
 
             if (spawnBoss) {
                 var {x, y} = this.getRandSpawnPoint();
-                this.spawnBoss(this, x, y, Boss_MaxHp);
+                this.spawnBoss(inst, x, y, Boss_MaxHp);
                 //add Teleporter sprite
                 this.tel = this.add.sprite(0,0,'Teleporter');
                 this.tel.play('Telepo');
