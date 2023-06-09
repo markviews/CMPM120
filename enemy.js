@@ -1,7 +1,7 @@
 class Enemy extends Phaser.GameObjects.Sprite {
 
     constructor(scene, type, x, y, health, damage) {
-        super(scene, x, y, type);
+        super(scene, x, y);
         this.scene = scene;
         this.type = type;
         this.health = health;

@@ -386,7 +386,7 @@ class Inventory extends Phaser.Scene {
             this.inv.setPosition(this.scale.width / 2, this.scale.height / 2);
 
             // text
-            let health = players[0].health;
+            let health = Math.round(players[0].health);
             let exp = players[0].exp;
             let level = players[0].level;
             this.add.text(this.inv.x - this.invScale * 109, this.inv.y - this.invScale * 83, health, { fontFamily: 'minecraft_font', fontSize: this.invScale * 10, color: '#000000', fontWeight: 'bold' });
