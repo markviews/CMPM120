@@ -372,8 +372,9 @@ class Player {
             let enemy_dist = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, nearestEnemy.x, nearestEnemy.y);
 
             // melee attack
-            if (enemy_dist < 100) {
+            if (enemy_dist < 100 && !this.attacking) {
                 this.attacking = true;
+                this.Meleehitbox.setPosition(this.sprite.x, this.sprite.y);
                 var anim = `attack_${this.dir == "left" ? "right" : this.dir}`;
                 this.sprite.play(this.skin + "_" + anim);
             }
@@ -542,7 +543,7 @@ class Player {
             attackSpeed: 1,         // ☑
             meleeDamage: 1,         // ☑
             projectileDamage: 1,    // implimented but no items give this buff
-            healthBoost: 1          // ☑
+            healthBoost: 0          // ☑
         };
 
         // for each item in a slot, add stats
@@ -555,6 +556,13 @@ class Player {
             });
         }
         
+        let oldHealth = players[0].maxHealth;
+        players[0].maxHealth = 10 + players[0].buffs.healthBoost;
+
+        // if maxHealth changed, update actual health
+        if (oldHealth != players[0] .maxHealth) {
+            players[0].health = players[0].maxHealth;
+        }
     }
 
     dodge(scene) {

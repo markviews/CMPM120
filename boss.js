@@ -57,10 +57,12 @@ class Boss extends Phaser.GameObjects.Sprite {
         //END SOUND EFFECTS
     
         scene.physics.world.on('collide', (gameObject1, gameObject2) => {
-            if(this == null)return;
-            if(this.anims == null)return;
-            let animKey = this.anims.currentAnim.key;
+            if (this == null) return;
+            if (this.stunned) return;
+            if (this.anims == null) return;
             if (gameObject2 != this) return;
+
+            let animKey = this.anims.currentAnim.key;
             var player = players[gameObject1.id];
             
             if (gameObject1.name == "melee_hitbox") {
@@ -83,6 +85,7 @@ class Boss extends Phaser.GameObjects.Sprite {
                 if (this.health <= 0) {
                     if(animKey!='magister_die'){
                         this.play('magister_die');
+                        this.Boss_Explosion.play();
                         this.Boss_die.play();
                     }
                     return;

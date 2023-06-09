@@ -44,14 +44,14 @@ function getItemData(itemID) {
         case 32: { data = { description: "Brass bracelet: \n+2% Melee Damage", meleeDamage: 0.02 }; break; }
         case 33: { data = { description: "Iron bracelet: \n+1% Melee Damage", meleeDamage: 0.01 }; break; }
 
-        case 34: { data = { description: "Adamantite amulet: \n+20 Health", healthBoost: 0.020 }; break; }
-        case 35: { data = { description: "Platinum amulet: \n+15 Health", healthBoost: 0.015 }; break; }
-        case 36: { data = { description: "Gold amulet: \n+10 Health", healthBoost: 0.010 }; break; }
-        case 37: { data = { description: "Silver amulet: \n+5 Health", healthBoost: 0.05 }; break; }
-        case 38: { data = { description: "Brass amulet: \n+3 Health", healthBoost: 0.03 }; break; }
-        case 39: { data = { description: "Iron amulet: \n+1 Health", healthBoost: 0.01 }; break; }
+        case 34: { data = { description: "Adamantite amulet: \n+20 Health", healthBoost: 20 }; break; }
+        case 35: { data = { description: "Platinum amulet: \n+15 Health", healthBoost: 15 }; break; }
+        case 36: { data = { description: "Gold amulet: \n+10 Health", healthBoost: 10 }; break; }
+        case 37: { data = { description: "Silver amulet: \n+5 Health", healthBoost: 5 }; break; }
+        case 38: { data = { description: "Brass amulet: \n+3 Health", healthBoost: 3 }; break; }
+        case 39: { data = { description: "Iron amulet: \n+1 Health", healthBoost: 1 }; break; }
 
-        case 40: { data = { description: "Health Potion: \n+25% Health", healthBoost: 0.01 }; break; }
+        case 40: { data = { description: "Health Potion: \n+25% Health" }; break; }
 
         // if we see this message in game, we forgot to add an item description
         default: { data = { description: itemID }; break; }
