@@ -10,7 +10,6 @@
 //'magister_magicTrail'
 //'magister_swordTrail'
 //'magister_TR'
-const magicKey = 'magister_MagicLoop';
 class Boss extends Phaser.GameObjects.Sprite {
 
     constructor(scene, x, y, health) {
