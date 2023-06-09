@@ -1096,7 +1096,11 @@ class UI extends Phaser.Scene {
         uiContainer.setVisible(true);
         this.icon = this.add.image(42, 170, 'inv_icon');
         this.hpBar = this.add.sprite(250, 0);
+        this.hpText = this.add.text(88, 34, 'HP: ' + players[0].health + '/' + players[0].maxHealth, { fontSize: '32px', fill: '#FFFFFF' });
+        this.hpText.setAlpha(0.6);
         this.XPBAR = this.add.sprite(250, 40);
+        this.expText = this.add.text(88, 80, 'XP: ' + players[0].exp + '/' + ' 27', { fontSize: '32px', fill: '#FFFFFF' });
+        this.expText.setAlpha(0.6);
         this.Dash = this.add.sprite(120, 170);
         this.XPBAR.setScale(10);
         this.hpBar.setScale(10);
@@ -1196,6 +1200,8 @@ class UI extends Phaser.Scene {
         if(frameIndex > 39) frameIndex = 39;
         this.hpBar.setFrame(frameIndex);
         this.XPBAR.setFrame(players[0].exp);
+        this.hpText.setText('HP: ' + Math.round(players[0].health) + '/' + players[0].maxHealth);
+        this.expText.setText('XP: ' + players[0].exp + '/' + ' 27');
         if(players[0].dodging == true){
             var Duration = players[0].dashTimer * players[0].buffs.dashCooldown;
             var frames = 31;
