@@ -88,8 +88,8 @@ class SetupLevel extends Phaser.Scene {
         this.load.image('TitleText', 'assets/ui/TitleText.png');
         this.load.spritesheet('items', 'assets/Items.png', { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('props', 'assets/Level_Design_-_Props.png', { frameWidth: 32, frameHeight: 32 });
-        this.load.plugin('rexcircularprogressplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcircularprogressplugin.min.js', true);
-        this.load.plugin("rexvirtualjoystickplugin", 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexvirtualjoystickplugin.min.js', true);
+        this.load.plugin('rexcircularprogressplugin', 'assets/libs/rexcircularprogressplugin.min.js', true);
+        this.load.plugin("rexvirtualjoystickplugin", 'assets/libs/rexvirtualjoystickplugin.min.js', true);
         this.load.spritesheet('torch', 'assets/Torch Side_0000-sheet.png', {frameWidth: 64, frameHeight: 64});
         this.load.spritesheet('FireBall', 'assets/FireBall.png', {frameWidth: 16, frameHeight: 16});
         this.load.spritesheet('Ice', 'assets/Ice.png', {frameWidth: 16, frameHeight: 16});
