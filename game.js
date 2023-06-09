@@ -17,6 +17,12 @@ var levelData = {};
 var playMusic = true;
 var track = 'Title_Screen';
 
+function skip() {
+    if (inst != undefined) {
+        inst.goToLevel();
+    }
+}
+
 class SetupLevel extends Phaser.Scene {
 
     preload() {
