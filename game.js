@@ -1097,10 +1097,8 @@ class UI extends Phaser.Scene {
         this.icon = this.add.image(42, 170, 'inv_icon');
         this.hpBar = this.add.sprite(250, 0);
         this.hpText = this.add.text(88, 34, 'HP: ' + players[0].health + '/' + players[0].maxHealth, { fontSize: '32px', fill: '#FFFFFF' });
-        this.hpText.setAlpha(0.6);
         this.XPBAR = this.add.sprite(250, 40);
         this.expText = this.add.text(88, 80, 'XP: ' + players[0].exp + '/' + ' 27', { fontSize: '32px', fill: '#FFFFFF' });
-        this.expText.setAlpha(0.6);
         this.Dash = this.add.sprite(120, 170);
         this.XPBAR.setScale(10);
         this.hpBar.setScale(10);
