@@ -31,3 +31,6 @@ The main character of the game is sent to a different timeline and has to find a
 * Font by Pwnage Block
 * Additional SFX: freeSound.org
 
+#If you run into any issues or want to skip to the end Boss: 
+* In command console type inst.goToLevel();
+
