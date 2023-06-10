@@ -3,12 +3,11 @@ const camMinZoom = 1.5;         // smallest the camera will zoom
 const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
-const Boss_MaxHp = 500;
 
 var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
-var level = -1;
+var level = 4;
 var control = null;
 
 var levels = {};
@@ -373,10 +372,6 @@ class GameLevel extends Phaser.Scene {
 
     }
 
-    spawnBoss(x, y, hp) {
-        this.boss.add(new Boss(this, x, y, hp));
-    }
-
     spawnEnemy(x, y) {
         var types = ['slime', 'cyberjelly', 'hunger', 'drone'];
         var type = types[Math.floor(Math.random() * types.length)];
@@ -659,10 +654,10 @@ class GameLevel extends Phaser.Scene {
 
         });
 
-        this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
+        //this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
         this.projectile_player = this.add.group(); // projectiles launched by players
-        this.physics.add.collider(this.projectile_player, this.boss);
+        //this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
         this.physics.add.collider(this.enemies, this.layer_tiles);
         this.physics.add.collider(this.projectile_player, this.layer_tiles, this.handleCollisionProjectileWall, null, this);
@@ -733,11 +728,12 @@ class GameLevel extends Phaser.Scene {
                 this.spawnEnemy(x, y);
             }
 
-            let spawnBoss = levelData.levels[level].spawnBoss;
-
-            if (spawnBoss) {
+            if (levelData.levels[level].spawnBoss) {
                 var {x, y} = this.getRandSpawnPoint();
-                this.spawnBoss(x, y, Boss_MaxHp);
+
+                // spawn boss
+                this.enemies.add(new Boss(this, x,y));
+
                 //add Teleporter sprite
                 this.tel = this.add.sprite(0,0,'Teleporter');
                 this.tel.play('Telepo');
@@ -1159,20 +1155,36 @@ class UI extends Phaser.Scene {
             // User is not on a mobile device
             console.log("Not a mobile device");
         }
+
+        // if we're in boss level setup boss health bar
+        if (levelData.levels[level].spawnBoss) {
+            var cenX = this.cameras.main.centerX;
+            var cenY = window.innerHeight * 0.85;
+            this.bossHPBar = this.add.sprite(cenX, cenY);
+            this.bossHPBar.setScale(10);
+            this.bossHPBar.play('BossHP', true);
+            this.bossHPBar.stop();
+        }
         
     }
     update() {
 
-        if (inst.boss.getChildren(0)[0]!=null && bossIsHere == false) {
-            if(inst.boss.getChildren(0)[0]!=null){
-                var cenX = this.cameras.main.centerX;
-                var cenY = window.innerHeight * 0.85;
-                this.bossHPBar = this.add.sprite(cenX, cenY);
-                this.bossHPBar.setScale(10);
-                this.bossHPBar.play('BossHP', true);
-                this.bossHPBar.stop();
-                bossIsHere = true;
-            }
+        // if we're in boss level but boss not detected yet
+        if (levelData.levels[level].spawnBoss && !this.boss) {
+            inst.enemies.getChildren().forEach( (enemy) => {
+                if (enemy instanceof Boss) {
+                    this.boss = enemy;
+                    console.log(enemy);
+                }
+            });
+        }
+        
+        // if boss detected, update health bar
+        if(this.boss) {
+            var frameIndex_boss = 59 - Math.round(this.boss.health / this.boss.maxHP * 58);
+            if(frameIndex_boss > 58) frameIndex_boss = 58;
+            if (this.bossHPBar != null)
+                this.bossHPBar.setFrame(frameIndex_boss);
         }
 
         this.Dash.on('animationcomplete-dash', () => {
@@ -1215,15 +1227,10 @@ class UI extends Phaser.Scene {
             this.Dash.play('dash', true);  
         }
 
-        if(inst.boss.getChildren(0)[0]!=null){
-            var frameIndex_boss = 59 - Math.round(inst.boss.getChildren(0)[0].health/ Boss_MaxHp* 58);
-            if(frameIndex_boss > 58) frameIndex_boss = 58;
-            if (this.bossHPBar != null)
-                this.bossHPBar.setFrame(frameIndex_boss);
-        }
+        
 
 
-    }  
+    }
 }
 
 class Lore extends Phaser.Scene {
