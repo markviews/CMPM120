@@ -54,7 +54,7 @@
             "music": "Dungeon_Theme",
             "decorations_floor": 60,
             "decorations_wall": 50,
-            "monsters": 0,
+            "monsters": 3,
             "spawnBoss": false,
             "enterDoor": "left"
         },

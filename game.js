@@ -4,10 +4,9 @@ const itemScale = 2.5;          // scale of items
 const itemsGrid = true;         // items snap to grid when placed
 const EditMode = { NotEditing: 0, Selecting: 1, PlaceBlock: 2, PlaceItem: 3, DeleteItem: 4, PlaceBlockBG: 5 }
 
-var bossIsHere = false;         // is the boss in the level?
 let uiContainer;
 let numPlayers = 1;
-var level = 4;
+var level = 3;
 var control = null;
 
 var levels = {};
@@ -526,7 +525,6 @@ class GameLevel extends Phaser.Scene {
 
         // unload current level
         this.enemies = undefined;
-        this.boss = undefined;
 
         // go new level
         this.scene.start('gamelevel', id);
@@ -654,10 +652,8 @@ class GameLevel extends Phaser.Scene {
 
         });
 
-        //this.boss = this.add.group({ classType: Boss, runChildUpdate: true });
         this.enemies = this.add.group({ classType: Enemy, runChildUpdate: true });
         this.projectile_player = this.add.group(); // projectiles launched by players
-        //this.physics.add.collider(this.projectile_player, this.boss);
         this.physics.add.collider(this.projectile_player, this.enemies);
         this.physics.add.collider(this.enemies, this.layer_tiles);
         this.physics.add.collider(this.projectile_player, this.layer_tiles, this.handleCollisionProjectileWall, null, this);
@@ -1155,16 +1151,6 @@ class UI extends Phaser.Scene {
             // User is not on a mobile device
             console.log("Not a mobile device");
         }
-
-        // if we're in boss level setup boss health bar
-        if (levelData.levels[level].spawnBoss) {
-            var cenX = this.cameras.main.centerX;
-            var cenY = window.innerHeight * 0.85;
-            this.bossHPBar = this.add.sprite(cenX, cenY);
-            this.bossHPBar.setScale(10);
-            this.bossHPBar.play('BossHP', true);
-            this.bossHPBar.stop();
-        }
         
     }
     update() {
@@ -1174,7 +1160,14 @@ class UI extends Phaser.Scene {
             inst.enemies.getChildren().forEach( (enemy) => {
                 if (enemy instanceof Boss) {
                     this.boss = enemy;
-                    console.log(enemy);
+                    
+                    // setup boss health bar
+                    var cenX = this.cameras.main.centerX;
+                    var cenY = window.innerHeight * 0.85;
+                    this.bossHPBar = this.add.sprite(cenX, cenY);
+                    this.bossHPBar.setScale(10);
+                    this.bossHPBar.play('BossHP', true);
+                    this.bossHPBar.stop();
                 }
             });
         }

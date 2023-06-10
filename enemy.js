@@ -15,8 +15,6 @@ class Enemy extends Phaser.GameObjects.Sprite {
         this.maxHP = health;
         this.health = health;
         
-        this.on('animationcomplete', (anim) => console.log("enemy class: " + anim.key));
-        
         if (!isBoss) {
             this.on('animationcomplete', (anim) => {
 
@@ -96,12 +94,14 @@ class Enemy extends Phaser.GameObjects.Sprite {
             
             // enemy getting hit by player's projectile
             if (gameObject1.name == "projectile") {
+
+                this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
                 if (this.stunned) {
                     gameObject1.destroy();
                     return;
                 }
                 this.stunned = true;
-                this.health -= players[0].projectileDamage * players[0].buffs.projectileDamage * players[0].buffs.damageBoost;
+                
                 if (this.health <= 0) {
                     this.play(type + '_die');
                     return;
