@@ -26,7 +26,7 @@
             "music": "Dungeon_Theme",
             "decorations_floor": 60,
             "decorations_wall": 50,
-            "monsters": 0,
+            "monsters": 10,
             "spawnBoss": false,
             "enterDoor": "left"
         },
@@ -36,7 +36,7 @@
             "music": "Dungeon_Theme",
             "decorations_floor": 60,
             "decorations_wall": 50,
-            "monsters": 0,
+            "monsters": 5,
             "spawnBoss": false
         },
         {
@@ -45,7 +45,7 @@
             "music": "Dungeon_Theme",
             "decorations_floor": 60,
             "decorations_wall": 50,
-            "monsters": 0,
+            "monsters": 10,
             "spawnBoss": false
         },
         {
@@ -54,7 +54,7 @@
             "music": "Dungeon_Theme",
             "decorations_floor": 60,
             "decorations_wall": 50,
-            "monsters": 3,
+            "monsters": 5,
             "spawnBoss": false,
             "enterDoor": "left"
         },
