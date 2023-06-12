@@ -415,7 +415,7 @@ class Player {
                 duration: 100 * this.buffs.invulnTime,
                 repeat: flashes * 2 -1,
                 yoyo: true,
-                onComplete: () =>{dodge2
+                onComplete: () =>{
                     this.sprite.alpha = 1;
                     this.invincible = false;
                 },
