@@ -32,5 +32,5 @@ The main character of the game is sent to a different timeline and has to find a
 * Additional SFX: freeSound.org
 
 # If you run into any issues or want to skip to the end Boss: 
-* In command console type inst.goToLevel();
+* In command console type inst.goToLevel(); or skip();
 
