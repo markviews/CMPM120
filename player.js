@@ -248,6 +248,7 @@ class Player {
                     right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT),
                     dodge: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.DELETE),
                     pause: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC),
+                    dodge2: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.CONTROL),
                 }
             break;
         }
@@ -414,7 +415,7 @@ class Player {
                 duration: 100 * this.buffs.invulnTime,
                 repeat: flashes * 2 -1,
                 yoyo: true,
-                onComplete: () =>{
+                onComplete: () =>{dodge2
                     this.sprite.alpha = 1;
                     this.invincible = false;
                 },

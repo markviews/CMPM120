@@ -1183,6 +1183,9 @@ class UI extends Phaser.Scene {
         this.Dash.on('animationcomplete-dash', () => {
             if(players[0].dodging == true){
                 players[0].dodging = false;
+                if(players[1] != null){
+                    players[1].dodging = false;
+                }
             }
         });
 
